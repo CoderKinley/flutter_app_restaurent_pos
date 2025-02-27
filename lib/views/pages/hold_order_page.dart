@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
-import 'package:pos_system_legphel/models/card%20item/menu_item_model.dart';
 
 class HoldOrderPage extends StatefulWidget {
   final List<MenuBillModel> menuItems;

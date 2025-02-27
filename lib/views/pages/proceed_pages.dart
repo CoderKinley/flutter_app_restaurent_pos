@@ -13,8 +13,7 @@ class ProceedPages extends StatefulWidget {
 class _ProceedOrderScreenState extends State<ProceedPages> {
   String selectedServiceType = 'Dine In'; // Default service type
   String selectedPaymentMode = 'Cash'; // Default payment mode
-  final TextEditingController _noteController =
-      TextEditingController(); // For any additional notes
+  // For any additional notes
 
   // Method to calculate total price
   double calculateTotal() {
