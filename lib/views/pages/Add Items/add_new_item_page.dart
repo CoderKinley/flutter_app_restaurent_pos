@@ -45,7 +45,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     super.initState();
 
     if (widget.product != null) {
-      // Pre-fill the fields if editing an existing product
       _nameController.text = widget.product!.name;
       _priceController.text = widget.product!.price.toString();
       _descriptionController.text = widget.product!.description;
@@ -80,7 +79,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     if (_formKey.currentState!.validate() &&
         _imagePath != null &&
         _selectedMenuType != null) {
-      var uuid = Uuid();
+      var uuid = const Uuid();
 
       final product = Product(
         id: widget.product?.id ?? uuid.v4(), // Assign UUID if new product
@@ -144,34 +143,34 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                         widget.product == null
                             ? "Product Details"
                             : "Edit Product Details",
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: const Color.fromARGB(255, 3, 27, 48),
+                          color: Color.fromARGB(255, 3, 27, 48),
                         ),
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       /// Product Name
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
                           labelText: 'Product Name',
-                          prefixIcon: Icon(Icons.shopping_cart),
+                          prefixIcon: const Icon(Icons.shopping_cart),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
                         validator: (value) =>
                             value!.isEmpty ? 'Enter product name' : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       /// Price
                       TextFormField(
                         controller: _priceController,
                         decoration: InputDecoration(
                           labelText: 'Price',
-                          prefixIcon: Icon(Icons.money),
+                          prefixIcon: const Icon(Icons.money),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
@@ -179,13 +178,13 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                         validator: (value) =>
                             value!.isEmpty ? 'Enter price' : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       /// Availability
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           labelText: 'Availability (1 = Yes, 0 = No)',
-                          prefixIcon: Icon(Icons.check_circle),
+                          prefixIcon: const Icon(Icons.check_circle),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
@@ -204,14 +203,14 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                 ))
                             .toList(),
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       /// Description
                       TextFormField(
                         controller: _descriptionController,
                         decoration: InputDecoration(
                           labelText: 'Product Description',
-                          prefixIcon: Icon(Icons.description),
+                          prefixIcon: const Icon(Icons.description),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
@@ -219,13 +218,13 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                         validator: (value) =>
                             value!.isEmpty ? 'Enter description' : null,
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       /// Menu Type
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           labelText: 'Menu Type',
-                          prefixIcon: Icon(Icons.restaurant_menu),
+                          prefixIcon: const Icon(Icons.restaurant_menu),
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
@@ -245,7 +244,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             value == null ? 'Select a menu type' : null,
                       ),
 
-                      SizedBox(height: 15.0),
+                      const SizedBox(height: 15.0),
 
                       /// Image Picker
                       _imagePath != null
@@ -256,10 +255,11 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                   child: Image.file(File(_imagePath!),
                                       height: 120, fit: BoxFit.cover),
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 TextButton.icon(
-                                  icon: Icon(Icons.cancel, color: Colors.red),
-                                  label: Text("Remove Image",
+                                  icon: const Icon(Icons.cancel,
+                                      color: Colors.red),
+                                  label: const Text("Remove Image",
                                       style: TextStyle(color: Colors.red)),
                                   onPressed: () {
                                     setState(() {
@@ -270,17 +270,17 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                 ),
                               ],
                             )
-                          : Text('No image selected',
+                          : const Text('No image selected',
                               style: TextStyle(color: Colors.grey)),
 
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
                       TextButton.icon(
-                        icon: Icon(Icons.image,
-                            color: const Color.fromARGB(255, 3, 27, 48)),
-                        label: Text("Pick Image",
+                        icon: const Icon(Icons.image,
+                            color: Color.fromARGB(255, 3, 27, 48)),
+                        label: const Text("Pick Image",
                             style: TextStyle(
-                                color: const Color.fromARGB(255, 3, 27, 48))),
+                                color: Color.fromARGB(255, 3, 27, 48))),
                         onPressed: _pickImage,
                       ),
 
@@ -290,7 +290,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                         child: ElevatedButton(
                           onPressed: () => _saveProduct(context),
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 15),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
                           ),
@@ -298,7 +298,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             widget.product == null
                                 ? "Add Product"
                                 : "Save Changes",
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ),
                       ),

@@ -1,0 +1,32 @@
+part of 'hold_order_bloc.dart';
+
+abstract class HoldOrderEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
+
+class LoadHoldOrders extends HoldOrderEvent {}
+
+class AddHoldOrder extends HoldOrderEvent {
+  final HoldOrderModel holdOrder;
+  AddHoldOrder(this.holdOrder);
+
+  @override
+  List<Object?> get props => [holdOrder];
+}
+
+class UpdateHoldOrder extends HoldOrderEvent {
+  final HoldOrderModel holdOrder;
+  UpdateHoldOrder(this.holdOrder);
+
+  @override
+  List<Object?> get props => [holdOrder];
+}
+
+class DeleteHoldOrder extends HoldOrderEvent {
+  final String holdOrderId;
+  DeleteHoldOrder(this.holdOrderId);
+
+  @override
+  List<Object?> get props => [holdOrderId];
+}

@@ -7,9 +7,11 @@ import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 
 class ItemsPage extends StatelessWidget {
   final List<Widget> rightScreens = [
-    AllItemsList(),
-    ItemsCategoryList(),
+    const AllItemsList(),
+    const ItemsCategoryList(),
   ];
+
+  ItemsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class ItemsPage extends StatelessWidget {
                                     .add(SelectScreen(0));
                               },
                             ),
-                            Divider(),
+                            const Divider(),
                             ListTile(
                               leading: const Icon(
                                 Icons.edit,
@@ -68,7 +70,7 @@ class ItemsPage extends StatelessWidget {
                                     .add(SelectScreen(1));
                               },
                             ),
-                            Divider(),
+                            const Divider(),
                           ],
                         ),
                       ),
@@ -154,42 +156,4 @@ class ItemsPage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _topMenu({
-    required String title,
-    required String subTitle,
-    required Widget action,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subTitle,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
-        Expanded(flex: 1, child: Container(width: double.infinity)),
-        Expanded(flex: 5, child: action),
-      ],
-    );
-  }
 }
-// 

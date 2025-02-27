@@ -13,7 +13,7 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
     return Stack(
       children: [
         // Main content of the screen
-        Center(child: Text("This is the main screen content")),
+        const Center(child: Text("This is the main screen content")),
 
         // Custom Floating Action Button -------------------------------------->
         Positioned(
@@ -22,9 +22,9 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
           child: GestureDetector(
             onTap: () {},
             child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 3, 27, 48),
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 3, 27, 48),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -34,7 +34,7 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
                   ),
                 ],
               ),
-              child: Icon(Icons.add, color: Colors.white, size: 32),
+              child: const Icon(Icons.add, color: Colors.white, size: 32),
             ),
           ),
         ),

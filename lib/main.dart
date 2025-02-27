@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/counter_bloc/bloc/counter_bloc.dart';
+import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/list_bloc/bloc/itemlist_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
           create: (context) => AddItemNavigationBloc(),
         ),
         BlocProvider(create: (context) => MenuBloc()),
+        BlocProvider(create: (context) => HoldOrderBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

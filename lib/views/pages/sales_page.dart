@@ -1,15 +1,19 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
+import 'package:uuid/uuid.dart';
 
 const List<String> list = <String>[
   'Takeout',
@@ -142,7 +146,7 @@ class _SalesPageState extends State<SalesPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const DropdownButtonExample(),
+                      // const DropdownButtonExample(),
                       Row(
                         children: [
                           IconButton(
@@ -176,31 +180,19 @@ class _SalesPageState extends State<SalesPage> {
                                   itemCount: state.cartItems.length,
                                   itemBuilder: (context, index) {
                                     final cartItem = state.cartItems[index];
-                                    print("Hello Lengos--->");
-                                    print(cartItem.product.name);
-                                    print(cartItem.quantity);
-                                    return CartItemWidget(
-                                        cartItem:
-                                            cartItem); // Using the CartItemWidget
+                                    return CartItemWidget(cartItem: cartItem);
                                   },
                                 ),
                               ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 10, left: 10),
-                                child: Column(
-                                  children: [
-                                    summarySection(context, state.totalAmount)
-                                  ],
-                                ),
-                              ),
+                              const SizedBox(
+                                  height: 10), // Added spacing for better UI
+                              summarySection(
+                                  context, state.totalAmount, state.cartItems),
                             ],
                           ),
                         );
                       } else {
-                        return const Center(
-                            child:
-                                CircularProgressIndicator()); // Show loading until data is loaded
+                        return const Center(child: CircularProgressIndicator());
                       }
                     },
                   ),
@@ -589,13 +581,15 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   // widget for the summary section
+  // add to hold order the menubill model list you know
+  // how to achieve that dumbass??
   Widget summarySection(
     BuildContext context,
-    double totalAmount, {
+    double totalAmount,
+    List<MenuBillModel> cartItems, {
     double? tax = 45,
   }) {
     double payableAmount = totalAmount + (tax ?? 0); // Add tax to total amount
-
     return Container(
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.only(top: 15, bottom: 15),
@@ -650,13 +644,28 @@ class _SalesPageState extends State<SalesPage> {
                 child: orderButton(
                   "Hold Order",
                   Colors.orange,
-                  HoldOrderPage(),
+                  HoldOrderPage(
+                    menuItems: cartItems,
+                  ),
+                  () {
+                    final uuid = Uuid();
+                    final holdItems = HoldOrderModel(
+                      holdOrderId: uuid.v4(), // Generates a unique UUID
+                      tableNumber: Random().nextInt(100).toString(),
+                      customerName: "Customer ${Random().nextInt(100)}",
+                      orderDateTime: DateTime.now(),
+                      menuItems: cartItems,
+                    );
+                    return context
+                        .read<HoldOrderBloc>()
+                        .add(AddHoldOrder(holdItems));
+                  },
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: orderButton(
-                    "Proceed", Colors.green, ProceedPages(items: [])),
+                child: orderButton("Proceed", Colors.green,
+                    ProceedPages(items: const []), () {}),
               ),
             ],
           ),
@@ -666,7 +675,8 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   // Button Widget
-  Widget orderButton(String text, Color color, Widget newPage) {
+  Widget orderButton(
+      String text, Color color, Widget newPage, Function onPressed) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
@@ -674,6 +684,8 @@ class _SalesPageState extends State<SalesPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: () {
+        onPressed();
+        print("THis is on pressed event");
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -684,38 +696,6 @@ class _SalesPageState extends State<SalesPage> {
         );
       },
       child: Text(text, style: const TextStyle(fontSize: 10)),
-    );
-  }
-}
-
-class DropdownButtonExample extends StatefulWidget {
-  const DropdownButtonExample({super.key});
-
-  @override
-  State<DropdownButtonExample> createState() => _DropdownButtonExampleState();
-}
-
-class _DropdownButtonExampleState extends State<DropdownButtonExample> {
-  String dropdownValue = list.first;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButton<String>(
-      value: dropdownValue,
-      icon: const Icon(Icons.arrow_drop_down),
-      elevation: 10,
-      underline: Container(
-        height: 0,
-      ),
-      onChanged: (String? value) {
-        // This is called when the user selects an item.
-        setState(() {
-          dropdownValue = value!;
-        });
-      },
-      items: list.map<DropdownMenuItem<String>>((String value) {
-        return DropdownMenuItem<String>(value: value, child: Text(value));
-      }).toList(),
     );
   }
 }

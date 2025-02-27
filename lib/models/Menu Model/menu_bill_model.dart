@@ -20,4 +20,18 @@ class MenuBillModel {
       quantity: quantity ?? this.quantity,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'product': product.toMap(),
+      'quantity': quantity,
+    };
+  }
+
+  factory MenuBillModel.fromMap(Map<String, dynamic> map) {
+    return MenuBillModel(
+      product: Product.fromMap(map['product']),
+      quantity: map['quantity'],
+    );
+  }
 }

@@ -4,7 +4,7 @@ import 'package:pos_system_legphel/views/pages/proceed_payment_bill.dart';
 class ProceedPages extends StatefulWidget {
   final List<Map<String, dynamic>> items; // Items to proceed with
 
-  ProceedPages({required this.items});
+  const ProceedPages({super.key, required this.items});
 
   @override
   _ProceedOrderScreenState createState() => _ProceedOrderScreenState();
@@ -13,7 +13,7 @@ class ProceedPages extends StatefulWidget {
 class _ProceedOrderScreenState extends State<ProceedPages> {
   String selectedServiceType = 'Dine In'; // Default service type
   String selectedPaymentMode = 'Cash'; // Default payment mode
-  TextEditingController _noteController =
+  final TextEditingController _noteController =
       TextEditingController(); // For any additional notes
 
   // Method to calculate total price
@@ -26,7 +26,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Proceed Order'),
+        title: const Text('Proceed Order'),
         centerTitle: true,
       ),
       body: Row(
@@ -39,8 +39,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
                     child: Text('Order Type',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
@@ -48,7 +48,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(border: OutlineInputBorder()),
+                      decoration:
+                          const InputDecoration(border: OutlineInputBorder()),
                       value: 'Dine In',
                       items: ['Dine In', 'Takeaway', 'Delivery']
                           .map((type) =>
@@ -57,7 +58,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       onChanged: (value) {},
                     ),
                   ),
-                  Divider(),
+                  const Divider(),
                   Expanded(
                     child: ListView(
                       children: [
@@ -77,24 +78,24 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
           Expanded(
             flex: 1,
             child: Container(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Total',
+                  const Text('Total',
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 10),
-                  Text('1,280.00Nu',
+                  const SizedBox(height: 10),
+                  const Text('1,280.00Nu',
                       style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.green)),
-                  Divider(),
-                  Text('Cash received',
+                  const Divider(),
+                  const Text('Cash received',
                       style: TextStyle(fontSize: 16, color: Colors.green)),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 10,
                     children: [
@@ -104,13 +105,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       _cashButton('2,000.00NU'),
                     ],
                   ),
-                  Spacer(),
+                  const Spacer(),
                   Row(
                     children: [
                       Expanded(child: _paymentButton('CARD')),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Expanded(child: _paymentButton('CASH')),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Expanded(child: _paymentButton('SCAN')),
                     ],
                   ),
@@ -149,7 +150,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(
           builder: (context) {
-            return ProceedPaymentBill(
+            return const ProceedPaymentBill(
               id: "12345",
               user: "John Doe",
               tableNo: "10",

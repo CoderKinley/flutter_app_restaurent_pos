@@ -56,14 +56,10 @@ class DatabaseHelper {
   Future<int> updateProduct(Product product) async {
     final db = await instance.database;
 
-    // print("Updating product with ID: ${product.id}");
-
     if (product.id == null) {
-      // print("Error: Product ID is NULL before update!");
       return 0;
     }
 
-    // Check if the product exists before updating
     final existingProduct = await db.query(
       'products',
       where: 'id = ?',
@@ -71,11 +67,8 @@ class DatabaseHelper {
     );
 
     if (existingProduct.isEmpty) {
-      // print( "Error: Product with ID ${product.id} does not exist in the database!");
       return 0;
     }
-
-    // print("Updating product: ID=${product.id}, Name=${product.name}");
 
     int result = await db.update(
       'products',
@@ -83,7 +76,6 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [product.id],
     );
-    // print("Update result: $result");
     return result;
   }
 

@@ -20,7 +20,7 @@ class _AllItemsListState extends State<AllItemsList> {
         children: [
           BlocBuilder<ProductBloc, ProductState>(builder: (context, state) {
             if (state is ProductLoading) {
-              return Center(
+              return const Center(
                 child: CircularProgressIndicator(),
               );
             } else if (state is ProductLoaded) {
@@ -39,7 +39,7 @@ class _AllItemsListState extends State<AllItemsList> {
                           ));
                         },
                         child: Container(
-                          margin: EdgeInsets.only(left: 8.0, right: 8.0),
+                          margin: const EdgeInsets.only(left: 8.0, right: 8.0),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
@@ -59,7 +59,7 @@ class _AllItemsListState extends State<AllItemsList> {
                             title: Text(product.name),
                             subtitle: Text(
                               'Nu.${product.price.toString()}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.green,
                               ),
                             ),
@@ -69,13 +69,13 @@ class _AllItemsListState extends State<AllItemsList> {
                                     .read<ProductBloc>()
                                     .add(DeleteProduct(product.id!));
                               },
-                              icon: Icon(Icons.delete),
+                              icon: const Icon(Icons.delete),
                             ),
                           ),
                         ),
                       ),
                       // Divider added here between list items
-                      Divider(),
+                      const Divider(),
                     ],
                   );
                 },
@@ -91,14 +91,14 @@ class _AllItemsListState extends State<AllItemsList> {
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(
                   builder: (context) {
-                    return AddNewItemPage();
+                    return const AddNewItemPage();
                   },
                 ));
               },
               child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 3, 27, 48),
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color.fromARGB(255, 3, 27, 48),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -108,7 +108,7 @@ class _AllItemsListState extends State<AllItemsList> {
                     ),
                   ],
                 ),
-                child: Icon(Icons.add, color: Colors.white, size: 32),
+                child: const Icon(Icons.add, color: Colors.white, size: 32),
               ),
             ),
           ),

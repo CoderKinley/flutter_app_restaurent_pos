@@ -58,14 +58,14 @@ class CartItemWidget extends StatelessWidget {
                         ),
                         child: IconButton(
                           icon: const Icon(
-                            Icons.add,
+                            Icons.remove,
                             size: 15,
                             color: Colors.white,
                           ),
                           onPressed: () {
                             context
                                 .read<MenuBloc>()
-                                .add(IncreaseCartItemQuantity(cartItem));
+                                .add(ReduceCartItemQuantity(cartItem));
                           },
                         ),
                       ),
@@ -87,14 +87,14 @@ class CartItemWidget extends StatelessWidget {
                         ),
                         child: IconButton(
                           icon: const Icon(
-                            Icons.remove,
+                            Icons.add,
                             size: 15,
                             color: Colors.white,
                           ),
                           onPressed: () {
                             context
                                 .read<MenuBloc>()
-                                .add(ReduceCartItemQuantity(cartItem));
+                                .add(IncreaseCartItemQuantity(cartItem));
                           },
                         ),
                       ),

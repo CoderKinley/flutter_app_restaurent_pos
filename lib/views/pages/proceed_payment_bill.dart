@@ -35,7 +35,7 @@ class ProceedPaymentBill extends StatelessWidget {
   final String payMode;
 
   const ProceedPaymentBill({
-    Key? key,
+    super.key,
     required this.id,
     required this.user,
     required this.tableNo,
@@ -47,7 +47,7 @@ class ProceedPaymentBill extends StatelessWidget {
     required this.time,
     required this.totalAmount,
     required this.payMode,
-  }) : super(key: key);
+  });
 
   Future<Uint8List> _generatePdf() async {
     final pdf = pw.Document();
