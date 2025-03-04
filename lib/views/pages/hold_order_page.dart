@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
+import 'package:pos_system_legphel/views/pages/sales_page.dart';
 
 class HoldOrderPage extends StatefulWidget {
   final List<MenuBillModel> menuItems;
 
-  HoldOrderPage({
+  const HoldOrderPage({
     super.key,
     required this.menuItems,
   });
@@ -159,55 +161,64 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                       items.fold(0.0, (sum, item) => sum + item.totalPrice);
 
                   return Card(
-                    margin: EdgeInsets.symmetric(vertical: 4),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                     elevation: 3,
                     child: ExpansionTile(
-                      tilePadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       title: Text(
                         'Order ID: #${holdOrderItem.holdOrderId}',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text('Total: Nu.${total.toStringAsFixed(2)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                                 color: Colors.green,
                               )),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           OutlinedButton(
                             onPressed: () {
-                              Navigator.pop(context);
+                              // Navigator.pop(context, holdOrderItem);
+                              Navigator.push(context, MaterialPageRoute(
+                                builder: (context) {
+                                  return SalesPage(
+                                    hold_order_model: holdOrderItem,
+                                  );
+                                },
+                              ));
                             },
                             style: OutlinedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6)),
                             ),
-                            child:
-                                Text('Confirm', style: TextStyle(fontSize: 12)),
+                            child: const Text('Confirm',
+                                style: TextStyle(fontSize: 12)),
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           IconButton(
                             onPressed: () {
                               context.read<HoldOrderBloc>().add(
                                   DeleteHoldOrder(holdOrderItem.holdOrderId));
                             },
-                            icon: Icon(Icons.delete, size: 20),
+                            icon: const Icon(Icons.delete, size: 20),
                           ),
                         ],
                       ),
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 4),
+                            horizontal: 16.0,
+                            vertical: 4,
+                          ),
                           child: Column(
                             children: [
                               for (int i = 0; i < items.length; i++) ...[
@@ -219,12 +230,12 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(items[i].product.name,
-                                          style: TextStyle(fontSize: 12)),
+                                          style: const TextStyle(fontSize: 12)),
                                       Text('× ${items[i].quantity}',
-                                          style: TextStyle(fontSize: 12)),
+                                          style: const TextStyle(fontSize: 12)),
                                       Text(
                                           '\$${items[i].product.price.toStringAsFixed(2)}',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold)),
                                     ],

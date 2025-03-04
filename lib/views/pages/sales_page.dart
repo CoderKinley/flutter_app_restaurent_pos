@@ -6,9 +6,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
+import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
@@ -22,8 +24,11 @@ const List<String> list = <String>[
 ];
 
 class SalesPage extends StatefulWidget {
+  final HoldOrderModel? hold_order_model;
+
   const SalesPage({
     super.key,
+    this.hold_order_model,
   });
 
   @override
@@ -34,173 +39,223 @@ class _SalesPageState extends State<SalesPage> {
   @override
   void initState() {
     super.initState();
-    context.read<MenuBloc>().add(LoadMenuItems()); // Load the menu on startup
+    context.read<MenuBloc>().add(LoadMenuItems());
+
+    if (widget.hold_order_model != null) {
+      print("I am not null!!!");
+      print(widget.hold_order_model?.menuItems[0].product.name);
+    } else {
+      print("null product");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        right: 0,
-        left: 0,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 10,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(right: 10),
-                  height: 60,
-                  color: const Color.fromARGB(255, 3, 27, 48),
-                  child: _mainTopMenu(
-                    action: _search(),
+    return Material(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          right: 0,
+          left: 0,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 10,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(right: 10),
+                    height: 60,
+                    color: const Color.fromARGB(255, 3, 27, 48),
+                    child: _mainTopMenu(
+                      action: _search(),
+                    ),
                   ),
-                ),
-                // contaier for The menu item list
-                Container(
-                  margin: const EdgeInsets.only(left: 10, right: 10),
-                  height: 70,
-                  padding: const EdgeInsets.only(top: 10, bottom: 10, right: 0),
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _itemTab(
-                        icon: 'assets/icons/icon-burger.png',
-                        title: 'Burger',
-                        isActive: true,
-                      ),
-                      _itemTab(
-                        icon: 'assets/icons/icon-noodles.png',
-                        title: 'Noodles',
-                        isActive: false,
-                      ),
-                      _itemTab(
-                        icon: 'assets/icons/icon-drinks.png',
-                        title: 'Bevarages',
-                        isActive: false,
-                      ),
-                      _itemTab(
-                        icon: 'assets/icons/icon-desserts.png',
-                        title: 'Desserts',
-                        isActive: false,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: BlocBuilder<ProductBloc, ProductState>(
-                    builder: (context, state) {
-                      if (state is ProductLoading) {
-                        return const Center(
-                            child:
-                                CircularProgressIndicator()); // Show loader for MenuInitial & MenuLoading
-                      } else if (state is ProductLoaded) {
-                        return GridView.builder(
-                          padding: const EdgeInsets.only(
-                              top: 0, left: 8, right: 8, bottom: 8),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            childAspectRatio: (1 / 1.4),
-                          ),
-                          itemCount: state.products.length,
-                          itemBuilder: (context, index) {
-                            final item = state.products[index];
-                            return _item(
-                              product: item, // Pass MenuItem directly
-                              context: context,
-                            );
-                          },
-                        );
-                      } else {
-                        return const Center(
-                            child: Text("Something went wrong!"));
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // next item the right side menu
-          Expanded(
-            flex: 6,
-            child: Column(
-              children: [
-                // Custom Top Navigation
-                Container(
-                  padding: const EdgeInsets.only(left: 10),
-                  height: 60,
-                  color: Colors.grey,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Bill",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  // contaier for The menu item list
+                  Container(
+                    margin: const EdgeInsets.only(left: 10, right: 10),
+                    height: 70,
+                    padding:
+                        const EdgeInsets.only(top: 10, bottom: 10, right: 0),
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _itemTab(
+                          icon: 'assets/icons/icon-burger.png',
+                          title: 'Burger',
+                          isActive: true,
                         ),
-                      ),
-                      // const DropdownButtonExample(),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.person_add),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_vert,
+                        _itemTab(
+                          icon: 'assets/icons/icon-noodles.png',
+                          title: 'Noodles',
+                          isActive: false,
+                        ),
+                        _itemTab(
+                          icon: 'assets/icons/icon-drinks.png',
+                          title: 'Bevarages',
+                          isActive: false,
+                        ),
+                        _itemTab(
+                          icon: 'assets/icons/icon-desserts.png',
+                          title: 'Desserts',
+                          isActive: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: BlocBuilder<ProductBloc, ProductState>(
+                      builder: (context, state) {
+                        if (state is ProductLoading) {
+                          return const Center(
+                              child:
+                                  CircularProgressIndicator()); // Show loader for MenuInitial & MenuLoading
+                        } else if (state is ProductLoaded) {
+                          return GridView.builder(
+                            padding: const EdgeInsets.only(
+                              top: 0,
+                              left: 8,
+                              right: 8,
+                              bottom: 8,
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              childAspectRatio: (1 / 1.4),
+                            ),
+                            itemCount: state.products.length,
+                            itemBuilder: (context, index) {
+                              final item = state.products[index];
+                              return _item(
+                                product: item, // Pass MenuItem directly
+                                context: context,
+                              );
+                            },
+                          );
+                        } else {
+                          return const Center(
+                              child: Text("Something went wrong!"));
+                        }
+                      },
+                    ),
                   ),
-                ),
-                // Food Items List
-                Expanded(
-                  flex: 1,
-                  child: BlocBuilder<MenuBloc, MenuState>(
-                    builder: (context, state) {
-                      if (state is MenuLoaded) {
-                        return Container(
-                          padding: const EdgeInsets.only(left: 10, top: 15),
-                          color: Colors.grey[200],
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: ListView.builder(
-                                  itemCount: state.cartItems.length,
-                                  itemBuilder: (context, index) {
-                                    final cartItem = state.cartItems[index];
-                                    return CartItemWidget(cartItem: cartItem);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                  height: 10), // Added spacing for better UI
-                              summarySection(
-                                  context, state.totalAmount, state.cartItems),
-                            ],
-                          ),
-                        );
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            // next item the right side menu
+            Expanded(
+              flex: 6,
+              child: Column(
+                children: [
+                  // Custom Top Navigation
+                  Container(
+                    padding: const EdgeInsets.only(left: 10),
+                    height: 60,
+                    color: Colors.grey,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Bill",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // const DropdownButtonExample(),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(Icons.person_add),
+                            ),
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(
+                                Icons.more_vert,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Food Items List-------------------------------------------------------------------------------------->
+                  Expanded(
+                    flex: 1,
+                    child: BlocBuilder<MenuBloc, MenuState>(
+                      builder: (context, state) {
+                        // Wehat if I UPdate the MenuBLoc TO have onley the items that i want to have and let
+                        // load the only item there in the MenuBLoC
+                        // The Code below is to load the Data on the Page Loading
+                        if (widget.hold_order_model != null) {
+                          // Load Hold Order Data - it does have the MenubillModel in it
+                          // what if I fetch data from the local database into here
+                          // so it should be matching the ID when fetching a particular data
+                          // and then i can update the data
+                          return Container(
+                            padding: const EdgeInsets.only(left: 10, top: 15),
+                            color: Colors.grey[200],
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: widget.hold_order_model
+                                            ?.menuItems.length ??
+                                        0,
+                                    itemBuilder: (context, index) {
+                                      final cartItem = widget
+                                          .hold_order_model?.menuItems[index];
+                                      return cartItem != null
+                                          ? CartItemWidget(cartItem: cartItem)
+                                          : SizedBox();
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                summarySection(
+                                    context,
+                                    widget.hold_order_model!.totalPrice,
+                                    widget.hold_order_model!.menuItems),
+                              ],
+                            ),
+                          );
+                        } else if (state is MenuLoaded) {
+                          return Container(
+                            padding: const EdgeInsets.only(left: 10, top: 15),
+                            color: Colors.grey[200],
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: state.cartItems.length,
+                                    itemBuilder: (context, index) {
+                                      final cartItem = state.cartItems[index];
+                                      return CartItemWidget(cartItem: cartItem);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(
+                                    height: 10), // Spacing for better UI
+                                summarySection(context, state.totalAmount,
+                                    state.cartItems),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -271,71 +326,6 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  // widget for the item order list
-  Widget _itemOrder({
-    required String image,
-    required String title,
-    required String qty,
-    required String price,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: const Color(0xff1f2029),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 60,
-            width: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(
-                image: AssetImage(image),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                )
-              ],
-            ),
-          ),
-          Text(
-            '$qty x',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // widget for the item list tab
   Widget _itemTab({
     required String icon,
@@ -393,44 +383,6 @@ class _SalesPageState extends State<SalesPage> {
           Expanded(flex: 5, child: action),
         ],
       ),
-    );
-  }
-
-  // widget for the top menu bar
-  Widget _topMenu({
-    required String title,
-    required String subTitle,
-    required Widget action,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subTitle,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
-        Expanded(flex: 1, child: Container(width: double.infinity)),
-        Expanded(flex: 5, child: action),
-      ],
     );
   }
 
@@ -664,8 +616,24 @@ class _SalesPageState extends State<SalesPage> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: orderButton("Proceed", Colors.green,
-                    ProceedPages(items: const []), () {}),
+                child: orderButton(
+                    "Proceed", Colors.green, ProceedPages(items: cartItems),
+                    () {
+                  final uuid = Uuid();
+                  final proceed_order_items = ProceedOrderModel(
+                    holdOrderId: uuid.v4(), // Generates a unique UUID
+                    tableNumber: Random().nextInt(100).toString(),
+                    customerName: "Customer ${Random().nextInt(100)}",
+                    phoneNumber:
+                        "+975${Random().nextInt(9000000) + 1000000}", // Generates a random phone number
+                    restaurantBranchName: "Branch ${Random().nextInt(10)}",
+                    orderDateTime: DateTime.now(),
+                    menuItems: cartItems,
+                  );
+                  return context
+                      .read<ProceedOrderBloc>()
+                      .add(AddProceedOrder(proceed_order_items));
+                }),
               ),
             ],
           ),
@@ -685,7 +653,6 @@ class _SalesPageState extends State<SalesPage> {
       ),
       onPressed: () {
         onPressed();
-        print("THis is on pressed event");
         Navigator.push(
           context,
           MaterialPageRoute(

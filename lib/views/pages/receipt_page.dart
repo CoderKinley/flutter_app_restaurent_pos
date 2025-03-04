@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 
-class ReceiptPage extends StatelessWidget {
+class ReceiptPage extends StatefulWidget {
   const ReceiptPage({super.key});
+
+  @override
+  _ReceiptPageState createState() => _ReceiptPageState();
+}
+
+class _ReceiptPageState extends State<ReceiptPage> {
+  ProceedOrderModel? selectedReceiptItem;
 
   @override
   Widget build(BuildContext context) {
@@ -10,6 +20,7 @@ class ReceiptPage extends StatelessWidget {
       padding: const EdgeInsets.only(right: 0, left: 0),
       child: Row(
         children: [
+          // Left side (List of receipts)
           Expanded(
             flex: 3,
             child: Column(
@@ -23,56 +34,51 @@ class ReceiptPage extends StatelessWidget {
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.only(left: 5, right: 5, top: 10),
-                    child: ListView(
-                      children: [
-                        _buildReceiptItem(
-                          'Friday, 7 February, 2025',
-                          'Refund #3-1201',
-                          isRefund: true,
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Friday, 7 February, 2025',
-                          'Refund #3-1201',
-                          isRefund: true,
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Friday, 7 February, 2025',
-                          'Refund #3-1201',
-                          isRefund: true,
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Friday, 24 January, 2025',
-                          '1,590.00Nu #3-1201',
-                          time: '5:21 pm',
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Friday, 24 January, 2025',
-                          '420.00Nu #3-1200',
-                          time: '5:00 pm',
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Thursday, 23 January, 2025',
-                          '330.00Nu #3-1199',
-                          time: '8:38 pm',
-                        ),
-                        const Divider(),
-                        _buildReceiptItem(
-                          'Thursday, 23 January, 2025',
-                          '310.00Nu #3-1198',
-                          time: '8:30 pm',
-                        ),
-                      ],
+                    child: BlocProvider(
+                      create: (_) =>
+                          ProceedOrderBloc()..add(LoadProceedOrders()),
+                      child: BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
+                        builder: (context, state) {
+                          if (state is ProceedOrderLoading) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+                          if (state is ProceedOrderLoaded) {
+                            return ListView(
+                              children: state.proceedOrders.map((proceedOrder) {
+                                return Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          selectedReceiptItem = proceedOrder;
+                                        });
+                                      },
+                                      child: _buildReceiptItem(
+                                        proceedOrder.orderDateTime.toString(),
+                                        'Name: ${proceedOrder.customerName}',
+                                        time: proceedOrder.orderDateTime
+                                            .toString(),
+                                      ),
+                                    ),
+                                    const Divider(),
+                                  ],
+                                );
+                              }).toList(),
+                            );
+                          }
+                          if (state is ProceedOrderError) {
+                            return Center(child: Text(state.message));
+                          }
+                          return Container();
+                        },
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+          // Right side (Detailed view of selected receipt item)
           Expanded(
             flex: 6,
             child: Column(
@@ -112,75 +118,95 @@ class ReceiptPage extends StatelessWidget {
                   flex: 1,
                   child: Container(
                     color: Colors.grey[200],
-                    child: const Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                    child: selectedReceiptItem == null
+                        ? const Padding(
+                            padding: EdgeInsets.all(10.0),
+                            child: Center(
+                              child: Text(
+                                'Select an item to view details',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: SingleChildScrollView(
+                              child: Card(
+                                elevation: 2,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('150.00Nu',
-                                          style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold)),
-                                      Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                '${selectedReceiptItem!.totalPrice}Nu',
+                                                style: const TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              const Text(
+                                                'Total',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
+                                      const Divider(),
+                                      Text(
+                                          'Employee: ${selectedReceiptItem!.customerName}'),
+                                      Text(
+                                          'POS: ${selectedReceiptItem!.restaurantBranchName}'),
+                                      const SizedBox(height: 8),
+                                      const Text('Dine in',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+
+                                      // List of menu items
+                                      for (var item
+                                          in selectedReceiptItem!.menuItems)
+                                        ListTile(
+                                          title: Text(item.product.name),
+                                          trailing:
+                                              Text('${item.totalPrice}Nu'),
+                                          subtitle: Text(
+                                              '${item.quantity} x ${item.product.price}Nu'),
+                                        ),
+                                      const Divider(),
+                                      const Text('Total',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Cash'),
+                                          Text(
+                                              '${selectedReceiptItem!.totalPrice}Nu'),
+                                        ],
+                                      ),
+                                      const Divider(),
+                                      Text(
+                                          '${selectedReceiptItem!.orderDateTime.toLocal()}'),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                              Divider(),
-                              Text('Employee: Owner'),
-                              Text('POS: POS 3'),
-                              SizedBox(height: 8),
-                              Text('Dine in',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              ListTile(
-                                title: Text('Special Courier 180ml'),
-                                trailing: Text('150.00Nu'),
-                                subtitle: Text('1 x 150.00Nu'),
-                              ),
-                              Divider(),
-                              Text('Total',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Cash'),
-                                  Text('1,000.00Nu'),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Change'),
-                                  Text('850.00Nu'),
-                                ],
-                              ),
-                              Divider(),
-                              Text('07/02/25 1:20 am'),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -234,7 +260,6 @@ class ReceiptPage extends StatelessWidget {
     );
   }
 
-  //  BUild a receipt File out of it
   Widget _buildReceiptItem(String date, String title,
       {String? time, bool isRefund = false}) {
     return Padding(
@@ -252,13 +277,11 @@ class ReceiptPage extends StatelessWidget {
                 children: [
                   const Icon(Icons.receipt, size: 16, color: Colors.grey),
                   const SizedBox(width: 8),
-                  Text(title,
-                      style: TextStyle(
-                          color: isRefund ? Colors.red : Colors.black)),
+                  Text(title),
                 ],
               ),
-              if (time != null)
-                Text(time, style: const TextStyle(color: Colors.grey)),
+              // if (time != null)
+              //   Text(time, style: const TextStyle(color: Colors.grey)),
             ],
           ),
         ],

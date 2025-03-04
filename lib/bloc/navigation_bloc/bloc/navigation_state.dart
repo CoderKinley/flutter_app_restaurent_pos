@@ -10,7 +10,14 @@ abstract class NavigationState extends Equatable {
 }
 
 class SalesPageState extends NavigationState {
-  const SalesPageState() : super(const SalesPage());
+  final HoldOrderModel? holdOrderModel;
+
+  // Constructor to pass the holdOrderModel
+  SalesPageState({this.holdOrderModel})
+      : super(SalesPage(hold_order_model: holdOrderModel));
+
+  @override
+  List<Object?> get props => [holdOrderModel];
 }
 
 class ReceiptPageState extends NavigationState {

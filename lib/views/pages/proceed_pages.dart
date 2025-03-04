@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed_payment_bill.dart';
+import 'package:uuid/uuid.dart';
 
 class ProceedPages extends StatefulWidget {
-  final List<Map<String, dynamic>> items; // Items to proceed with
+  final List<MenuBillModel> items;
 
   const ProceedPages({super.key, required this.items});
 
@@ -11,14 +14,10 @@ class ProceedPages extends StatefulWidget {
 }
 
 class _ProceedOrderScreenState extends State<ProceedPages> {
-  String selectedServiceType = 'Dine In'; // Default service type
-  String selectedPaymentMode = 'Cash'; // Default payment mode
-  // For any additional notes
+  String selectedServiceType = 'Dine In';
 
-  // Method to calculate total price
   double calculateTotal() {
-    return widget.items
-        .fold(0, (sum, item) => sum + (item['price'] * item['quantity']));
+    return widget.items.fold(0, (sum, item) => sum + item.totalPrice);
   }
 
   @override
@@ -54,18 +53,26 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                           .map((type) =>
                               DropdownMenuItem(value: type, child: Text(type)))
                           .toList(),
-                      onChanged: (value) {},
+                      onChanged: (value) {
+                        setState(() {
+                          selectedServiceType = value!;
+                        });
+                      },
                     ),
                   ),
                   const Divider(),
                   Expanded(
-                    child: ListView(
-                      children: [
-                        _menuItem('Chicken roll x 1', '150.00Nu'),
-                        _menuItem('Black label x 2', '900.00Nu'),
-                        _menuItem('Chicken 65 x 1', '200.00Nu'),
-                        _menuItem('Black tea x 1', '30.00Nu'),
-                      ],
+                    child: ListView.builder(
+                      itemCount: widget.items.length,
+                      itemBuilder: (context, index) {
+                        final item = widget.items[index];
+                        return ListTile(
+                          title:
+                              Text('${item.product.name} x ${item.quantity}'),
+                          trailing:
+                              Text('${item.totalPrice.toStringAsFixed(2)}Nu'),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -86,24 +93,12 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  const Text('1,280.00Nu',
-                      style: TextStyle(
+                  Text('${calculateTotal().toStringAsFixed(2)}Nu',
+                      style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.green)),
                   const Divider(),
-                  const Text('Cash received',
-                      style: TextStyle(fontSize: 16, color: Colors.green)),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    children: [
-                      _cashButton('1,290.00NU'),
-                      _cashButton('1,300.00NU'),
-                      _cashButton('1,500.00NU'),
-                      _cashButton('2,000.00NU'),
-                    ],
-                  ),
                   const Spacer(),
                   Row(
                     children: [
@@ -123,47 +118,42 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
     );
   }
 
-  Widget _menuItem(String title, String price) {
-    return ListTile(
-      title: Text(title),
-      trailing: Text(price),
-    );
-  }
-
-  Widget _orderTypeButton(String type) {
-    return ElevatedButton(
-      onPressed: () {},
-      child: Text(type),
-    );
-  }
-
-  Widget _cashButton(String amount) {
-    return ElevatedButton(
-      onPressed: () {},
-      child: Text(amount),
-    );
-  }
-
   Widget _paymentButton(String method) {
+    String getCurrentDate() {
+      return DateFormat('dd-MM-yyyy')
+          .format(DateTime.now()); // Get the current date
+    }
+
+    String getCurrentTime() {
+      return DateFormat('hh:mm a')
+          .format(DateTime.now()); // Get the current time
+    }
+
     return ElevatedButton(
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(
           builder: (context) {
-            return const ProceedPaymentBill(
-              id: "12345",
-              user: "John Doe",
+            final uuid = Uuid();
+            return ProceedPaymentBill(
+              id: uuid.v4(),
+              user: "Kinley Penjor",
+              phoneNo: "+975-17807306",
               tableNo: "10",
-              items: [
-                {"name": "Burger", "quantity": 2, "price": 5.99},
-                {"name": "Pasta", "quantity": 1, "price": 7.49},
-              ],
-              subTotal: 19.47,
-              gst: 1.95,
-              totalQuantity: 3,
-              date: "24-02-2025",
-              time: "8:30 PM",
-              totalAmount: 21.42,
-              payMode: "Cash",
+              items: widget.items
+                  .map((item) => {
+                        "name": item.product.name,
+                        "quantity": item.quantity,
+                        "price": item.product.price,
+                      })
+                  .toList(),
+              subTotal: calculateTotal(),
+              gst: calculateTotal() * 0.05,
+              totalQuantity:
+                  widget.items.fold(0, (sum, item) => sum + item.quantity),
+              date: getCurrentDate(), // Current date
+              time: getCurrentTime(), // Current time
+              totalAmount: calculateTotal() * 1.05,
+              payMode: method,
             );
           },
         ));

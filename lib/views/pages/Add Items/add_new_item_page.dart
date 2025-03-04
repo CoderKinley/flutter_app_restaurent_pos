@@ -37,7 +37,9 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     "Snacks",
     "Breakfast",
     "Combo Meal",
-    "Starter"
+    "Starter",
+    "Veg Thali",
+    "Non-Veg Thali",
   ];
 
   @override

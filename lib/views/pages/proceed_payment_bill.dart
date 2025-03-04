@@ -23,6 +23,7 @@ import 'package:permission_handler/permission_handler.dart';
 class ProceedPaymentBill extends StatelessWidget {
   final String id;
   final String user;
+  final String phoneNo;
   final String tableNo;
   final List<Map<String, dynamic>> items;
   final double subTotal;
@@ -37,6 +38,7 @@ class ProceedPaymentBill extends StatelessWidget {
     super.key,
     required this.id,
     required this.user,
+    required this.phoneNo,
     required this.tableNo,
     required this.items,
     required this.subTotal,
@@ -130,6 +132,14 @@ class ProceedPaymentBill extends StatelessWidget {
         title: const Text(
           'Bill Details',
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
         elevation: 2,
       ),
       body: SingleChildScrollView(
@@ -160,6 +170,7 @@ class ProceedPaymentBill extends StatelessWidget {
                                 color: Colors.blue)),
                         const SizedBox(height: 8),
                         Text(user, style: const TextStyle(fontSize: 16)),
+                        Text(phoneNo, style: const TextStyle(fontSize: 16)),
                         Text("Table: $tableNo",
                             style: const TextStyle(fontSize: 16)),
                         Text("$date at $time",

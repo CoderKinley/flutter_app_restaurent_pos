@@ -6,8 +6,6 @@ abstract class NavigationEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class NavigateToSales extends NavigationEvent {}
-
 class NavigateToReceipt extends NavigationEvent {}
 
 class NavigateToItems extends NavigationEvent {}
@@ -17,3 +15,12 @@ class NavigateToNotification extends NavigationEvent {}
 class NavigateToShift extends NavigationEvent {}
 
 class NavigateToSettings extends NavigationEvent {}
+
+class NavigateToSales extends NavigationEvent {
+  final HoldOrderModel? holdOrderModel;
+
+  NavigateToSales({this.holdOrderModel});
+
+  @override
+  List<Object?> get props => [holdOrderModel];
+}
