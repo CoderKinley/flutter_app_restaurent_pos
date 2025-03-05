@@ -65,17 +65,28 @@ class _ReceiptPageState extends State<ReceiptPage> {
                               groupedOrders[dateKey]!.add(order);
                             }
 
+                            // Sort grouped orders by date in descending order
                             var reversedGroupedOrders = Map.fromEntries(
                                 groupedOrders.entries.toList()
                                   ..sort((a, b) => b.key.compareTo(a.key)));
 
+                            // Sort each day's orders by orderDateTime (time) in descending order
+                            reversedGroupedOrders.updateAll((key, value) {
+                              value.sort((a, b) =>
+                                  b.orderDateTime.compareTo(a.orderDateTime));
+                              return value;
+                            });
+
                             return CustomScrollView(
                               controller: scrollController,
                               slivers: [
+                                // Updating the header with dynamic date based on the first group
                                 SliverPersistentHeader(
                                   pinned: true,
                                   delegate: _DateHeaderDelegate(
-                                      reversedGroupedOrders, scrollController),
+                                    reversedGroupedOrders,
+                                    scrollController,
+                                  ),
                                 ),
                                 SliverList(
                                   delegate: SliverChildBuilderDelegate(
@@ -409,17 +420,14 @@ class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
   _DateHeaderDelegate(this.groupedOrders, this.scrollController);
 
   @override
-  double get minExtent =>
-      49.0; // Adjust this value to be smaller than the maxExtent
+  double get minExtent => 49.0;
 
   @override
-  double get maxExtent =>
-      49.0; // Use the same value to avoid exceeding the available space
+  double get maxExtent => 49.0;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // Calculate the current visible index based on the scroll position
     int currentIndex = (scrollController.offset / 50).floor();
     String currentDate = groupedOrders.keys.elementAt(currentIndex);
 

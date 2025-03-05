@@ -2,13 +2,11 @@ class CategoryModel {
   final String categoryId;
   final String categoryName;
   final String status; // active or inactive from the category
-  final int sortOrder;
 
   CategoryModel({
     required this.categoryId,
     required this.categoryName,
     required this.status,
-    required this.sortOrder,
   });
 
   Map<String, dynamic> toMap() {
@@ -16,7 +14,6 @@ class CategoryModel {
       'categoryId': categoryId,
       'categoryName': categoryName,
       'status': status,
-      'sortOrder': sortOrder,
     };
   }
 
@@ -25,7 +22,6 @@ class CategoryModel {
       categoryId: map['categoryId'],
       categoryName: map['categoryName'],
       status: map['status'],
-      sortOrder: map['sortOrder'],
     );
   }
 }

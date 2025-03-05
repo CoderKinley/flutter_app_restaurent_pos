@@ -13,7 +13,8 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     on<RemoveFromCart>(_onRemoveFromCart);
     on<ReduceCartItemQuantity>(_onItemRemove);
     on<IncreaseCartItemQuantity>(_onItemAdd);
-    on<UpdateCartItemQuantity>(_onUpdateCartItemQuantity); // New Event Handler
+    on<UpdateCartItemQuantity>(_onUpdateCartItemQuantity);
+    on<RemoveAllFromCart>(_onRemoveAllFromCart);
   }
 
   void _onLoadMenuItems(LoadMenuItems event, Emitter<MenuState> emit) {
@@ -121,6 +122,15 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       menuItems: currentState.menuItems,
       cartItems: updatedCart,
       totalAmount: total,
+    ));
+  }
+
+  void _onRemoveAllFromCart(RemoveAllFromCart event, Emitter<MenuState> emit) {
+    final currentState = state as MenuLoaded;
+    emit(MenuLoaded(
+      menuItems: currentState.menuItems,
+      cartItems: [],
+      totalAmount: 0,
     ));
   }
 }

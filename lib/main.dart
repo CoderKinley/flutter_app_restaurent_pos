@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
-import 'package:pos_system_legphel/bloc/counter_bloc/bloc/counter_bloc.dart';
+import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/list_bloc/bloc/itemlist_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => NavigationBloc()),
-        BlocProvider(create: (context) => CounterBloc()),
         BlocProvider(create: (context) => ItemlistBloc()),
         BlocProvider(
             create: (context) =>
@@ -38,7 +37,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => MenuBloc()),
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
-        BlocProvider(create: (context) => TableBloc())
+        BlocProvider(create: (context) => TableBloc()),
+        BlocProvider(create: (context) => CategoryBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

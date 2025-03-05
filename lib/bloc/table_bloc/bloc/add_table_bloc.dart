@@ -41,7 +41,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   void _onUpdateTable(UpdateTable event, Emitter<TableState> emit) async {
     try {
       await _tableDatabase.updateTable(event.table);
-      add(LoadTables()); // Reload tables after update
+      add(LoadTables());
     } catch (e) {
       emit(TableError(errorMessage: "Failed to update table: $e"));
     }
@@ -51,7 +51,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   void _onDeleteTable(DeleteTable event, Emitter<TableState> emit) async {
     try {
       await _tableDatabase.deleteTable(event.tableNumber);
-      add(LoadTables()); // Reload tables after deletion
+      add(LoadTables());
     } catch (e) {
       emit(TableError(errorMessage: "Failed to delete table: $e"));
     }

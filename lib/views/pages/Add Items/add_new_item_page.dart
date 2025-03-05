@@ -26,8 +26,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   final TextEditingController _descriptionController = TextEditingController();
 
   String? _imagePath;
-  String? _selectedAvailability = "1"; // Default value
-  String? _selectedMenuType; // Stores selected menu type
+  String? _selectedAvailability = "1";
+  String? _selectedMenuType;
 
   //  fetch from the database of Local storage after fully calculating it
   final List<String> _menuTypes = [
@@ -45,7 +45,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   @override
   void initState() {
     super.initState();
-
     if (widget.product != null) {
       _nameController.text = widget.product!.name;
       _priceController.text = widget.product!.price.toString();

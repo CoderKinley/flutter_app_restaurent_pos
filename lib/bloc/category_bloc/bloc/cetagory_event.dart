@@ -10,7 +10,7 @@ class LoadCategories extends CategoryEvent {}
 class AddCategory extends CategoryEvent {
   final CategoryModel category;
 
-  AddCategory({required this.category});
+  AddCategory(this.category);
 
   @override
   List<Object?> get props => [category];
@@ -19,7 +19,7 @@ class AddCategory extends CategoryEvent {
 class UpdateCategory extends CategoryEvent {
   final CategoryModel category;
 
-  UpdateCategory({required this.category});
+  UpdateCategory(this.category);
 
   @override
   List<Object?> get props => [category];
@@ -28,7 +28,7 @@ class UpdateCategory extends CategoryEvent {
 class DeleteCategory extends CategoryEvent {
   final String categoryId;
 
-  DeleteCategory({required this.categoryId});
+  DeleteCategory(this.categoryId);
 
   @override
   List<Object?> get props => [categoryId];

@@ -33,24 +33,22 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   void _onAddCategory(AddCategory event, Emitter<CategoryState> emit) async {
     try {
       await _categoryDatabase.insertCategory(event.category);
-      add(LoadCategories()); // Reload categories after adding a new one
+      add(LoadCategories());
     } catch (e) {
       emit(CategoryError(errorMessage: "Failed to add category: $e"));
     }
   }
 
-  // Update an existing Category
   void _onUpdateCategory(
       UpdateCategory event, Emitter<CategoryState> emit) async {
     try {
       await _categoryDatabase.updateCategory(event.category);
-      add(LoadCategories()); // Reload categories after updating
+      add(LoadCategories());
     } catch (e) {
       emit(CategoryError(errorMessage: "Failed to update category: $e"));
     }
   }
 
-  // Delete a Category
   void _onDeleteCategory(
       DeleteCategory event, Emitter<CategoryState> emit) async {
     try {

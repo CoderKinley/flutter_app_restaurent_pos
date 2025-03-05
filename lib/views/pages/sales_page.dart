@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
@@ -44,6 +45,7 @@ class _SalesPageState extends State<SalesPage> {
     super.initState();
     context.read<MenuBloc>().add(LoadMenuItems());
     context.read<TableBloc>().add(LoadTables());
+    context.read<CategoryBloc>().add(LoadCategories());
   }
 
   @override
@@ -79,25 +81,27 @@ class _SalesPageState extends State<SalesPage> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _itemTab(
-                          icon: 'assets/icons/icon-burger.png',
-                          title: 'Thali',
-                          isActive: true,
-                        ),
-                        _itemTab(
-                          icon: 'assets/icons/icon-noodles.png',
-                          title: 'Momo',
-                          isActive: false,
-                        ),
-                        _itemTab(
-                          icon: 'assets/icons/icon-drinks.png',
-                          title: 'Drinks',
-                          isActive: false,
-                        ),
-                        _itemTab(
-                          icon: 'assets/icons/icon-desserts.png',
-                          title: 'Deserts',
-                          isActive: false,
+                        BlocBuilder<CategoryBloc, CategoryState>(
+                          builder: (context, state) {
+                            if (state is CategoryLoading) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            } else if (state is CategoryLoaded) {
+                              return Row(
+                                children: state.categories.map((category) {
+                                  return _itemTab(
+                                    title: category.categoryName,
+                                    isActive: false,
+                                  );
+                                }).toList(),
+                              );
+                            } else {
+                              return const Center(
+                                child: Text("No categories available"),
+                              );
+                            }
+                          },
                         ),
                       ],
                     ),
@@ -181,20 +185,18 @@ class _SalesPageState extends State<SalesPage> {
                                       }
                                     },
                                     items: [
-                                      DropdownMenuItem<String>(
-                                        value:
-                                            'Table', // The placeholder option
-                                        child: Text(
-                                            'Table'), // Display 'Table' as the first option
+                                      const DropdownMenuItem<String>(
+                                        value: 'Table',
+                                        child: Text('Table'),
                                       ),
                                       ...state.tables
                                           .map<DropdownMenuItem<String>>(
                                               (table) {
                                         return DropdownMenuItem<String>(
-                                          value: table.tableNumber
-                                              .toString(), // Ensure it's a string
+                                          value: table.tableNumber.toString(),
                                           child: Text(
-                                              'Table ${table.tableNumber}'),
+                                            'Table ${table.tableNumber}',
+                                          ),
                                         );
                                       }).toList(),
                                     ],
@@ -362,7 +364,7 @@ class _SalesPageState extends State<SalesPage> {
 
   // widget for the item list tab
   Widget _itemTab({
-    required String icon,
+    // required String icon,
     required String title,
     required bool isActive,
   }) {
@@ -378,10 +380,10 @@ class _SalesPageState extends State<SalesPage> {
         ),
         child: Row(
           children: [
-            Image.asset(
-              icon,
-              width: 38,
-            ),
+            // Image.asset(
+            //   icon,
+            //   width: 38,
+            // ),
             const SizedBox(width: 8),
             Text(
               title,
@@ -624,48 +626,94 @@ class _SalesPageState extends State<SalesPage> {
           // Buttons Row for Hold Order and Proceed
           Row(
             children: [
-              Expanded(
-                child: orderButton(
-                  "Hold Order",
-                  Colors.orange,
-                  HoldOrderPage(
-                    menuItems: cartItems,
-                  ),
-                  () {
-                    final uuid = Uuid();
-                    final holdItems = HoldOrderModel(
-                      holdOrderId: uuid.v4(), // Generates a unique UUID
-                      tableNumber: tableNumber,
-                      customerName: "Customer ${Random().nextInt(100)}",
-                      orderDateTime: DateTime.now(),
-                      menuItems: cartItems,
+              BlocBuilder<MenuBloc, MenuState>(
+                builder: (context, state) {
+                  if (state is MenuLoaded && state.cartItems.isNotEmpty) {
+                    // If cart has items, show "Hold Order" button
+                    return Expanded(
+                      child: orderButton(
+                        "Hold Order",
+                        Color(0xFFFFDAB9), // Peach,
+                        HoldOrderPage(menuItems: state.cartItems),
+                        () {
+                          final uuid = Uuid();
+                          final holdItems = HoldOrderModel(
+                            holdOrderId: uuid.v4(),
+                            tableNumber: tableNumber,
+                            customerName: "Customer ${Random().nextInt(100)}",
+                            orderDateTime: DateTime.now(),
+                            menuItems: state.cartItems,
+                          );
+
+                          context
+                              .read<HoldOrderBloc>()
+                              .add(AddHoldOrder(holdItems));
+                          context.read<MenuBloc>().add(RemoveAllFromCart());
+                        },
+                      ),
                     );
-                    return context
-                        .read<HoldOrderBloc>()
-                        .add(AddHoldOrder(holdItems));
-                  },
-                ),
+                  } else {
+                    // If cart is empty, show "View Hold Order" button
+                    return Expanded(
+                      child: orderButton(
+                        "View Hold Order",
+                        const Color.fromARGB(255, 3, 27, 48),
+                        HoldOrderPage(menuItems: []), // Empty cart
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    HoldOrderPage(menuItems: [])),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                },
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: orderButton(
-                    "Proceed", Colors.green, ProceedPages(items: cartItems),
-                    () {
-                  final uuid = Uuid();
-                  final proceed_order_items = ProceedOrderModel(
-                    holdOrderId: uuid.v4(), // Generates a unique UUID
-                    tableNumber: Random().nextInt(100).toString(),
-                    customerName: "Customer ${Random().nextInt(100)}",
-                    phoneNumber:
-                        "+975${Random().nextInt(9000000) + 1000000}", // Generates a random phone number
-                    restaurantBranchName: "Branch ${Random().nextInt(10)}",
-                    orderDateTime: DateTime.now(),
-                    menuItems: cartItems,
-                  );
-                  return context
-                      .read<ProceedOrderBloc>()
-                      .add(AddProceedOrder(proceed_order_items));
-                }),
+                child: BlocBuilder<MenuBloc, MenuState>(
+                  builder: (context, state) {
+                    bool isEnabled =
+                        state is MenuLoaded && state.cartItems.isNotEmpty;
+
+                    return Opacity(
+                      opacity:
+                          isEnabled ? 1.0 : 0.5, // Dim the button when disabled
+                      child: AbsorbPointer(
+                        absorbing:
+                            !isEnabled, // Disable button clicks if no items
+                        child: orderButton(
+                          "Proceed",
+                          Color.fromARGB(255, 101, 221, 159), // Seafoam Green
+
+                          ProceedPages(items: isEnabled ? state.cartItems : []),
+                          () {
+                            final uuid = Uuid();
+                            final proceedOrderItems = ProceedOrderModel(
+                              holdOrderId: uuid.v4(),
+                              tableNumber: tableNumber,
+                              customerName: "Customer ${Random().nextInt(100)}",
+                              phoneNumber:
+                                  "+975${Random().nextInt(9000000) + 1000000}",
+                              restaurantBranchName:
+                                  "Branch ${Random().nextInt(10)}",
+                              orderDateTime: DateTime.now(),
+                              menuItems: cartItems,
+                            );
+
+                            context
+                                .read<ProceedOrderBloc>()
+                                .add(AddProceedOrder(proceedOrderItems));
+                            context.read<MenuBloc>().add(RemoveAllFromCart());
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -680,6 +728,7 @@ class _SalesPageState extends State<SalesPage> {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
+        foregroundColor: Colors.deepOrange,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

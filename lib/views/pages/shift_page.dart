@@ -11,7 +11,6 @@ class ShiftPage extends StatelessWidget {
       body: const Center(
         child: Text("Under Development!"),
       ),
-      drawer: const DrawerWidget(),
     );
   }
 }

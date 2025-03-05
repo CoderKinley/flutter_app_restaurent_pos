@@ -49,3 +49,8 @@ class UpdateCartItemQuantity extends MenuEvent {
   @override
   List<Object?> get props => [updatedItems];
 }
+
+class RemoveAllFromCart extends MenuEvent {
+  @override
+  List<Object?> get props => [];
+}
