@@ -7,6 +7,7 @@ import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dar
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
@@ -36,17 +37,13 @@ class SalesPage extends StatefulWidget {
 }
 
 class _SalesPageState extends State<SalesPage> {
+  String? selectedTableNumber = 'Table';
+
   @override
   void initState() {
     super.initState();
     context.read<MenuBloc>().add(LoadMenuItems());
-
-    if (widget.hold_order_model != null) {
-      print("I am not null!!!");
-      print(widget.hold_order_model?.menuItems[0].product.name);
-    } else {
-      print("null product");
-    }
+    context.read<TableBloc>().add(LoadTables());
   }
 
   @override
@@ -84,22 +81,22 @@ class _SalesPageState extends State<SalesPage> {
                       children: [
                         _itemTab(
                           icon: 'assets/icons/icon-burger.png',
-                          title: 'Burger',
+                          title: 'Thali',
                           isActive: true,
                         ),
                         _itemTab(
                           icon: 'assets/icons/icon-noodles.png',
-                          title: 'Noodles',
+                          title: 'Momo',
                           isActive: false,
                         ),
                         _itemTab(
                           icon: 'assets/icons/icon-drinks.png',
-                          title: 'Bevarages',
+                          title: 'Drinks',
                           isActive: false,
                         ),
                         _itemTab(
                           icon: 'assets/icons/icon-desserts.png',
-                          title: 'Desserts',
+                          title: 'Deserts',
                           isActive: false,
                         ),
                       ],
@@ -167,18 +164,57 @@ class _SalesPageState extends State<SalesPage> {
                         // const DropdownButtonExample(),
                         Row(
                           children: [
+                            BlocBuilder<TableBloc, TableState>(
+                              builder: (context, state) {
+                                if (state is TableLoading) {
+                                  return const CircularProgressIndicator();
+                                } else if (state is TableError) {
+                                  return Text('Error: ${state.errorMessage}');
+                                } else if (state is TableLoaded) {
+                                  return DropdownButton<String>(
+                                    value: selectedTableNumber ?? 'Table',
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          selectedTableNumber = newValue;
+                                        });
+                                      }
+                                    },
+                                    items: [
+                                      DropdownMenuItem<String>(
+                                        value:
+                                            'Table', // The placeholder option
+                                        child: Text(
+                                            'Table'), // Display 'Table' as the first option
+                                      ),
+                                      ...state.tables
+                                          .map<DropdownMenuItem<String>>(
+                                              (table) {
+                                        return DropdownMenuItem<String>(
+                                          value: table.tableNumber
+                                              .toString(), // Ensure it's a string
+                                          child: Text(
+                                              'Table ${table.tableNumber}'),
+                                        );
+                                      }).toList(),
+                                    ],
+                                    underline:
+                                        Container(), // Remove the underline
+                                  );
+                                }
+                                return Container();
+                              },
+                            ),
                             IconButton(
                               onPressed: () {},
                               icon: const Icon(Icons.person_add),
                             ),
                             IconButton(
                               onPressed: () {},
-                              icon: const Icon(
-                                Icons.more_vert,
-                              ),
+                              icon: const Icon(Icons.more_vert),
                             ),
                           ],
-                        ),
+                        )
                       ],
                     ),
                   ),
@@ -187,14 +223,7 @@ class _SalesPageState extends State<SalesPage> {
                     flex: 1,
                     child: BlocBuilder<MenuBloc, MenuState>(
                       builder: (context, state) {
-                        // Wehat if I UPdate the MenuBLoc TO have onley the items that i want to have and let
-                        // load the only item there in the MenuBLoC
-                        // The Code below is to load the Data on the Page Loading
                         if (widget.hold_order_model != null) {
-                          // Load Hold Order Data - it does have the MenubillModel in it
-                          // what if I fetch data from the local database into here
-                          // so it should be matching the ID when fetching a particular data
-                          // and then i can update the data
                           return Container(
                             padding: const EdgeInsets.only(left: 10, top: 15),
                             color: Colors.grey[200],
@@ -216,9 +245,11 @@ class _SalesPageState extends State<SalesPage> {
                                 ),
                                 const SizedBox(height: 10),
                                 summarySection(
-                                    context,
-                                    widget.hold_order_model!.totalPrice,
-                                    widget.hold_order_model!.menuItems),
+                                  context,
+                                  widget.hold_order_model!.totalPrice,
+                                  widget.hold_order_model!.menuItems,
+                                  selectedTableNumber!,
+                                ),
                               ],
                             ),
                           );
@@ -239,8 +270,12 @@ class _SalesPageState extends State<SalesPage> {
                                 ),
                                 const SizedBox(
                                     height: 10), // Spacing for better UI
-                                summarySection(context, state.totalAmount,
-                                    state.cartItems),
+                                summarySection(
+                                  context,
+                                  state.totalAmount,
+                                  state.cartItems,
+                                  selectedTableNumber!,
+                                ),
                               ],
                             ),
                           );
@@ -261,7 +296,6 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   Widget _item({
-    // required MenuItem item, // Accept a MenuItem instead of Map<String, dynamic>
     required Product product,
     required BuildContext context,
   }) {
@@ -532,13 +566,11 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  // widget for the summary section
-  // add to hold order the menubill model list you know
-  // how to achieve that dumbass??
   Widget summarySection(
     BuildContext context,
     double totalAmount,
-    List<MenuBillModel> cartItems, {
+    List<MenuBillModel> cartItems,
+    String tableNumber, {
     double? tax = 45,
   }) {
     double payableAmount = totalAmount + (tax ?? 0); // Add tax to total amount
@@ -603,7 +635,7 @@ class _SalesPageState extends State<SalesPage> {
                     final uuid = Uuid();
                     final holdItems = HoldOrderModel(
                       holdOrderId: uuid.v4(), // Generates a unique UUID
-                      tableNumber: Random().nextInt(100).toString(),
+                      tableNumber: tableNumber,
                       customerName: "Customer ${Random().nextInt(100)}",
                       orderDateTime: DateTime.now(),
                       menuItems: cartItems,

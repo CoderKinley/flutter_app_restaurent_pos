@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
@@ -13,6 +14,13 @@ class ReceiptPage extends StatefulWidget {
 
 class _ReceiptPageState extends State<ReceiptPage> {
   ProceedOrderModel? selectedReceiptItem;
+
+  final ScrollController scrollController = ScrollController();
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,27 +51,86 @@ class _ReceiptPageState extends State<ReceiptPage> {
                             return Center(child: CircularProgressIndicator());
                           }
                           if (state is ProceedOrderLoaded) {
-                            return ListView(
-                              children: state.proceedOrders.map((proceedOrder) {
-                                return Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          selectedReceiptItem = proceedOrder;
-                                        });
-                                      },
-                                      child: _buildReceiptItem(
-                                        proceedOrder.orderDateTime.toString(),
-                                        'Name: ${proceedOrder.customerName}',
-                                        time: proceedOrder.orderDateTime
-                                            .toString(),
-                                      ),
-                                    ),
-                                    const Divider(),
-                                  ],
-                                );
-                              }).toList(),
+                            // Group orders by date
+                            Map<String, List<ProceedOrderModel>> groupedOrders =
+                                {};
+                            for (var order in state.proceedOrders) {
+                              String dateKey = order.orderDateTime
+                                  .toLocal()
+                                  .toString()
+                                  .split(' ')[0]; // Get the date part only
+                              if (!groupedOrders.containsKey(dateKey)) {
+                                groupedOrders[dateKey] = [];
+                              }
+                              groupedOrders[dateKey]!.add(order);
+                            }
+
+                            var reversedGroupedOrders = Map.fromEntries(
+                                groupedOrders.entries.toList()
+                                  ..sort((a, b) => b.key.compareTo(a.key)));
+
+                            return CustomScrollView(
+                              controller: scrollController,
+                              slivers: [
+                                SliverPersistentHeader(
+                                  pinned: true,
+                                  delegate: _DateHeaderDelegate(
+                                      reversedGroupedOrders, scrollController),
+                                ),
+                                SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (BuildContext context, int index) {
+                                      final entry = reversedGroupedOrders
+                                          .entries
+                                          .toList()[index];
+                                      return Column(
+                                        children: [
+                                          Column(
+                                            children:
+                                                entry.value.map((proceedOrder) {
+                                              return Column(
+                                                children: [
+                                                  InkWell(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        selectedReceiptItem =
+                                                            proceedOrder;
+                                                      });
+                                                    },
+                                                    child: _buildReceiptItem(
+                                                      DateFormat(
+                                                              'yyyy-MM-dd HH:mm')
+                                                          .format(proceedOrder
+                                                              .orderDateTime)
+                                                          .toString(),
+                                                      'Name: ${proceedOrder.customerName}',
+                                                      time: DateFormat('HH:mm')
+                                                          .format(proceedOrder
+                                                              .orderDateTime),
+                                                      onDelete: () {
+                                                        context
+                                                            .read<
+                                                                ProceedOrderBloc>()
+                                                            .add(
+                                                              DeleteProceedOrder(
+                                                                  proceedOrder
+                                                                      .holdOrderId),
+                                                            );
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const Divider(),
+                                                ],
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    childCount: reversedGroupedOrders.length,
+                                  ),
+                                ),
+                              ],
                             );
                           }
                           if (state is ProceedOrderError) {
@@ -78,6 +145,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
               ],
             ),
           ),
+
           // Right side (Detailed view of selected receipt item)
           Expanded(
             flex: 6,
@@ -150,15 +218,17 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                               Text(
                                                 '${selectedReceiptItem!.totalPrice}Nu',
                                                 style: const TextStyle(
-                                                    fontSize: 24,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                ),
                                               ),
                                               const Text(
                                                 'Total',
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
                                                 ),
                                               ),
                                             ],
@@ -261,7 +331,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   }
 
   Widget _buildReceiptItem(String date, String title,
-      {String? time, bool isRefund = false}) {
+      {String? time, bool isRefund = false, required Function onDelete}) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -280,12 +350,95 @@ class _ReceiptPageState extends State<ReceiptPage> {
                   Text(title),
                 ],
               ),
-              // if (time != null)
-              //   Text(time, style: const TextStyle(color: Colors.grey)),
+              // Add the PopupMenuButton for delete option
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.grey),
+                onSelected: (String value) {
+                  if (value == 'delete') {
+                    _showDeleteConfirmationDialog(context, onDelete);
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Delete'),
+                    ),
+                  ];
+                },
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, Function onDelete) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this item?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                onDelete(); // Call the onDelete function when confirming
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Map<String, List<ProceedOrderModel>> groupedOrders;
+  final ScrollController scrollController;
+
+  _DateHeaderDelegate(this.groupedOrders, this.scrollController);
+
+  @override
+  double get minExtent =>
+      49.0; // Adjust this value to be smaller than the maxExtent
+
+  @override
+  double get maxExtent =>
+      49.0; // Use the same value to avoid exceeding the available space
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // Calculate the current visible index based on the scroll position
+    int currentIndex = (scrollController.offset / 50).floor();
+    String currentDate = groupedOrders.keys.elementAt(currentIndex);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      color: Colors.green,
+      child: Text(
+        currentDate, // Displaying the current date based on scroll
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 18.0,
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
   }
 }

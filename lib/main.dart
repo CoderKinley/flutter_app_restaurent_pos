@@ -9,6 +9,7 @@ import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
 
 void main() {
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => MenuBloc()),
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
+        BlocProvider(create: (context) => TableBloc())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

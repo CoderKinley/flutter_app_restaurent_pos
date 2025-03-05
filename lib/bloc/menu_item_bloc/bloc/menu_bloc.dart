@@ -13,12 +13,11 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     on<RemoveFromCart>(_onRemoveFromCart);
     on<ReduceCartItemQuantity>(_onItemRemove);
     on<IncreaseCartItemQuantity>(_onItemAdd);
+    on<UpdateCartItemQuantity>(_onUpdateCartItemQuantity); // New Event Handler
   }
 
   void _onLoadMenuItems(LoadMenuItems event, Emitter<MenuState> emit) {
     emit(MenuLoading());
-
-    // final currentState = state as MenuLoaded;
     emit(MenuLoaded(menuItems: [], cartItems: [], totalAmount: 0));
   }
 
@@ -34,7 +33,8 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       updatedCart.add(existingCartItem);
     } else {
       final index = updatedCart.indexOf(existingCartItem);
-      updatedCart[index].quantity++;
+      updatedCart[index] =
+          existingCartItem.copyWith(quantity: existingCartItem.quantity + 1);
     }
 
     double total = updatedCart.fold(
@@ -70,13 +70,13 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
         .map((item) {
           if (item.product.id == event.item.product.id) {
             return item.quantity > 1
-                ? item.copyWith(quantity: item.quantity - 1) // Reduce quantity
-                : null; // Remove item if quantity is 1
+                ? item.copyWith(quantity: item.quantity - 1)
+                : null;
           }
           return item;
         })
         .whereType<MenuBillModel>()
-        .toList(); // Remove null items
+        .toList();
 
     double total = updatedCart.fold(
         0, (sum, item) => sum + (item.product.price * item.quantity));
@@ -93,10 +93,26 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     List<MenuBillModel> updatedCart = currentState.cartItems.map((item) {
       if (item.product.id == event.item.product.id) {
-        return item.copyWith(quantity: item.quantity + 1); // Increase quantity
+        return item.copyWith(quantity: item.quantity + 1);
       }
       return item;
     }).toList();
+
+    double total = updatedCart.fold(
+        0, (sum, item) => sum + (item.product.price * item.quantity));
+
+    emit(MenuLoaded(
+      menuItems: currentState.menuItems,
+      cartItems: updatedCart,
+      totalAmount: total,
+    ));
+  }
+
+  void _onUpdateCartItemQuantity(
+      UpdateCartItemQuantity event, Emitter<MenuState> emit) {
+    final currentState = state as MenuLoaded;
+
+    List<MenuBillModel> updatedCart = List.from(event.updatedItems);
 
     double total = updatedCart.fold(
         0, (sum, item) => sum + (item.product.price * item.quantity));

@@ -40,3 +40,12 @@ class IncreaseCartItemQuantity extends MenuEvent {
   @override
   List<Object> get props => [];
 }
+
+class UpdateCartItemQuantity extends MenuEvent {
+  final List<MenuBillModel> updatedItems;
+
+  UpdateCartItemQuantity(this.updatedItems);
+
+  @override
+  List<Object?> get props => [updatedItems];
+}

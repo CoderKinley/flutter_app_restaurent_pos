@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
+import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_table.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/all_items_list.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/items_category_list.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
@@ -9,6 +10,7 @@ class ItemsPage extends StatelessWidget {
   final List<Widget> rightScreens = [
     const AllItemsList(),
     const ItemsCategoryList(),
+    const AddNewTable(),
   ];
 
   ItemsPage({super.key});
@@ -26,58 +28,73 @@ class ItemsPage extends StatelessWidget {
         children: [
           Expanded(
             flex: 6,
-            child: Column(
-              children: [
-                // header ---------------------------------------------------->
-                Container(
-                  padding: const EdgeInsets.only(right: 10),
-                  height: 60,
-                  color: const Color.fromARGB(255, 3, 27, 48),
-                  child: _mainTopMenu(
-                    action: Container(),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // header ---------------------------------------------------->
+                  Container(
+                    padding: const EdgeInsets.only(right: 10),
+                    height: 60,
+                    color: const Color.fromARGB(255, 3, 27, 48),
+                    child: _mainTopMenu(
+                      action: Container(),
+                    ),
                   ),
-                ),
-                // contaier for The menu item list
-                Container(
-                  height: 500,
-                  margin: const EdgeInsets.only(left: 10, right: 10),
-                  padding: const EdgeInsets.only(top: 10, bottom: 10, right: 0),
-                  child: ListView(
-                    children: [
-                      SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            ListTile(
-                              leading: const Icon(
-                                Icons.list,
+                  // contaier for The menu item list
+                  Container(
+                    height: 500,
+                    margin: const EdgeInsets.only(left: 10, right: 10),
+                    padding:
+                        const EdgeInsets.only(top: 10, bottom: 10, right: 0),
+                    child: ListView(
+                      children: [
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.list,
+                                ),
+                                title: const Text("Items"),
+                                onTap: () {
+                                  return context
+                                      .read<AddItemNavigationBloc>()
+                                      .add(SelectScreen(0));
+                                },
                               ),
-                              title: const Text("Items"),
-                              onTap: () {
-                                return context
-                                    .read<AddItemNavigationBloc>()
-                                    .add(SelectScreen(0));
-                              },
-                            ),
-                            const Divider(),
-                            ListTile(
-                              leading: const Icon(
-                                Icons.edit,
+                              const Divider(),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.edit,
+                                ),
+                                title: const Text("Categories"),
+                                onTap: () {
+                                  return context
+                                      .read<AddItemNavigationBloc>()
+                                      .add(SelectScreen(1));
+                                },
                               ),
-                              title: const Text("Categories"),
-                              onTap: () {
-                                return context
-                                    .read<AddItemNavigationBloc>()
-                                    .add(SelectScreen(1));
-                              },
-                            ),
-                            const Divider(),
-                          ],
+                              const Divider(),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.table_bar,
+                                ),
+                                title: const Text("Tables"),
+                                onTap: () {
+                                  return context
+                                      .read<AddItemNavigationBloc>()
+                                      .add(SelectScreen(2));
+                                },
+                              ),
+                              const Divider(),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // next item the right side menu -------------------------------------->
@@ -102,16 +119,16 @@ class ItemsPage extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.person_add),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_vert,
-                            ),
-                          ),
+                          // IconButton(
+                          //   onPressed: () {},
+                          //   icon: const Icon(Icons.person_add),
+                          // ),
+                          // IconButton(
+                          //   onPressed: () {},
+                          //   icon: const Icon(
+                          //     Icons.more_vert,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ],
