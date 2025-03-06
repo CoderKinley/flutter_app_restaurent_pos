@@ -25,10 +25,6 @@ This **POS System** is a feature-rich and efficient Point of Sale application bu
 
 Here’s a preview of the app's UI:
 
-## App Screenshots
-
-Here’s a preview of the app's UI:
-
 <div style="display: flex; justify-content: center;">
   <table style="width: 100%; border-collapse: collapse;">
     <tr>
