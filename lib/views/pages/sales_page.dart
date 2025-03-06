@@ -14,7 +14,7 @@ import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
-import 'package:pos_system_legphel/views/pages/proceed_pages.dart';
+import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:uuid/uuid.dart';
@@ -39,6 +39,8 @@ class SalesPage extends StatefulWidget {
 
 class _SalesPageState extends State<SalesPage> {
   String? selectedTableNumber = 'Table';
+  TextEditingController nameController = TextEditingController();
+  TextEditingController contactController = TextEditingController();
 
   @override
   void initState() {
@@ -145,12 +147,11 @@ class _SalesPageState extends State<SalesPage> {
                 ],
               ),
             ),
-            // next item the right side menu
+            // next item the right side menu------------------------------------------->
             Expanded(
               flex: 6,
               child: Column(
                 children: [
-                  // Custom Top Navigation
                   Container(
                     padding: const EdgeInsets.only(left: 10),
                     height: 60,
@@ -208,12 +209,29 @@ class _SalesPageState extends State<SalesPage> {
                               },
                             ),
                             IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                return _showAddPersonDialog();
+                              },
                               icon: const Icon(Icons.person_add),
                             ),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.more_vert),
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                Navigator.push(context, MaterialPageRoute(
+                                  builder: (context) {
+                                    return HoldOrderPage(menuItems: []);
+                                  },
+                                ));
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'View Hold Order',
+                                  child: Text('View Hold Order'),
+                                ),
+                              ],
+                              child: IconButton(
+                                onPressed: null,
+                                icon: const Icon(Icons.more_vert),
+                              ),
                             ),
                           ],
                         )
@@ -294,6 +312,52 @@ class _SalesPageState extends State<SalesPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddPersonDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Add Person"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: "Name"),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: contactController,
+                  decoration:
+                      const InputDecoration(labelText: "Contact Number"),
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String name = nameController.text;
+                String contact = contactController.text;
+
+                print("Added: Name - $name, Contact - $contact");
+
+                Navigator.pop(context);
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -640,7 +704,7 @@ class _SalesPageState extends State<SalesPage> {
                           final holdItems = HoldOrderModel(
                             holdOrderId: uuid.v4(),
                             tableNumber: tableNumber,
-                            customerName: "Customer ${Random().nextInt(100)}",
+                            customerName: nameController.text,
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );
@@ -653,20 +717,12 @@ class _SalesPageState extends State<SalesPage> {
                       ),
                     );
                   } else {
-                    // If cart is empty, show "View Hold Order" button
                     return Expanded(
                       child: orderButton(
                         "View Hold Order",
                         const Color.fromARGB(255, 3, 27, 48),
                         HoldOrderPage(menuItems: []), // Empty cart
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    HoldOrderPage(menuItems: [])),
-                          );
-                        },
+                        () {},
                       ),
                     );
                   }
@@ -680,8 +736,7 @@ class _SalesPageState extends State<SalesPage> {
                         state is MenuLoaded && state.cartItems.isNotEmpty;
 
                     return Opacity(
-                      opacity:
-                          isEnabled ? 1.0 : 0.5, // Dim the button when disabled
+                      opacity: isEnabled ? 1.0 : 0.4,
                       child: AbsorbPointer(
                         absorbing:
                             !isEnabled, // Disable button clicks if no items
@@ -689,24 +744,34 @@ class _SalesPageState extends State<SalesPage> {
                           "Proceed",
                           Color.fromARGB(255, 101, 221, 159), // Seafoam Green
 
-                          ProceedPages(items: isEnabled ? state.cartItems : []),
+                          ProceedPages(
+                            items: isEnabled ? state.cartItems : [],
+                            branchName: "Branch ${Random().nextInt(10)}",
+                            customername: nameController.text,
+                            tableNumber: tableNumber,
+                            phoneNumber: "+975-${contactController.text}",
+                            orderID: Uuid().v4(),
+                          ),
                           () {
                             final uuid = Uuid();
                             final proceedOrderItems = ProceedOrderModel(
-                              holdOrderId: uuid.v4(),
+                              holdOrderId: uuid.v4().toString(),
                               tableNumber: tableNumber,
-                              customerName: "Customer ${Random().nextInt(100)}",
+                              customerName: nameController.text.toString(),
                               phoneNumber:
-                                  "+975${Random().nextInt(9000000) + 1000000}",
+                                  "+975-${contactController.text.toString()}",
                               restaurantBranchName:
                                   "Branch ${Random().nextInt(10)}",
                               orderDateTime: DateTime.now(),
                               menuItems: cartItems,
                             );
 
+                            // aDD THE PROCESSED ORDR TO THE WHATEVER PAGE IT IS THERE
                             context
                                 .read<ProceedOrderBloc>()
                                 .add(AddProceedOrder(proceedOrderItems));
+
+                            // removed the menu items form the previous page
                             context.read<MenuBloc>().add(RemoveAllFromCart());
                           },
                         ),

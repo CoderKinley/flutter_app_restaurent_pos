@@ -65,15 +65,15 @@ class ProceedPaymentBill extends StatelessWidget {
             pw.Text("Items:",
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
             ...items.map((item) => pw.Text(
-                "${item['name']} - Qty: ${item['quantity']}, Price: \$${item['price']}")),
+                "${item['name']} - Qty: ${item['quantity']}, Price: Nu.${item['price']}")),
             pw.Divider(),
             pw.Text("Subtotal: \$${subTotal.toStringAsFixed(2)}"),
-            pw.Text("GST: \$${gst.toStringAsFixed(2)}"),
+            pw.Text("GST: Nu.${gst.toStringAsFixed(2)}"),
             pw.Text("Total Quantity: $totalQuantity"),
             pw.Text("Date: $date"),
             pw.Text("Time: $time"),
             pw.SizedBox(height: 8),
-            pw.Text("Total Amount: \$${totalAmount.toStringAsFixed(2)}",
+            pw.Text("Total Amount: Nu.${totalAmount.toStringAsFixed(2)}",
                 style:
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.Text("Payment Mode: $payMode",
@@ -212,7 +212,7 @@ class ProceedPaymentBill extends StatelessWidget {
                             ),
                             Expanded(
                               child: Text(
-                                "\$${item['price']}",
+                                "Nu.${item['price']}",
                                 style: const TextStyle(fontSize: 16),
                                 textAlign: TextAlign.right,
                               ),
@@ -234,13 +234,13 @@ class ProceedPaymentBill extends StatelessWidget {
                     child: Column(
                       children: [
                         _buildSummaryRow(
-                            "Subtotal", "\$${subTotal.toStringAsFixed(2)}"),
-                        _buildSummaryRow("GST", "\$${gst.toStringAsFixed(2)}"),
+                            "Subtotal", "Nu.${subTotal.toStringAsFixed(2)}"),
+                        _buildSummaryRow("GST", "Nu.${gst.toStringAsFixed(2)}"),
                         _buildSummaryRow(
                             "Total Quantity", totalQuantity.toString()),
                         const Divider(height: 24),
                         _buildSummaryRow("Total Amount",
-                            "\$${totalAmount.toStringAsFixed(2)}",
+                            "Nu.${totalAmount.toStringAsFixed(2)}",
                             isTotal: true),
                         const SizedBox(height: 8),
                         Text("Paid via $payMode",

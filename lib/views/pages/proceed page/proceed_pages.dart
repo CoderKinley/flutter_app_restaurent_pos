@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
-import 'package:pos_system_legphel/views/pages/proceed_payment_bill.dart';
+import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
 import 'package:uuid/uuid.dart';
 
 class ProceedPages extends StatefulWidget {
   final List<MenuBillModel> items;
+  final String customername;
+  final String phoneNumber;
+  final String tableNumber;
+  final String orderID;
+  final String branchName;
 
-  const ProceedPages({super.key, required this.items});
+  const ProceedPages({
+    super.key,
+    required this.items,
+    required this.branchName,
+    required this.customername,
+    required this.orderID,
+    required this.phoneNumber,
+    required this.tableNumber,
+  });
 
   @override
   _ProceedOrderScreenState createState() => _ProceedOrderScreenState();
@@ -133,12 +146,11 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(
           builder: (context) {
-            final uuid = Uuid();
             return ProceedPaymentBill(
-              id: uuid.v4(),
-              user: "Kinley Penjor",
-              phoneNo: "+975-17807306",
-              tableNo: "10",
+              id: widget.orderID,
+              user: widget.customername,
+              phoneNo: widget.phoneNumber,
+              tableNo: widget.tableNumber,
               items: widget.items
                   .map((item) => {
                         "name": item.product.name,

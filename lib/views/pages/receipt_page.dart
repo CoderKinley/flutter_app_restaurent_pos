@@ -248,7 +248,9 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                       ),
                                       const Divider(),
                                       Text(
-                                          'Employee: ${selectedReceiptItem!.customerName}'),
+                                          'Customer Name: ${selectedReceiptItem!.customerName}'),
+                                      Text(
+                                          'Contace Number: ${selectedReceiptItem!.phoneNumber}'),
                                       Text(
                                           'POS: ${selectedReceiptItem!.restaurantBranchName}'),
                                       const SizedBox(height: 8),
