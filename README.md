@@ -25,36 +25,44 @@ This **POS System** is a feature-rich and efficient Point of Sale application bu
 
 Here’s a preview of the app's UI:
 
-<div align="center">
-  <table>
+## App Screenshots
+
+Here’s a preview of the app's UI:
+
+<div style="display: flex; justify-content: center;">
+  <table style="width: 100%; border-collapse: collapse;">
     <tr>
-      <td><img src="https://github.com/user-attachments/assets/839e186e-aa15-42ba-850b-8709b3eea187" alt="Menu Page" width="300"></td>
-      <td><img src="https://github.com/user-attachments/assets/557c50cd-82f0-4d25-8e00-836ee5e23bd2" alt="Order Summary" width="300"></td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/839e186e-aa15-42ba-850b-8709b3eea187" alt="Menu Page" style="width: 100%; max-width: 500px;">
+        <p><b>Menu Page</b></p>
+      </td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/557c50cd-82f0-4d25-8e00-836ee5e23bd2" alt="Order Summary" style="width: 100%; max-width: 500px;">
+        <p><b>Order Summary</b></p>
+      </td>
     </tr>
     <tr>
-      <td><b>Menu Page</b></td>
-      <td><b>Order Summary</b></td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/bf33c9b6-4836-4671-a012-13af8cc59983" alt="Payment Page" style="width: 100%; max-width: 500px;">
+        <p><b>Payment Page</b></p>
+      </td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/31946f91-db01-4c26-890d-aeb8bd48655d" alt="Hold Orders View" style="width: 100%; max-width: 500px;">
+        <p><b>Hold Orders View</b></p>
+      </td>
     </tr>
     <tr>
-      <td><img src="https://github.com/user-attachments/assets/bf33c9b6-4836-4671-a012-13af8cc59983" alt="Payment Page" width="300"></td>
-      <td><img src="https://github.com/user-attachments/assets/31946f91-db01-4c26-890d-aeb8bd48655d" alt="Hold Orders View" width="300"></td>
-    </tr>
-    <tr>
-      <td><b>Payment Page</b></td>
-      <td><b>Hold Orders View</b></td>
-    </tr>
-    <tr>
-      <td><img src="https://github.com/user-attachments/assets/4e6d1f6c-51b7-493c-8ca3-a91474808218" alt="Extra Image 1" width="300"></td>
-      <td><img src="https://github.com/user-attachments/assets/1f1cc6b1-0c52-4f0c-871d-b1a699266fad" alt="Extra Image 2" width="300"></td>
-    </tr>
-    <tr>
-      <td><b>Extra Image 1</b></td>
-      <td><b>Extra Image 2</b></td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/4e6d1f6c-51b7-493c-8ca3-a91474808218" alt="Extra Image 1" style="width: 100%; max-width: 500px;">
+        <p><b>Extra Image 1</b></p>
+      </td>
+      <td style="text-align: center; padding: 10px;">
+        <img src="https://github.com/user-attachments/assets/1f1cc6b1-0c52-4f0c-871d-b1a699266fad" alt="Extra Image 2" style="width: 100%; max-width: 500px;">
+        <p><b>Extra Image 2</b></p>
+      </td>
     </tr>
   </table>
 </div>
-
-
 
 ## 🔧 Installation
 
