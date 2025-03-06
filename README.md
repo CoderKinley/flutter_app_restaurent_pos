@@ -21,21 +21,38 @@ This **POS System** is a feature-rich and efficient Point of Sale application bu
 - **SQLite (sqflite)** (Local Database)
 - **BLoC Pattern** (State Management)
 
-## 📷 Screenshots
+## App Screenshots
 
-### 📋 Menu Page
-![Screenshot_20250306_151104](https://github.com/user-attachments/assets/839e186e-aa15-42ba-850b-8709b3eea187)
+Here’s a preview of the app's UI:
 
-### 🛒 Order Summary
-![Screenshot_20250306_151116](https://github.com/user-attachments/assets/557c50cd-82f0-4d25-8e00-836ee5e23bd2)
-
-### 💳 Payment Page
-![Screenshot_20250306_151156](https://github.com/user-attachments/assets/bf33c9b6-4836-4671-a012-13af8cc59983)
-
-### 📑 Hold Orders View
-![Screenshot_20250306_151207](https://github.com/user-attachments/assets/31946f91-db01-4c26-890d-aeb8bd48655d)
-![Screenshot_20250306_151054](https://github.com/user-attachments/assets/4e6d1f6c-51b7-493c-8ca3-a91474808218)
-![Screenshot_20250306_151100](https://github.com/user-attachments/assets/1f1cc6b1-0c52-4f0c-871d-b1a699266fad)
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/839e186e-aa15-42ba-850b-8709b3eea187" alt="Menu Page" width="300"></td>
+      <td><img src="https://github.com/user-attachments/assets/557c50cd-82f0-4d25-8e00-836ee5e23bd2" alt="Order Summary" width="300"></td>
+    </tr>
+    <tr>
+      <td><b>Menu Page</b></td>
+      <td><b>Order Summary</b></td>
+    </tr>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/bf33c9b6-4836-4671-a012-13af8cc59983" alt="Payment Page" width="300"></td>
+      <td><img src="https://github.com/user-attachments/assets/31946f91-db01-4c26-890d-aeb8bd48655d" alt="Hold Orders View" width="300"></td>
+    </tr>
+    <tr>
+      <td><b>Payment Page</b></td>
+      <td><b>Hold Orders View</b></td>
+    </tr>
+    <tr>
+      <td><img src="https://github.com/user-attachments/assets/4e6d1f6c-51b7-493c-8ca3-a91474808218" alt="Extra Image 1" width="300"></td>
+      <td><img src="https://github.com/user-attachments/assets/1f1cc6b1-0c52-4f0c-871d-b1a699266fad" alt="Extra Image 2" width="300"></td>
+    </tr>
+    <tr>
+      <td><b>Extra Image 1</b></td>
+      <td><b>Extra Image 2</b></td>
+    </tr>
+  </table>
+</div>
 
 
 
