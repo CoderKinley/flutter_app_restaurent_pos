@@ -27,21 +27,61 @@ class ProceedPages extends StatefulWidget {
 
 class _ProceedOrderScreenState extends State<ProceedPages> {
   String selectedServiceType = 'Dine In';
+  int splitCount = 1;
+  List<double> splitAmounts = [];
+  bool isSplit = false;
 
   double calculateTotal() {
     return widget.items.fold(0, (sum, item) => sum + item.totalPrice);
   }
 
+  void _showSplitDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text("Split Bill"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  keyboardType: TextInputType.number,
+                  decoration:
+                      const InputDecoration(labelText: "Number of People"),
+                  onChanged: (value) {
+                    setState(() {
+                      splitCount = int.tryParse(value) ?? 1;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isSplit = true;
+                      double total = calculateTotal();
+                      splitAmounts = List.generate(
+                          splitCount, (index) => total / splitCount);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Split Equally"),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Proceed Order'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Proceed Order'), centerTitle: true),
       body: Row(
         children: [
-          // Left side: Menu and Order options
           Expanded(
             flex: 2,
             child: Container(
@@ -49,18 +89,12 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Order Type',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: DropdownButtonFormField<String>(
                       decoration:
                           const InputDecoration(border: OutlineInputBorder()),
-                      value: 'Dine In',
+                      value: selectedServiceType,
                       items: ['Dine In', 'Takeaway', 'Delivery']
                           .map((type) =>
                               DropdownMenuItem(value: type, child: Text(type)))
@@ -82,7 +116,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                           title:
                               Text('${item.product.name} x ${item.quantity}'),
                           trailing:
-                              Text('${item.totalPrice.toStringAsFixed(2)}Nu'),
+                              Text('${item.totalPrice.toStringAsFixed(2)} Nu'),
                         );
                       },
                     ),
@@ -91,8 +125,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               ),
             ),
           ),
-
-          // Right side: Price summary and payment options
           Expanded(
             flex: 1,
             child: Container(
@@ -100,45 +132,76 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextFormField(
-                        controller: TextEditingController(
-                            text: calculateTotal().toStringAsFixed(2)),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none, // Remove the border
-                        ),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                        onChanged: (value) {
-                          // Handle the updated value
-                          print("Updated value: $value");
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "Please enter a value";
-                          }
-                          return null;
-                        },
-                      ),
-                      Text(
-                        'Nu',
+                      const Text(
+                        'Total',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: TextEditingController(
+                                text: calculateTotal().toStringAsFixed(2),
+                              ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none, // Remove the border
+                              ),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Nu',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      ElevatedButton(
+                        onPressed: _showSplitDialog,
+                        child: const Text("Split Bill"),
+                      ),
                     ],
                   ),
-                  const Divider(),
-                  const Spacer(),
+                  if (isSplit)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).viewInsets.bottom),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 10),
+                            Text(
+                              "Split Among $splitCount People:",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            ...splitAmounts.map(
+                              (amount) =>
+                                  Text('${amount.toStringAsFixed(2)} Nu'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(child: _paymentButton('CARD')),
@@ -158,16 +221,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   }
 
   Widget _paymentButton(String method) {
-    String getCurrentDate() {
-      return DateFormat('dd-MM-yyyy')
-          .format(DateTime.now()); // Get the current date
-    }
-
-    String getCurrentTime() {
-      return DateFormat('hh:mm a')
-          .format(DateTime.now()); // Get the current time
-    }
-
     return ElevatedButton(
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(
@@ -181,22 +234,21 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   .map((item) => {
                         "name": item.product.name,
                         "quantity": item.quantity,
-                        "price": item.product.price,
+                        "price": item.product.price
                       })
                   .toList(),
               subTotal: calculateTotal(),
               gst: calculateTotal() * 0.05,
               totalQuantity:
                   widget.items.fold(0, (sum, item) => sum + item.quantity),
-              date: getCurrentDate(), // Current date
-              time: getCurrentTime(), // Current time
+              date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+              time: DateFormat('hh:mm a').format(DateTime.now()),
               totalAmount: calculateTotal() * 1.05,
               payMode: method,
             );
           },
         ));
       },
-      style: ElevatedButton.styleFrom(),
       child: Text(method),
     );
   }
