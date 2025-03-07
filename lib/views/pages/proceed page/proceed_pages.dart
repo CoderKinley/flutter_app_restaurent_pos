@@ -79,25 +79,48 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Proceed Order'), centerTitle: true),
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: const Text(
+          'Proceed Order',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: false,
+        foregroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 3, 27, 48),
+      ),
       body: Row(
         children: [
+          // Left Side: Order Details
           Expanded(
-            flex: 2,
+            flex: 4,
             child: Container(
               color: Colors.grey[200],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Service Type Dropdown
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: DropdownButtonFormField<String>(
-                      decoration:
-                          const InputDecoration(border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      ),
                       value: selectedServiceType,
                       items: ['Dine In', 'Takeaway', 'Delivery']
-                          .map((type) =>
-                              DropdownMenuItem(value: type, child: Text(type)))
+                          .map((type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(
+                                  type,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ))
                           .toList(),
                       onChanged: (value) {
                         setState(() {
@@ -106,17 +129,22 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       },
                     ),
                   ),
-                  const Divider(),
+                  const Divider(height: 1, thickness: 1),
+                  // Order Items List
                   Expanded(
                     child: ListView.builder(
                       itemCount: widget.items.length,
                       itemBuilder: (context, index) {
                         final item = widget.items[index];
                         return ListTile(
-                          title:
-                              Text('${item.product.name} x ${item.quantity}'),
-                          trailing:
-                              Text('${item.totalPrice.toStringAsFixed(2)} Nu'),
+                          title: Text(
+                            '${item.product.name} x ${item.quantity}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          trailing: Text(
+                            '${item.totalPrice.toStringAsFixed(2)} Nu',
+                            style: const TextStyle(fontSize: 16),
+                          ),
                         );
                       },
                     ),
@@ -125,93 +153,146 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               ),
             ),
           ),
+          // Right Side: Payment and Total
           Expanded(
-            flex: 1,
+            flex: 3,
             child: Container(
               padding: const EdgeInsets.all(16.0),
               color: Colors.white,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+              child: LayoutBuilder(
+                // Use LayoutBuilder for better constraints
+                builder: (context, constraints) {
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: TextEditingController(
-                                text: calculateTotal().toStringAsFixed(2),
+                      // Scrollable Top Section
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Total Amount Section
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  FocusScope(
+                                    child: Focus(
+                                      onFocusChange: (hasFocus) {
+                                        if (hasFocus) {
+                                          // Auto-scroll to input when focused
+                                          Scrollable.ensureVisible(
+                                            context,
+                                            duration: const Duration(
+                                                milliseconds: 300),
+                                          );
+                                        }
+                                      },
+                                      child: TextFormField(
+                                        controller: TextEditingController(
+                                          text: calculateTotal()
+                                              .toStringAsFixed(2),
+                                        ),
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "0.00",
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const Divider(height: 20, thickness: 1),
+                                  // Split Bill Button
+                                  ElevatedButton(
+                                    onPressed: _showSplitDialog,
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12, horizontal: 24),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 0, 150, 136),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      "Split Bill",
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none, // Remove the border
-                              ),
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
+                              // Split Amounts (if enabled)
+                              if (isSplit)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      "Split Among $splitCount People:",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...splitAmounts.map(
+                                      (amount) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                        child: Text(
+                                          '${amount.toStringAsFixed(2)} Nu',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Nu',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      ElevatedButton(
-                        onPressed: _showSplitDialog,
-                        child: const Text("Split Bill"),
-                      ),
-                    ],
-                  ),
-                  if (isSplit)
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).viewInsets.bottom),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            Text(
-                              "Split Among $splitCount People:",
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            ...splitAmounts.map(
-                              (amount) =>
-                                  Text('${amount.toStringAsFixed(2)} Nu'),
-                            ),
-                          ],
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: _paymentButton('CARD')),
-                      const SizedBox(width: 10),
-                      Expanded(child: _paymentButton('CASH')),
-                      const SizedBox(width: 10),
-                      Expanded(child: _paymentButton('SCAN')),
+                      _buildPaymentButtons(),
+
+                      // Fixed Bottom Buttons
+                      // Padding(
+                      //   padding: const EdgeInsets.only(top: 16),
+                      //   child: Column(
+                      //     children: [
+                      //       // First Row for CASH and SCAN
+                      //       Row(
+                      //         children: [
+                      //           Expanded(child: _paymentButton('CASH')),
+                      //           const SizedBox(width: 10),
+                      //           Expanded(child: _paymentButton('SCAN')),
+                      //         ],
+                      //       ),
+                      //       const SizedBox(height: 10),
+                      //       Row(
+                      //         children: [
+                      //           Expanded(child: _paymentButton('CARD')),
+                      //           const SizedBox(width: 10),
+                      //           Expanded(child: _paymentButton('CREDIT')),
+                      //         ],
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -220,36 +301,78 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
     );
   }
 
+  Widget _buildPaymentButtons() {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _paymentButton('CASH')),
+            const SizedBox(width: 5),
+            Expanded(child: _paymentButton('SCAN')),
+            const SizedBox(width: 5),
+            Expanded(child: _paymentButton('CARD')),
+            const SizedBox(width: 5),
+            Expanded(child: _paymentButton('CREDIT')),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _paymentButton(String method) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(context, MaterialPageRoute(
-          builder: (context) {
-            return ProceedPaymentBill(
-              id: widget.orderID,
-              user: widget.customername,
-              phoneNo: widget.phoneNumber,
-              tableNo: widget.tableNumber,
-              items: widget.items
-                  .map((item) => {
-                        "name": item.product.name,
-                        "quantity": item.quantity,
-                        "price": item.product.price
-                      })
-                  .toList(),
-              subTotal: calculateTotal(),
-              gst: calculateTotal() * 0.05,
-              totalQuantity:
-                  widget.items.fold(0, (sum, item) => sum + item.quantity),
-              date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
-              time: DateFormat('hh:mm a').format(DateTime.now()),
-              totalAmount: calculateTotal() * 1.05,
-              payMode: method,
-            );
-          },
-        ));
-      },
-      child: Text(method),
+    return SizedBox(
+      width: 80, // Fixed width for square
+      height: 50, // Fixed height for square
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProceedPaymentBill(
+                  id: widget.orderID,
+                  user: widget.customername,
+                  phoneNo: widget.phoneNumber,
+                  tableNo: widget.tableNumber,
+                  items: widget.items
+                      .map((item) => {
+                            "name": item.product.name,
+                            "quantity": item.quantity,
+                            "price": item.product.price
+                          })
+                      .toList(),
+                  subTotal: calculateTotal(),
+                  gst: calculateTotal() * 0.05,
+                  totalQuantity:
+                      widget.items.fold(0, (sum, item) => sum + item.quantity),
+                  date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+                  time: DateFormat('hh:mm a').format(DateTime.now()),
+                  totalAmount: calculateTotal() * 1.05,
+                  payMode: method,
+                ),
+              ));
+        },
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8), // Slightly rounded corners
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              method,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

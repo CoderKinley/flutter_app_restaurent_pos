@@ -61,80 +61,135 @@ class _SalesPageState extends State<SalesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 10,
+              flex: 5,
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.only(right: 2),
                     height: 60,
                     color: const Color.fromARGB(255, 3, 27, 48),
-                    child: _mainTopMenu(
-                      action: _search(),
-                    ),
+                    child: _mainTopMenu(action: Container()),
                   ),
-                  // Container for the menu item list
-                  Container(
-                    margin: const EdgeInsets.only(left: 10, right: 10),
-                    height: 70,
-                    padding:
-                        const EdgeInsets.only(top: 10, bottom: 10, right: 0),
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        BlocBuilder<CategoryBloc, CategoryState>(
-                          builder: (context, state) {
-                            if (state is CategoryLoading) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            } else if (state is CategoryLoaded) {
-                              return Row(
-                                children: [
-                                  // "All Categories" item
-                                  _itemTab(
+                  Expanded(
+                    // ← This is crucial for scrolling!
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: BlocBuilder<CategoryBloc, CategoryState>(
+                        builder: (context, state) {
+                          if (state is CategoryLoading) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (state is CategoryLoaded) {
+                            return ListView.separated(
+                              physics:
+                                  const AlwaysScrollableScrollPhysics(), // ← Ensures scrolling
+                              itemCount: state.categories.length + 1,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 0),
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  return _itemTab(
                                     title: "All Categories",
                                     isActive: _selectedCategory == null,
                                     onTap: () {
-                                      setState(() {
-                                        _selectedCategory =
-                                            null; // Clear the selected category
-                                      });
-                                      // Dispatch event to load all products
+                                      setState(() => _selectedCategory = null);
                                       context
                                           .read<ProductBloc>()
                                           .add(LoadProducts());
                                     },
-                                  ),
-                                  // Other categories
-                                  ...state.categories.map((category) {
-                                    return _itemTab(
-                                      title: category.categoryName,
-                                      isActive: _selectedCategory ==
-                                          category.categoryName,
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedCategory =
-                                              category.categoryName;
-                                        });
-                                        // context.read<ProductBloc>().add(
-                                        //     LoadProductsByCategory(
-                                        //         category:
-                                        //             category.categoryName));
-                                      },
-                                    );
-                                  }).toList(),
-                                ],
-                              );
-                            } else {
-                              return const Center(
-                                child: Text("No categories available"),
-                              );
-                            }
-                          },
-                        ),
-                      ],
+                                  );
+                                }
+                                final category = state.categories[index - 1];
+                                return _itemTab(
+                                  title: category.categoryName,
+                                  isActive: _selectedCategory ==
+                                      category.categoryName,
+                                  onTap: () => setState(() =>
+                                      _selectedCategory =
+                                          category.categoryName),
+                                );
+                              },
+                            );
+                          } else {
+                            return const Center(
+                                child: Text("No categories available 🎈"));
+                          }
+                        },
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 10,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(
+                        right: 10, left: 10, top: 5, bottom: 5),
+                    height: 60,
+                    color: const Color.fromARGB(255, 3, 27, 48),
+                    child: Expanded(flex: 5, child: _search()),
+                  ),
+                  // Container(
+                  //   margin: const EdgeInsets.only(left: 10, right: 10),
+                  //   height: 70,
+                  //   padding:
+                  //       const EdgeInsets.only(top: 10, bottom: 10, right: 0),
+                  //   child: ListView(
+                  //     scrollDirection: Axis.horizontal,
+                  //     children: [
+                  //       BlocBuilder<CategoryBloc, CategoryState>(
+                  //         builder: (context, state) {
+                  //           if (state is CategoryLoading) {
+                  //             return const Center(
+                  //               child: CircularProgressIndicator(),
+                  //             );
+                  //           } else if (state is CategoryLoaded) {
+                  //             return Row(
+                  //               children: [
+                  //                 _itemTab(
+                  //                   title: "All Categories",
+                  //                   isActive: _selectedCategory == null,
+                  //                   onTap: () {
+                  //                     setState(() {
+                  //                       _selectedCategory = null;
+                  //                     });
+                  //                     context
+                  //                         .read<ProductBloc>()
+                  //                         .add(LoadProducts());
+                  //                   },
+                  //                 ),
+                  //                 ...state.categories.map((category) {
+                  //                   return _itemTab(
+                  //                     title: category.categoryName,
+                  //                     isActive: _selectedCategory ==
+                  //                         category.categoryName,
+                  //                     onTap: () {
+                  //                       setState(() {
+                  //                         _selectedCategory =
+                  //                             category.categoryName;
+                  //                       });
+                  //                       // context.read<ProductBloc>().add(
+                  //                       //     LoadProductsByCategory(
+                  //                       //         category:
+                  //                       //             category.categoryName));
+                  //                     },
+                  //                   );
+                  //                 }).toList(),
+                  //               ],
+                  //             );
+                  //           } else {
+                  //             return const Center(
+                  //               child: Text("No categories available"),
+                  //             );
+                  //           }
+                  //         },
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                   Expanded(
                     child: BlocBuilder<ProductBloc, ProductState>(
                       builder: (context, state) {
@@ -160,14 +215,14 @@ class _SalesPageState extends State<SalesPage> {
                             ),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
+                              crossAxisCount: 3,
                               childAspectRatio: (1 / 1.4),
                             ),
                             itemCount: filteredProducts.length,
                             itemBuilder: (context, index) {
                               final item = filteredProducts[index];
                               return _item(
-                                product: item, // Pass the filtered product
+                                product: item,
                                 context: context,
                               );
                             },
@@ -184,7 +239,7 @@ class _SalesPageState extends State<SalesPage> {
             ),
             // next item the right side menu------------------------------------------->
             Expanded(
-              flex: 6,
+              flex: 7,
               child: Column(
                 children: [
                   Container(
@@ -279,6 +334,10 @@ class _SalesPageState extends State<SalesPage> {
                     child: BlocBuilder<MenuBloc, MenuState>(
                       builder: (context, state) {
                         if (state is MenuLoaded) {
+                          // Reverse the list to show the latest added item at the top
+                          final reversedCartItems =
+                              state.cartItems.reversed.toList();
+
                           return Container(
                             padding: const EdgeInsets.only(left: 10, top: 15),
                             color: Colors.grey[200],
@@ -286,9 +345,10 @@ class _SalesPageState extends State<SalesPage> {
                               children: [
                                 Expanded(
                                   child: ListView.builder(
-                                    itemCount: state.cartItems.length,
+                                    itemCount: reversedCartItems
+                                        .length, // Use the reversed list
                                     itemBuilder: (context, index) {
-                                      final cartItem = state.cartItems[index];
+                                      final cartItem = reversedCartItems[index];
                                       return CartItemWidget(cartItem: cartItem);
                                     },
                                   ),
@@ -434,31 +494,32 @@ class _SalesPageState extends State<SalesPage> {
   Widget _itemTab({
     required String title,
     required bool isActive,
-    required VoidCallback onTap, // Add this callback
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap, // Use the callback here
-      child: Card(
-        child: Container(
-          width: 200,
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: isActive
-                ? Border.all(color: Colors.deepOrangeAccent, width: 3)
-                : Border.all(color: Colors.transparent, width: 3),
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.deepOrangeAccent.withOpacity(0.1) : null,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade300,
+            width: isActive ? 2 : 1,
           ),
-          child: Row(
-            children: [
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+        ),
+        constraints: const BoxConstraints(
+          minWidth: double.infinity,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
+            ),
           ),
         ),
       ),
@@ -516,7 +577,7 @@ class _SalesPageState extends State<SalesPage> {
     String name,
     double price,
     double? oldPrice, {
-    double? tax = 45,
+    double? tax = 20,
     String? subtitle,
     bool showDiscount = false,
   }) {

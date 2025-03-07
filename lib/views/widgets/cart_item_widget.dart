@@ -23,13 +23,16 @@ class CartItemWidget extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      cartItem.product.name.length > 14
-                          ? '${cartItem.product.name.substring(0, 14)}...'
-                          : cartItem.product.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      width: 100,
+                      child: Text(
+                        cartItem.product.name.length > 16
+                            ? '${cartItem.product.name.substring(0, 16)}...'
+                            : cartItem.product.name,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Text(
