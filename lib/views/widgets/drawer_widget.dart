@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart";
 
@@ -99,7 +100,7 @@ class DrawerWidget extends StatelessWidget {
                     "Exit",
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    SystemNavigator.pop();
                   },
                 )
               ],
@@ -107,6 +108,37 @@ class DrawerWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _confirmExit(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Exit App"),
+          content: const Text("Are you sure you want to exit the app?"),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel")),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                SystemNavigator.pop();
+              },
+              child: const Text(
+                "Exit",
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            )
+          ],
+        );
+      },
     );
   }
 }

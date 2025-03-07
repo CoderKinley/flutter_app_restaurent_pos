@@ -7,10 +7,11 @@ class ShiftPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Shift")),
+      appBar: AppBar(title: const Text("Shift Page")),
       body: const Center(
-        child: Text("Under Development!"),
+        child: Text("No Shift Still Under Development!"),
       ),
+      drawer: const DrawerWidget(),
     );
   }
 }

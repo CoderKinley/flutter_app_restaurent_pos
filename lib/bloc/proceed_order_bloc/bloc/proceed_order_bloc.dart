@@ -17,7 +17,7 @@ class ProceedOrderBloc extends Bloc<ProceedOrderEvent, ProceedOrderState> {
         final proceedOrders = await databaseHelper.fetchProceedOrders();
         emit(ProceedOrderLoaded(proceedOrders));
       } catch (e) {
-        emit(ProceedOrderError("Failed to load proceed orders"));
+        emit(const ProceedOrderError("Failed to load proceed orders"));
       }
     });
 
@@ -26,7 +26,7 @@ class ProceedOrderBloc extends Bloc<ProceedOrderEvent, ProceedOrderState> {
         await databaseHelper.insertProceedOrder(event.proceedOrder);
         add(LoadProceedOrders()); // Refresh list
       } catch (e) {
-        emit(ProceedOrderError("Failed to add proceed order"));
+        emit(const ProceedOrderError("Failed to add proceed order"));
       }
     });
 
@@ -35,7 +35,7 @@ class ProceedOrderBloc extends Bloc<ProceedOrderEvent, ProceedOrderState> {
         await databaseHelper.updateProceedOrder(event.proceedOrder);
         add(LoadProceedOrders());
       } catch (e) {
-        emit(ProceedOrderError("Failed to update proceed order"));
+        emit(const ProceedOrderError("Failed to update proceed order"));
       }
     });
 
@@ -44,7 +44,7 @@ class ProceedOrderBloc extends Bloc<ProceedOrderEvent, ProceedOrderState> {
         await databaseHelper.deleteProceedOrder(event.holdOrderId);
         add(LoadProceedOrders());
       } catch (e) {
-        emit(ProceedOrderError("Failed to delete proceed order"));
+        emit(const ProceedOrderError("Failed to delete proceed order"));
       }
     });
   }

@@ -48,7 +48,8 @@ class _ReceiptPageState extends State<ReceiptPage> {
                       child: BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
                         builder: (context, state) {
                           if (state is ProceedOrderLoading) {
-                            return Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
                           if (state is ProceedOrderLoaded) {
                             // Group orders by date
@@ -276,7 +277,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text('Cash'),
+                                          const Text('Cash'),
                                           Text(
                                               '${selectedReceiptItem!.totalPrice}Nu'),
                                         ],
@@ -344,7 +345,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   }
 
   Widget _buildReceiptItem(String date, String title,
-      {String? time, bool isRefund = false, required Function onDelete}) {
+      {String? time, required Function onDelete}) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -438,7 +439,7 @@ class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
       color: Colors.green,
       child: Text(
         currentDate, // Displaying the current date based on scroll
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: 18.0,

@@ -8,3 +8,12 @@ class ProductLoaded extends ProductState {
   final List<Product> products;
   ProductLoaded(this.products);
 }
+
+class ProductError extends ProductState {
+  final String errorMessage;
+
+  ProductError({required this.errorMessage});
+
+  @override
+  List<Object?> get props => [errorMessage];
+}

@@ -230,7 +230,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                   ),
                                 ),
                                 if (i != items.length - 1)
-                                  Divider(height: 1, thickness: 0.5),
+                                  const Divider(height: 1, thickness: 0.5),
                               ],
                             ],
                           ),
@@ -241,7 +241,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                 },
               );
             }
-            return Center(child: Text("Nothing"));
+            return const Center(child: Text("Nothing"));
           },
         ),
       ),

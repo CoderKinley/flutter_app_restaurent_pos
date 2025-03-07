@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
-import 'package:uuid/uuid.dart';
 
 class ProceedPages extends StatefulWidget {
   final List<MenuBillModel> items;
@@ -106,11 +105,38 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text('${calculateTotal().toStringAsFixed(2)}Nu',
-                      style: const TextStyle(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextFormField(
+                        controller: TextEditingController(
+                            text: calculateTotal().toStringAsFixed(2)),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none, // Remove the border
+                        ),
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green)),
+                          color: Colors.green,
+                        ),
+                        onChanged: (value) {
+                          // Handle the updated value
+                          print("Updated value: $value");
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Please enter a value";
+                          }
+                          return null;
+                        },
+                      ),
+                      Text(
+                        'Nu',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                   const Divider(),
                   const Spacer(),
                   Row(

@@ -26,3 +26,12 @@ class CategoryError extends CategoryState {
   @override
   List<Object?> get props => [errorMessage];
 }
+
+class CategoryUsageChecked extends CategoryState {
+  final bool isUsed;
+
+  CategoryUsageChecked(this.isUsed);
+
+  @override
+  List<Object?> get props => [isUsed];
+}

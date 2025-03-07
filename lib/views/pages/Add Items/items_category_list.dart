@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_category.dart';
 
@@ -51,10 +52,8 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
                             subtitle: Text('Status: ${category.status}'),
                             trailing: IconButton(
                               onPressed: () {
-                                // Handle category deletion
-                                context.read<CategoryBloc>().add(
-                                      DeleteCategory(category.categoryId),
-                                    );
+                                _confirmDeleteCategory(context,
+                                    category.categoryId, category.categoryName);
                               },
                               icon: const Icon(Icons.delete),
                             ),
@@ -69,7 +68,7 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
             } else if (state is CategoryError) {
               return Center(child: Text('Error: ${state.errorMessage}'));
             }
-            return Center(child: Text('No Categories Available'));
+            return const Center(child: Text('No Categories Available'));
           },
         ),
         // Custom Floating Action Button -------------------------------------->
@@ -80,7 +79,7 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(
                 builder: (context) {
-                  return AddCategoryPage();
+                  return const AddCategoryPage();
                 },
               ));
             },
@@ -102,6 +101,50 @@ class _ItemsCategoryListState extends State<ItemsCategoryList> {
           ),
         ),
       ],
+    );
+  }
+
+// Function to show confirmation dialog
+  void _confirmDeleteCategory(
+      BuildContext context, String categoryId, String CategoryName) async {
+    final isUsed = await DatabaseHelper.instance.isCategoryUsed(CategoryName);
+
+    if (isUsed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text("Cannot delete category: It is associated with products."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete Category"),
+          content: const Text("Are you sure you want to delete this category?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                context
+                    .read<CategoryBloc>()
+                    .add(DeleteCategory(categoryId)); // Delete the category
+              },
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

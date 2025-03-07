@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:uuid/uuid.dart';
@@ -28,19 +29,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   String? _imagePath;
   String? _selectedAvailability = "1";
   String? _selectedMenuType;
-
-  //  fetch from the database of Local storage after fully calculating it
-  final List<String> _menuTypes = [
-    "Main Course",
-    "Drinks",
-    "Desserts",
-    "Snacks",
-    "Breakfast",
-    "Combo Meal",
-    "Starter",
-    "Veg Thali",
-    "Non-Veg Thali",
-  ];
 
   @override
   void initState() {
@@ -81,7 +69,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
         _imagePath != null &&
         _selectedMenuType != null) {
       var uuid = const Uuid();
-
       final product = Product(
         id: widget.product?.id ?? uuid.v4(), // Assign UUID if new product
         name: _nameController.text,
@@ -221,28 +208,42 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                       ),
                       const SizedBox(height: 15),
 
-                      /// Menu Type
-                      DropdownButtonFormField<String>(
-                        decoration: InputDecoration(
-                          labelText: 'Menu Type',
-                          prefixIcon: const Icon(Icons.restaurant_menu),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        value: _selectedMenuType,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedMenuType = newValue;
-                          });
+                      BlocBuilder<CategoryBloc, CategoryState>(
+                        builder: (context, state) {
+                          if (state is CategoryLoading) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (state is CategoryError) {
+                            return Center(child: Text(state.errorMessage));
+                          } else if (state is CategoryLoaded) {
+                            // Use the fetched categories to populate the dropdown
+                            final categories = state.categories;
+
+                            return DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                labelText: 'Menu Type',
+                                prefixIcon: const Icon(Icons.restaurant_menu),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                              value: _selectedMenuType,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedMenuType = newValue;
+                                });
+                              },
+                              items: categories
+                                  .map((category) => DropdownMenuItem(
+                                        value: category.categoryName,
+                                        child: Text(category.categoryName),
+                                      ))
+                                  .toList(),
+                              validator: (value) =>
+                                  value == null ? 'Select a menu type' : null,
+                            );
+                          } else {
+                            return Center(child: Text('No categories found'));
+                          }
                         },
-                        items: _menuTypes
-                            .map((type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Text(type),
-                                ))
-                            .toList(),
-                        validator: (value) =>
-                            value == null ? 'Select a menu type' : null,
                       ),
 
                       const SizedBox(height: 15.0),

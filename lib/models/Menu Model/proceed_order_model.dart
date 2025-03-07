@@ -11,7 +11,7 @@ class ProceedOrderModel extends Equatable {
   final DateTime orderDateTime;
   final List<MenuBillModel> menuItems;
 
-  ProceedOrderModel({
+  const ProceedOrderModel({
     required this.holdOrderId,
     required this.tableNumber,
     required this.customerName,

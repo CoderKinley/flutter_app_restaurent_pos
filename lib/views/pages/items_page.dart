@@ -107,10 +107,10 @@ class ItemsPage extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 10),
                   height: 60,
                   color: Colors.grey,
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         "All Items",
                         style: TextStyle(
                           fontSize: 16,

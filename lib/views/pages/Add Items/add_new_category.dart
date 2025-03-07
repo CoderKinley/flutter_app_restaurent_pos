@@ -23,6 +23,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
 
   final _categoryNameController = TextEditingController();
 
+  @override
   void initState() {
     super.initState();
     if (widget.categoryModel != null) {
@@ -41,7 +42,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final newCategory = CategoryModel(
-        categoryId: Uuid().v4().toString(),
+        categoryId: const Uuid().v4().toString(),
         categoryName: _categoryNameController.text,
         status: _status,
       );
@@ -49,7 +50,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
       context.read<CategoryBloc>().add(AddCategory(newCategory));
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Category Added Successfully!')),
+        const SnackBar(content: Text('Category Added Successfully!')),
       );
 
       Navigator.pop(context);
@@ -68,7 +69,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
     context.read<CategoryBloc>().add(UpdateCategory(newCategory));
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Editded Successfully!')),
+      const SnackBar(content: Text('Editded Successfully!')),
     );
 
     Navigator.pop(context);
@@ -78,10 +79,10 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Category'),
+        title: const Text('Add Category'),
       ),
       body: Card(
-        margin: EdgeInsets.symmetric(horizontal: 10.0),
+        margin: const EdgeInsets.symmetric(horizontal: 10.0),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -91,7 +92,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
               children: [
                 TextFormField(
                   controller: _categoryNameController,
-                  decoration: InputDecoration(labelText: 'Category Name'),
+                  decoration: const InputDecoration(labelText: 'Category Name'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a category name';
@@ -99,7 +100,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: _status,
                   onChanged: (value) {
@@ -113,7 +114,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
                             child: Text(status),
                           ))
                       .toList(),
-                  decoration: InputDecoration(labelText: 'Status'),
+                  decoration: const InputDecoration(labelText: 'Status'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please select a status';
@@ -121,7 +122,7 @@ class _AddCategoryPageState extends State<AddCategoryPage> {
                     return null;
                   },
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Center(
                   child: ElevatedButton(
                     onPressed:

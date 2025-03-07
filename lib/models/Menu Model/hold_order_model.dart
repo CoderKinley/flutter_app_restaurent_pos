@@ -10,7 +10,7 @@ class HoldOrderModel extends Equatable {
   final DateTime orderDateTime;
   final List<MenuBillModel> menuItems;
 
-  HoldOrderModel({
+  const HoldOrderModel({
     required this.holdOrderId,
     required this.tableNumber,
     required this.customerName,

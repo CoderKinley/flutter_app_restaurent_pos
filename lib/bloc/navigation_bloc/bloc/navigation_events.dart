@@ -16,11 +16,4 @@ class NavigateToShift extends NavigationEvent {}
 
 class NavigateToSettings extends NavigationEvent {}
 
-class NavigateToSales extends NavigationEvent {
-  final HoldOrderModel? holdOrderModel;
-
-  NavigateToSales({this.holdOrderModel});
-
-  @override
-  List<Object?> get props => [holdOrderModel];
-}
+class NavigateToSales extends NavigationEvent {}

@@ -1,7 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pos_system_legphel/SQL/category_databasehelper.dart';
+import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/models/category_model.dart';
+import 'package:sqflite/sqflite.dart';
 
 part 'cetagory_event.dart';
 part 'cetagory_state.dart';
@@ -9,12 +11,14 @@ part 'cetagory_state.dart';
 class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   final CategoryDatabaseHelper _categoryDatabase =
       CategoryDatabaseHelper.instance;
+  final DatabaseHelper databaseHelper = DatabaseHelper.instance;
 
   CategoryBloc() : super(CategoryInitial()) {
     on<LoadCategories>(_onLoadCategories);
     on<AddCategory>(_onAddCategory);
     on<UpdateCategory>(_onUpdateCategory);
     on<DeleteCategory>(_onDeleteCategory);
+    on<CheckCategoryUsage>(_onCheckCategoryUsage);
   }
 
   // Load Categories from Database
@@ -56,6 +60,17 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
       add(LoadCategories()); // Reload categories after deletion
     } catch (e) {
       emit(CategoryError(errorMessage: "Failed to delete category: $e"));
+    }
+  }
+
+  void _onCheckCategoryUsage(
+      CheckCategoryUsage event, Emitter<CategoryState> emit) async {
+    try {
+      final isUsed = await databaseHelper.isCategoryUsed(event.categoryId);
+      print(isUsed);
+      emit(CategoryUsageChecked(isUsed));
+    } catch (e) {
+      emit(CategoryError(errorMessage: "Failed to check category usage: $e"));
     }
   }
 }

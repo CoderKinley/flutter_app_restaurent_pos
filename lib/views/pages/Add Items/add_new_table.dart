@@ -85,7 +85,7 @@ class _AddNewTableState extends State<AddNewTable> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(
                 builder: (context) {
-                  return AddTablePage();
+                  return const AddTablePage();
                 },
               ));
             },
@@ -108,6 +108,5 @@ class _AddNewTableState extends State<AddNewTable> {
         ),
       ],
     );
-    ;
   }
 }

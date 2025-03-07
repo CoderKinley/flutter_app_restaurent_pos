@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
-import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/items_page.dart';
 import 'package:pos_system_legphel/views/pages/notification_page.dart';
 import 'package:pos_system_legphel/views/pages/receipt_page.dart';
@@ -14,9 +12,9 @@ part 'navigation_state.dart';
 part 'navigation_events.dart';
 
 class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
-  NavigationBloc() : super(SalesPageState()) {
+  NavigationBloc() : super(const SalesPageState()) {
     on<NavigateToSales>((event, emit) {
-      emit(SalesPageState(holdOrderModel: event.holdOrderModel));
+      emit(const SalesPageState());
     });
     on<NavigateToReceipt>((event, emit) => emit(const ReceiptPageState()));
     on<NavigateToItems>((event, emit) => emit(ItemsPageState()));

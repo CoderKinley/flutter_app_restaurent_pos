@@ -83,4 +83,15 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.delete('products', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<bool> isCategoryUsed(String categoryId) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'products',
+      where: 'menutype = ?',
+      whereArgs: [categoryId],
+      limit: 1, // Only need to check if at least one product exists
+    );
+    return result.isNotEmpty; // Returns true if the category is used
+  }
 }

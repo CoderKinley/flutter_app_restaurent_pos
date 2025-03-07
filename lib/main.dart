@@ -38,7 +38,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
         BlocProvider(create: (context) => TableBloc()),
-        BlocProvider(create: (context) => CategoryBloc()),
+        BlocProvider(
+            create: (context) => CategoryBloc()..add(LoadCategories())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

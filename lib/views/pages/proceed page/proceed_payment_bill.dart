@@ -67,7 +67,7 @@ class ProceedPaymentBill extends StatelessWidget {
             ...items.map((item) => pw.Text(
                 "${item['name']} - Qty: ${item['quantity']}, Price: Nu.${item['price']}")),
             pw.Divider(),
-            pw.Text("Subtotal: \$${subTotal.toStringAsFixed(2)}"),
+            pw.Text("Subtotal: Nu.${subTotal.toStringAsFixed(2)}"),
             pw.Text("GST: Nu.${gst.toStringAsFixed(2)}"),
             pw.Text("Total Quantity: $totalQuantity"),
             pw.Text("Date: $date"),

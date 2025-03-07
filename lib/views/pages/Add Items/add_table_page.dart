@@ -98,7 +98,7 @@ class _AddTablePageState extends State<AddTablePage> {
                           widget.tableModel!.tableNumber.toString()));
                       Navigator.pop(context);
                     },
-                    child: Text("Delete"),
+                    child: const Text("Delete"),
                   ),
                 ],
               ),

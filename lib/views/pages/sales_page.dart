@@ -26,11 +26,8 @@ const List<String> list = <String>[
 ];
 
 class SalesPage extends StatefulWidget {
-  final HoldOrderModel? hold_order_model;
-
   const SalesPage({
     super.key,
-    this.hold_order_model,
   });
 
   @override
@@ -41,6 +38,7 @@ class _SalesPageState extends State<SalesPage> {
   String? selectedTableNumber = 'Table';
   TextEditingController nameController = TextEditingController();
   TextEditingController contactController = TextEditingController();
+  String? _selectedCategory;
 
   @override
   void initState() {
@@ -74,7 +72,7 @@ class _SalesPageState extends State<SalesPage> {
                       action: _search(),
                     ),
                   ),
-                  // contaier for The menu item list
+                  // Container for the menu item list
                   Container(
                     margin: const EdgeInsets.only(left: 10, right: 10),
                     height: 70,
@@ -91,12 +89,41 @@ class _SalesPageState extends State<SalesPage> {
                               );
                             } else if (state is CategoryLoaded) {
                               return Row(
-                                children: state.categories.map((category) {
-                                  return _itemTab(
-                                    title: category.categoryName,
-                                    isActive: false,
-                                  );
-                                }).toList(),
+                                children: [
+                                  // "All Categories" item
+                                  _itemTab(
+                                    title: "All Categories",
+                                    isActive: _selectedCategory == null,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategory =
+                                            null; // Clear the selected category
+                                      });
+                                      // Dispatch event to load all products
+                                      context
+                                          .read<ProductBloc>()
+                                          .add(LoadProducts());
+                                    },
+                                  ),
+                                  // Other categories
+                                  ...state.categories.map((category) {
+                                    return _itemTab(
+                                      title: category.categoryName,
+                                      isActive: _selectedCategory ==
+                                          category.categoryName,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedCategory =
+                                              category.categoryName;
+                                        });
+                                        // context.read<ProductBloc>().add(
+                                        //     LoadProductsByCategory(
+                                        //         category:
+                                        //             category.categoryName));
+                                      },
+                                    );
+                                  }).toList(),
+                                ],
                               );
                             } else {
                               return const Center(
@@ -113,9 +140,17 @@ class _SalesPageState extends State<SalesPage> {
                       builder: (context, state) {
                         if (state is ProductLoading) {
                           return const Center(
-                              child:
-                                  CircularProgressIndicator()); // Show loader for MenuInitial & MenuLoading
+                              child: CircularProgressIndicator());
                         } else if (state is ProductLoaded) {
+                          // Filter products based on the selected category
+                          final filteredProducts = _selectedCategory == null
+                              ? state
+                                  .products // Show all products if "All Categories" is selected
+                              : state.products
+                                  .where((product) =>
+                                      product.menutype == _selectedCategory)
+                                  .toList();
+
                           return GridView.builder(
                             padding: const EdgeInsets.only(
                               top: 0,
@@ -128,11 +163,11 @@ class _SalesPageState extends State<SalesPage> {
                               crossAxisCount: 4,
                               childAspectRatio: (1 / 1.4),
                             ),
-                            itemCount: state.products.length,
+                            itemCount: filteredProducts.length,
                             itemBuilder: (context, index) {
-                              final item = state.products[index];
+                              final item = filteredProducts[index];
                               return _item(
-                                product: item, // Pass MenuItem directly
+                                product: item, // Pass the filtered product
                                 context: context,
                               );
                             },
@@ -199,7 +234,7 @@ class _SalesPageState extends State<SalesPage> {
                                             'Table ${table.tableNumber}',
                                           ),
                                         );
-                                      }).toList(),
+                                      }),
                                     ],
                                     underline:
                                         Container(), // Remove the underline
@@ -218,19 +253,19 @@ class _SalesPageState extends State<SalesPage> {
                               onSelected: (value) {
                                 Navigator.push(context, MaterialPageRoute(
                                   builder: (context) {
-                                    return HoldOrderPage(menuItems: []);
+                                    return const HoldOrderPage(menuItems: []);
                                   },
                                 ));
                               },
                               itemBuilder: (context) => [
-                                PopupMenuItem(
+                                const PopupMenuItem(
                                   value: 'View Hold Order',
                                   child: Text('View Hold Order'),
                                 ),
                               ],
-                              child: IconButton(
+                              child: const IconButton(
                                 onPressed: null,
-                                icon: const Icon(Icons.more_vert),
+                                icon: Icon(Icons.more_vert),
                               ),
                             ),
                           ],
@@ -243,37 +278,7 @@ class _SalesPageState extends State<SalesPage> {
                     flex: 1,
                     child: BlocBuilder<MenuBloc, MenuState>(
                       builder: (context, state) {
-                        if (widget.hold_order_model != null) {
-                          return Container(
-                            padding: const EdgeInsets.only(left: 10, top: 15),
-                            color: Colors.grey[200],
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: widget.hold_order_model
-                                            ?.menuItems.length ??
-                                        0,
-                                    itemBuilder: (context, index) {
-                                      final cartItem = widget
-                                          .hold_order_model?.menuItems[index];
-                                      return cartItem != null
-                                          ? CartItemWidget(cartItem: cartItem)
-                                          : SizedBox();
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                summarySection(
-                                  context,
-                                  widget.hold_order_model!.totalPrice,
-                                  widget.hold_order_model!.menuItems,
-                                  selectedTableNumber!,
-                                ),
-                              ],
-                            ),
-                          );
-                        } else if (state is MenuLoaded) {
+                        if (state is MenuLoaded) {
                           return Container(
                             padding: const EdgeInsets.only(left: 10, top: 15),
                             color: Colors.grey[200],
@@ -426,37 +431,35 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  // widget for the item list tab
   Widget _itemTab({
-    // required String icon,
     required String title,
     required bool isActive,
+    required VoidCallback onTap, // Add this callback
   }) {
-    return Card(
-      child: Container(
-        width: 200,
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: isActive
-              ? Border.all(color: Colors.deepOrangeAccent, width: 3)
-              : Border.all(color: Colors.transparent, width: 3),
-        ),
-        child: Row(
-          children: [
-            // Image.asset(
-            //   icon,
-            //   width: 38,
-            // ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: onTap, // Use the callback here
+      child: Card(
+        child: Container(
+          width: 200,
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: isActive
+                ? Border.all(color: Colors.deepOrangeAccent, width: 3)
+                : Border.all(color: Colors.transparent, width: 3),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            )
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -697,10 +700,10 @@ class _SalesPageState extends State<SalesPage> {
                     return Expanded(
                       child: orderButton(
                         "Hold Order",
-                        Color(0xFFFFDAB9), // Peach,
+                        const Color(0xFFFFDAB9), // Peach,
                         HoldOrderPage(menuItems: state.cartItems),
                         () {
-                          final uuid = Uuid();
+                          const uuid = Uuid();
                           final holdItems = HoldOrderModel(
                             holdOrderId: uuid.v4(),
                             tableNumber: tableNumber,
@@ -721,7 +724,7 @@ class _SalesPageState extends State<SalesPage> {
                       child: orderButton(
                         "View Hold Order",
                         const Color.fromARGB(255, 3, 27, 48),
-                        HoldOrderPage(menuItems: []), // Empty cart
+                        const HoldOrderPage(menuItems: []), // Empty cart
                         () {},
                       ),
                     );
@@ -742,7 +745,8 @@ class _SalesPageState extends State<SalesPage> {
                             !isEnabled, // Disable button clicks if no items
                         child: orderButton(
                           "Proceed",
-                          Color.fromARGB(255, 101, 221, 159), // Seafoam Green
+                          const Color.fromARGB(
+                              255, 101, 221, 159), // Seafoam Green
 
                           ProceedPages(
                             items: isEnabled ? state.cartItems : [],
@@ -750,10 +754,10 @@ class _SalesPageState extends State<SalesPage> {
                             customername: nameController.text,
                             tableNumber: tableNumber,
                             phoneNumber: "+975-${contactController.text}",
-                            orderID: Uuid().v4(),
+                            orderID: const Uuid().v4(),
                           ),
                           () {
-                            final uuid = Uuid();
+                            const uuid = Uuid();
                             final proceedOrderItems = ProceedOrderModel(
                               holdOrderId: uuid.v4().toString(),
                               tableNumber: tableNumber,
