@@ -92,12 +92,10 @@ flutter run
 
 Contributions are welcome! Feel free to submit issues or pull requests to improve this POS system.
 
-## 📜 License
+## 📜 Author
 
-This project is licensed under the [MIT License](LICENSE).
+**Kinley Prnjor**
 
----
 
-🔗 **Stay Connected**\
-💻 [GitHub](https://github.com/yourusername) | 🐦 [Twitter](https://twitter.com/yourhandle) | 🌐 [Website](https://yourwebsite.com)
+
 
