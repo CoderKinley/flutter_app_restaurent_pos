@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart';
+import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/list_bloc/bloc/itemlist_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
+import 'package:pos_system_legphel/data/menu_api_service.dart';
+import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
 
 void main() {
@@ -18,7 +23,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -28,9 +32,6 @@ class MyApp extends StatelessWidget {
         BlocProvider(
             create: (context) =>
                 ProductBloc(DatabaseHelper.instance)..add(LoadProducts())),
-        // BlocProvider(
-        //   create: (context) => NoteBloc(context.read())..add(LoadNotes()),
-        // ),
         BlocProvider(
           create: (context) => AddItemNavigationBloc(),
         ),
@@ -38,6 +39,15 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
         BlocProvider(create: (context) => TableBloc()),
+        BlocProvider(create: (context) => SubcategoryBloc()),
+        BlocProvider(
+          create: (context) => MenuBlocApi(
+            MenuRepository(
+              MenuApiService(), // Create an instance
+              MenuLocalDb(), // Create an instance
+            ),
+          ),
+        ),
         BlocProvider(
             create: (context) => CategoryBloc()..add(LoadCategories())),
       ],

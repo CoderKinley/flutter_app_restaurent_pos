@@ -8,6 +8,7 @@ import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dar
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
@@ -18,6 +19,8 @@ import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:uuid/uuid.dart';
+
+// https://mobipos.com.au/resources/guide/cash-register/ordering-menu/
 
 const List<String> list = <String>[
   'Takeout',
@@ -61,7 +64,7 @@ class _SalesPageState extends State<SalesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 5,
+              flex: 6,
               child: Column(
                 children: [
                   Container(
@@ -72,52 +75,136 @@ class _SalesPageState extends State<SalesPage> {
                   ),
                   Expanded(
                     // ← This is crucial for scrolling!
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: BlocBuilder<CategoryBloc, CategoryState>(
-                        builder: (context, state) {
-                          if (state is CategoryLoading) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (state is CategoryLoaded) {
-                            return ListView.separated(
-                              physics:
-                                  const AlwaysScrollableScrollPhysics(), // ← Ensures scrolling
-                              itemCount: state.categories.length + 1,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 0),
-                              itemBuilder: (context, index) {
-                                if (index == 0) {
-                                  return _itemTab(
-                                    title: "All Categories",
-                                    isActive: _selectedCategory == null,
-                                    onTap: () {
-                                      setState(() => _selectedCategory = null);
-                                      context
-                                          .read<ProductBloc>()
-                                          .add(LoadProducts());
-                                    },
+                    child: Container(
+                      color: Colors.grey[200],
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: BlocBuilder<CategoryBloc, CategoryState>(
+                          builder: (context, state) {
+                            if (state is CategoryLoading) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (state is CategoryLoaded) {
+                              return ListView.separated(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(), // ← Ensures scrolling
+                                itemCount: state.categories.length + 1,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 0),
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return _itemTab(
+                                      title: "All Categories",
+                                      isActive: _selectedCategory == null,
+                                      onTap: () {
+                                        setState(
+                                            () => _selectedCategory = null);
+                                        context
+                                            .read<ProductBloc>()
+                                            .add(LoadProducts());
+                                      },
+                                    );
+                                  }
+
+                                  final category = state.categories[index - 1];
+                                  return Column(
+                                    children: [
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (_selectedCategory ==
+                                                category.categoryName) {
+                                              _selectedCategory = null;
+                                            } else {
+                                              _selectedCategory =
+                                                  category.categoryName;
+                                            }
+                                          });
+                                          context.read<SubcategoryBloc>().add(
+                                                LoadSubcategories(
+                                                    categoryId:
+                                                        category.categoryId),
+                                              );
+                                        },
+                                        child: _itemTab(
+                                          title: category.categoryName,
+                                          isActive: _selectedCategory ==
+                                              category.categoryName,
+                                          onTap: () {
+                                            setState(() => _selectedCategory =
+                                                category.categoryName);
+                                            context.read<SubcategoryBloc>().add(
+                                                  LoadSubcategories(
+                                                      categoryId:
+                                                          category.categoryId),
+                                                );
+                                          },
+                                        ),
+                                      ),
+                                      if (_selectedCategory ==
+                                          category.categoryName)
+                                        BlocBuilder<SubcategoryBloc,
+                                            SubcategoryState>(
+                                          builder: (context, subcategoryState) {
+                                            if (subcategoryState
+                                                is SubcategoryLoading) {
+                                              return const Center(
+                                                  child:
+                                                      CircularProgressIndicator());
+                                            } else if (subcategoryState
+                                                is SubcategoryLoaded) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left:
+                                                        15.0), // Indentation for subcategories
+                                                child: Column(
+                                                  children: subcategoryState
+                                                      .subcategories
+                                                      .map((subcategory) {
+                                                    return Column(
+                                                      children: [
+                                                        ListTile(
+                                                          title: Text(
+                                                            subcategory
+                                                                .subcategoryName,
+                                                            style: TextStyle(
+                                                                fontSize: 14),
+                                                          ),
+                                                          onTap: () {},
+                                                        ),
+                                                        Divider(
+                                                          // Add a line below each ListTile
+                                                          color: Colors.grey
+                                                              .shade300, // Color of the divider
+                                                          thickness:
+                                                              1, // Thickness of the divider
+                                                        ),
+                                                      ],
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              );
+                                            } else {
+                                              return const Center(
+                                                child: Text(
+                                                    "No subcategories available"),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                    ],
                                   );
-                                }
-                                final category = state.categories[index - 1];
-                                return _itemTab(
-                                  title: category.categoryName,
-                                  isActive: _selectedCategory ==
-                                      category.categoryName,
-                                  onTap: () => setState(() =>
-                                      _selectedCategory =
-                                          category.categoryName),
-                                );
-                              },
-                            );
-                          } else {
-                            return const Center(
-                                child: Text("No categories available 🎈"));
-                          }
-                        },
+                                },
+                              );
+                            } else {
+                              return const Center(
+                                  child: Text("No categories available 🎈"));
+                            }
+                          },
+                        ),
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -239,7 +326,7 @@ class _SalesPageState extends State<SalesPage> {
             ),
             // next item the right side menu------------------------------------------->
             Expanded(
-              flex: 7,
+              flex: 6,
               child: Column(
                 children: [
                   Container(
@@ -504,7 +591,7 @@ class _SalesPageState extends State<SalesPage> {
           color: isActive ? Colors.deepOrangeAccent.withOpacity(0.1) : null,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade300,
+            color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade400,
             width: isActive ? 2 : 1,
           ),
         ),
@@ -512,15 +599,19 @@ class _SalesPageState extends State<SalesPage> {
           minWidth: double.infinity,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Center(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color:
+                    isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

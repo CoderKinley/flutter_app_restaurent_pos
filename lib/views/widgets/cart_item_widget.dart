@@ -13,7 +13,7 @@ class CartItemWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(right: 10, bottom: 10),
       child: Padding(
-        padding: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 5),
+        padding: const EdgeInsets.only(left: 15, right: 0, top: 5, bottom: 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,7 +24,7 @@ class CartItemWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 100,
+                      width: 90,
                       child: Text(
                         cartItem.product.name.length > 16
                             ? '${cartItem.product.name.substring(0, 16)}...'
@@ -45,7 +45,7 @@ class CartItemWidget extends StatelessWidget {
                   ],
                 ),
                 Container(
-                  margin: const EdgeInsets.only(left: 20, right: 10),
+                  margin: const EdgeInsets.only(left: 0, right: 0),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),

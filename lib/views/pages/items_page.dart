@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
+import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_sub_category.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_table.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/all_items_list.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/items_category_list.dart';
+import 'package:pos_system_legphel/views/pages/Add%20Items/sub_category_list.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 
 class ItemsPage extends StatelessWidget {
@@ -11,6 +13,7 @@ class ItemsPage extends StatelessWidget {
     const AllItemsList(),
     const ItemsCategoryList(),
     const AddNewTable(),
+    const SubCategoryList(),
   ];
 
   ItemsPage({super.key});
@@ -87,6 +90,18 @@ class ItemsPage extends StatelessWidget {
                                 },
                               ),
                               const Divider(),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.category,
+                                ),
+                                title: const Text("Sub Categories"),
+                                onTap: () {
+                                  return context
+                                      .read<AddItemNavigationBloc>()
+                                      .add(SelectScreen(3));
+                                },
+                              ),
+                              const Divider(),
                             ],
                           ),
                         ),
@@ -116,20 +131,6 @@ class ItemsPage extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      Row(
-                        children: [
-                          // IconButton(
-                          //   onPressed: () {},
-                          //   icon: const Icon(Icons.person_add),
-                          // ),
-                          // IconButton(
-                          //   onPressed: () {},
-                          //   icon: const Icon(
-                          //     Icons.more_vert,
-                          //   ),
-                          // ),
-                        ],
                       ),
                     ],
                   ),
