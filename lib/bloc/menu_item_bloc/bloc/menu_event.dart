@@ -8,7 +8,7 @@ class LoadMenuItems extends MenuEvent {
 }
 
 class AddToCart extends MenuEvent {
-  final Product item;
+  final MenuModel item;
   AddToCart(this.item);
 
   @override

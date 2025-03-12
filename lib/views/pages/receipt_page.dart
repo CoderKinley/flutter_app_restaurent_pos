@@ -263,7 +263,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                       for (var item
                                           in selectedReceiptItem!.menuItems)
                                         ListTile(
-                                          title: Text(item.product.name),
+                                          title: Text(item.product.menuName),
                                           trailing:
                                               Text('${item.totalPrice}Nu'),
                                           subtitle: Text(

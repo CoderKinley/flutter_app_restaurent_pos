@@ -11,7 +11,7 @@ class ProceedOrderDatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('ProceedOrders.db');
+    _database = await _initDB('ProceedOrdersFromAPI.db');
     return _database!;
   }
 

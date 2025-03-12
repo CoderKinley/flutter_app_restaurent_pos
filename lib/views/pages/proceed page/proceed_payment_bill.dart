@@ -4,21 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'dart:typed_data';
+import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-// class  ProceedPages extends StatelessWidget {
-//   const ProceedPages({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(),
-//       body: const Center(
-//         child: Text("Bill Page"),
-//       ),
-//     );
-//   }
-// }
+import 'package:flutter/services.dart';
 
 class ProceedPaymentBill extends StatelessWidget {
   final String id;
@@ -49,39 +37,155 @@ class ProceedPaymentBill extends StatelessWidget {
     required this.totalAmount,
     required this.payMode,
   });
-
   Future<Uint8List> _generatePdf() async {
     final pdf = pw.Document();
+
+    final ByteData logoData =
+        await rootBundle.load('assets/icons/logo.png'); // Load logo
+    final Uint8List logoBytes = logoData.buffer.asUint8List();
+
     pdf.addPage(
       pw.Page(
+        pageFormat: PdfPageFormat.roll57,
         build: (pw.Context context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
-            pw.Text("Bill ID: $id",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-            pw.Text("User: $user"),
-            pw.Text("Table No: $tableNo"),
-            pw.SizedBox(height: 8),
-            pw.Text("Items:",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-            ...items.map((item) => pw.Text(
-                "${item['name']} - Qty: ${item['quantity']}, Price: Nu.${item['price']}")),
-            pw.Divider(),
-            pw.Text("Subtotal: Nu.${subTotal.toStringAsFixed(2)}"),
-            pw.Text("GST: Nu.${gst.toStringAsFixed(2)}"),
-            pw.Text("Total Quantity: $totalQuantity"),
-            pw.Text("Date: $date"),
-            pw.Text("Time: $time"),
-            pw.SizedBox(height: 8),
-            pw.Text("Total Amount: Nu.${totalAmount.toStringAsFixed(2)}",
+            // Header Section with Logo & Business Info
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                // Left: Logo
+                pw.Container(
+                  width: 50,
+                  height: 50,
+                  child: pw.Image(pw.MemoryImage(logoBytes)),
+                ),
+                // Right: Business Details
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text("Legphel",
+                        style: pw.TextStyle(
+                            fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 2),
+                    pw.Text("Mobile 1: +975-17772393",
+                        style: pw.TextStyle(fontSize: 7)),
+                    pw.Text("Mobile 2: +975-77772393",
+                        style: pw.TextStyle(fontSize: 7)),
+                    pw.Text("TPN: LAC00091", style: pw.TextStyle(fontSize: 7)),
+                    pw.Text("Acc No: 200108440",
+                        style: pw.TextStyle(fontSize: 7)),
+                    pw.Text("Post Box: 239", style: pw.TextStyle(fontSize: 7)),
+                    pw.Text(
+                      "legphel.hotel@gmail.com",
+                      style: pw.TextStyle(fontSize: 7),
+                    ),
+                    pw.Text("Rinchending, Phuentsholing",
+                        style: pw.TextStyle(fontSize: 7)),
+                  ],
+                ),
+              ],
+            ),
+            pw.Divider(thickness: 1),
+
+            // Bill Details
+            pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Bill ID: $id", style: pw.TextStyle(fontSize: 7)),
+                pw.Text("Date: $date", style: pw.TextStyle(fontSize: 7)),
+              ],
+            ),
+            pw.Text("User: $user", style: pw.TextStyle(fontSize: 7)),
+            pw.Text("Table No: $tableNo", style: pw.TextStyle(fontSize: 7)),
+            pw.SizedBox(height: 5),
+
+            // Items Header
+            pw.Text("Items Purchased",
                 style:
-                    pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-            pw.Text("Payment Mode: $payMode",
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+            pw.Divider(thickness: 0.5),
+
+            // Items List
+            ...items.map((item) => pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Expanded(
+                        child: pw.Text(
+                            "${item['menuName']} x${item['quantity']}",
+                            style: pw.TextStyle(fontSize: 7))),
+                    pw.Text("Nu.${item['price']}",
+                        style: pw.TextStyle(fontSize: 7)),
+                  ],
+                )),
+            pw.Divider(thickness: 1),
+
+            // Bill Summary
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Subtotal:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Nu.${subTotal.toStringAsFixed(2)}",
+                    style: pw.TextStyle(fontSize: 8)),
+              ],
+            ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Service 10%:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
+                    style: pw.TextStyle(fontSize: 8)),
+              ],
+            ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("B.S.T 10%:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
+                    style: pw.TextStyle(fontSize: 8)),
+              ],
+            ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Total Quantity:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("$totalQuantity", style: pw.TextStyle(fontSize: 8)),
+              ],
+            ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Total Amount:",
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                pw.Text("Nu.${totalAmount.toStringAsFixed(2)}",
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold)),
+              ],
+            ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Payment Mode:",
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                pw.Text("$payMode",
+                    style: pw.TextStyle(
+                        fontSize: 8, fontWeight: pw.FontWeight.bold)),
+              ],
+            ),
+            pw.SizedBox(height: 10),
+
+            // Thank You Note
+            pw.Text("Thank You! Visit Again!",
+                style:
+                    pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+            pw.Text("Have a great day!", style: pw.TextStyle(fontSize: 9)),
           ],
         ),
       ),
     );
+
     return pdf.save();
   }
 
@@ -200,7 +304,7 @@ class ProceedPaymentBill extends StatelessWidget {
                           children: [
                             Expanded(
                               flex: 2,
-                              child: Text(item['name'],
+                              child: Text(item['menuName'],
                                   style: const TextStyle(fontSize: 16)),
                             ),
                             Expanded(

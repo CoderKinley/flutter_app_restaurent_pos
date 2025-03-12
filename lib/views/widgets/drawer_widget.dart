@@ -13,12 +13,12 @@ class DrawerWidget extends StatelessWidget {
         padding: const EdgeInsets.all(0),
         children: [
           UserAccountsDrawerHeader(
-            accountName: const Text("Kinley Penjor"),
-            accountEmail: const Text("KinleyPenjor313@gamil.com"),
+            accountName: const Text("Legphel Hotel"),
+            accountEmail: const Text("hotel.legphel@gamil.com"),
             currentAccountPicture: CircleAvatar(
               child: ClipOval(
                 child: Image.asset(
-                  'assets/icons/cool-profile-picture.jpg',
+                  'assets/icons/logo.png',
                   width: 90,
                   fit: BoxFit.cover,
                 ),

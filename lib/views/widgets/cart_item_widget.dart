@@ -26,9 +26,9 @@ class CartItemWidget extends StatelessWidget {
                     Container(
                       width: 90,
                       child: Text(
-                        cartItem.product.name.length > 16
-                            ? '${cartItem.product.name.substring(0, 16)}...'
-                            : cartItem.product.name,
+                        cartItem.product.menuName.length > 16
+                            ? '${cartItem.product.menuName.substring(0, 16)}...'
+                            : cartItem.product.menuName,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -36,7 +36,7 @@ class CartItemWidget extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "Nu.${(cartItem.product.price * cartItem.quantity).toStringAsFixed(2)}",
+                      "Nu.${(double.tryParse(cartItem.product.price) ?? 0.0 * cartItem.quantity).toStringAsFixed(2)}",
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.normal,

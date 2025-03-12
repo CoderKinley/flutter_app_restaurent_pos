@@ -21,6 +21,34 @@ class MenuModel {
     required this.uuid,
   });
 
+  factory MenuModel.fromMap(Map<String, dynamic> map) {
+    return MenuModel(
+      menuId: map['menu_id'],
+      menuName: map['menu_name'],
+      menuType: map['menu_type'],
+      subMenuType: map['sub_menu_type'],
+      price: map['price'],
+      description: map['description'],
+      availability: map['availability'] == 1,
+      dishImage: map['dish_image'],
+      uuid: map['uuid'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'menu_id': menuId,
+      'menu_name': menuName,
+      'menu_type': menuType,
+      'sub_menu_type': subMenuType,
+      'price': price,
+      'description': description,
+      'availability': availability ? 1 : 0,
+      'dish_image': dishImage,
+      'uuid': uuid,
+    };
+  }
+
   factory MenuModel.fromJson(Map<String, dynamic> json) {
     return MenuModel(
       menuId: json['menu_id'],
@@ -43,7 +71,7 @@ class MenuModel {
       'sub_menu_type': subMenuType,
       'price': price,
       'description': description,
-      'availability': availability ? 1 : 0,
+      'availability': availability,
       'dish_image': dishImage,
       'uuid': uuid,
     };

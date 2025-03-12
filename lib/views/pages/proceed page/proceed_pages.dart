@@ -10,6 +10,7 @@ class ProceedPages extends StatefulWidget {
   final String tableNumber;
   final String orderID;
   final String branchName;
+  final double totalCostWithTax;
 
   const ProceedPages({
     super.key,
@@ -19,6 +20,7 @@ class ProceedPages extends StatefulWidget {
     required this.orderID,
     required this.phoneNumber,
     required this.tableNumber,
+    required this.totalCostWithTax,
   });
 
   @override
@@ -138,7 +140,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                         final item = widget.items[index];
                         return ListTile(
                           title: Text(
-                            '${item.product.name} x ${item.quantity}',
+                            '${item.product.menuName} x ${item.quantity}',
                             style: const TextStyle(fontSize: 16),
                           ),
                           trailing: Text(
@@ -176,12 +178,23 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Total',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Total',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const Text(
+                                        '   (Including 20% charge)',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 10),
                                   FocusScope(
@@ -198,8 +211,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                       },
                                       child: TextFormField(
                                         controller: TextEditingController(
-                                          text: calculateTotal()
-                                              .toStringAsFixed(2),
+                                          text: widget.totalCostWithTax
+                                              .toString(),
                                         ),
                                         decoration: const InputDecoration(
                                           border: InputBorder.none,
@@ -336,18 +349,18 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   tableNo: widget.tableNumber,
                   items: widget.items
                       .map((item) => {
-                            "name": item.product.name,
+                            "menuName": item.product.menuName,
                             "quantity": item.quantity,
                             "price": item.product.price
                           })
                       .toList(),
                   subTotal: calculateTotal(),
-                  gst: calculateTotal() * 0.05,
+                  gst: calculateTotal() * 0.2,
                   totalQuantity:
                       widget.items.fold(0, (sum, item) => sum + item.quantity),
                   date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
                   time: DateFormat('hh:mm a').format(DateTime.now()),
-                  totalAmount: calculateTotal() * 1.05,
+                  totalAmount: calculateTotal() * 1.2,
                   payMode: method,
                 ),
               ));

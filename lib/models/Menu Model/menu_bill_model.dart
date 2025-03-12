@@ -1,7 +1,8 @@
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
+import 'package:pos_system_legphel/models/new_menu_model.dart';
 
 class MenuBillModel {
-  final Product product;
+  final MenuModel product;
   int quantity;
 
   MenuBillModel({
@@ -9,10 +10,13 @@ class MenuBillModel {
     this.quantity = 1,
   });
 
-  double get totalPrice => product.price.toDouble() * quantity.toDouble();
+  double get totalPrice {
+    double parsedPrice = double.tryParse(product.price) ?? 0.0;
+    return parsedPrice * quantity.toDouble();
+  }
 
   MenuBillModel copyWith({
-    Product? product,
+    MenuModel? product,
     int? quantity,
   }) {
     return MenuBillModel(
@@ -30,7 +34,7 @@ class MenuBillModel {
 
   factory MenuBillModel.fromMap(Map<String, dynamic> map) {
     return MenuBillModel(
-      product: Product.fromMap(map['product']),
+      product: MenuModel.fromMap(map['product']),
       quantity: map['quantity'],
     );
   }

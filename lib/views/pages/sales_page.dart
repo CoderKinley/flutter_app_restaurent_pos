@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
+import 'package:pos_system_legphel/models/new_menu_model.dart';
 import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
@@ -49,6 +51,7 @@ class _SalesPageState extends State<SalesPage> {
     context.read<MenuBloc>().add(LoadMenuItems());
     context.read<TableBloc>().add(LoadTables());
     context.read<CategoryBloc>().add(LoadCategories());
+    context.read<MenuBlocApi>().add(FetchMenuApi());
   }
 
   @override
@@ -217,7 +220,7 @@ class _SalesPageState extends State<SalesPage> {
                         right: 10, left: 10, top: 5, bottom: 5),
                     height: 60,
                     color: const Color.fromARGB(255, 3, 27, 48),
-                    child: Expanded(flex: 5, child: _search()),
+                    child: Expanded(flex: 5, child: Container()),
                   ),
                   // Container(
                   //   margin: const EdgeInsets.only(left: 10, right: 10),
@@ -278,19 +281,19 @@ class _SalesPageState extends State<SalesPage> {
                   //   ),
                   // ),
                   Expanded(
-                    child: BlocBuilder<ProductBloc, ProductState>(
+                    child: BlocBuilder<MenuBlocApi, MenuApiState>(
                       builder: (context, state) {
-                        if (state is ProductLoading) {
+                        if (state is MenuApiLoading) {
                           return const Center(
                               child: CircularProgressIndicator());
-                        } else if (state is ProductLoaded) {
-                          // Filter products based on the selected category
-                          final filteredProducts = _selectedCategory == null
+                        } else if (state is MenuApiLoaded) {
+                          // Filter menu items based on the selected category
+                          final filteredMenuItems = _selectedCategory == null
                               ? state
-                                  .products // Show all products if "All Categories" is selected
-                              : state.products
-                                  .where((product) =>
-                                      product.menutype == _selectedCategory)
+                                  .menuItems // Show all menu items if no category is selected
+                              : state.menuItems
+                                  .where((menuItem) =>
+                                      menuItem.menuType == _selectedCategory)
                                   .toList();
 
                           return GridView.builder(
@@ -305,9 +308,9 @@ class _SalesPageState extends State<SalesPage> {
                               crossAxisCount: 3,
                               childAspectRatio: (1 / 1.4),
                             ),
-                            itemCount: filteredProducts.length,
+                            itemCount: filteredMenuItems.length,
                             itemBuilder: (context, index) {
-                              final item = filteredProducts[index];
+                              final item = filteredMenuItems[index];
                               return _item(
                                 product: item,
                                 context: context,
@@ -320,7 +323,7 @@ class _SalesPageState extends State<SalesPage> {
                         }
                       },
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -514,7 +517,7 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   Widget _item({
-    required Product product,
+    required MenuModel product,
     required BuildContext context,
   }) {
     return InkWell(
@@ -534,24 +537,26 @@ class _SalesPageState extends State<SalesPage> {
                 child: Column(
                   children: [
                     Container(
-                      height: 100,
+                      height: 80,
                       width: 120,
                       decoration: BoxDecoration(
+                        // Optional: Add a border radius if needed
                         borderRadius: BorderRadius.circular(16),
+
+                        // Use the asset image directly
                         image: DecorationImage(
-                          image: product.image.isNotEmpty
-                              ? FileImage(File(
-                                  product.image)) // Load the image if available
-                              : const AssetImage(
-                                  'assets/placeholder_image.png'), // Use a placeholder if no image
+                          image: const AssetImage(
+                              'assets/icons/logo.png'), // Directly use the logo image from assets
                           fit: BoxFit
-                              .cover, // Optionally, control how the image fits
+                              .cover, // Adjust the box fit (you can change this as needed)
                         ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      product.name, // Use MenuItem's name
+                      product.menuName.length > 28
+                          ? '${product.menuName.substring(0, 28)}...'
+                          : product.menuName, // Use MenuItem's name
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
@@ -564,9 +569,9 @@ class _SalesPageState extends State<SalesPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Nu. ${product.price.toStringAsFixed(2)}', // Use MenuItem's price
+                    'Nu. ${product.price}', // Use MenuItem's price
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -583,37 +588,39 @@ class _SalesPageState extends State<SalesPage> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.deepOrangeAccent.withOpacity(0.1) : null,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade400,
-            width: isActive ? 2 : 1,
-          ),
-        ),
-        constraints: const BoxConstraints(
-          minWidth: double.infinity,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                color:
-                    isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
-              ),
+    return ExpansionTile(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              // color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+      trailing: Icon(
+        isActive ? Icons.expand_less : Icons.expand_more,
+        // color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
+      ),
+      onExpansionChanged: (bool expanded) {
+        onTap.call();
+      },
+      children: [],
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // backgroundColor: isActive
+      //     ? Colors.deepOrangeAccent.withOpacity(0.1)
+      //     : Colors.transparent,
+      // shape: RoundedRectangleBorder(
+      //   // borderRadius: BorderRadius.circular(8),
+      //   side: BorderSide(
+      //     color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade400,
+      //     width: isActive ? 2 : 1,
+      //   ),
+      // ),
     );
   }
 
@@ -792,9 +799,10 @@ class _SalesPageState extends State<SalesPage> {
     double totalAmount,
     List<MenuBillModel> cartItems,
     String tableNumber, {
-    double? tax = 45,
+    num? tax = 0.2,
   }) {
-    double payableAmount = totalAmount + (tax ?? 0); // Add tax to total amount
+    double payableAmount =
+        totalAmount + ((totalAmount * tax!)); // Add tax to total amount
     return Container(
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.only(top: 15, bottom: 15),
@@ -821,10 +829,20 @@ class _SalesPageState extends State<SalesPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Tax"),
-              Text("Nu. ${tax?.toStringAsFixed(2) ?? '0.00'}"), // Dynamic tax
+              const Text("B.S.T 10%"),
+              Text(
+                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
             ],
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Service 10%"),
+              Text(
+                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
+            ],
+          ),
+
           const Divider(),
           // Payable Amount Row
           Row(
@@ -902,11 +920,13 @@ class _SalesPageState extends State<SalesPage> {
 
                           ProceedPages(
                             items: isEnabled ? state.cartItems : [],
-                            branchName: "Branch ${Random().nextInt(10)}",
+                            branchName: "Legphel Hotel",
                             customername: nameController.text,
                             tableNumber: tableNumber,
                             phoneNumber: "+975-${contactController.text}",
                             orderID: const Uuid().v4(),
+                            totalCostWithTax:
+                                (totalAmount + (totalAmount * 0.2)),
                           ),
                           () {
                             const uuid = Uuid();
