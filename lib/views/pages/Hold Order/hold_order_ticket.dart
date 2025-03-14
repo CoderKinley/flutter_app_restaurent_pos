@@ -63,13 +63,13 @@ class HoldOrderTicket {
               ],
             ),
             pw.Divider(thickness: 1),
-            pw.Text("Bill ID: $id", style: const pw.TextStyle(fontSize: 7)),
             pw.Text("Date: $date", style: const pw.TextStyle(fontSize: 7)),
             pw.Text("Time: $time", style: const pw.TextStyle(fontSize: 7)),
             pw.Text("User: $user", style: const pw.TextStyle(fontSize: 7)),
             pw.Text("Table No: $tableNumber",
                 style: const pw.TextStyle(fontSize: 7)),
             pw.SizedBox(height: 5),
+            pw.Text("Contact: 17807306"),
           ],
         ),
       ),
@@ -77,9 +77,6 @@ class HoldOrderTicket {
     return pdf.save();
   }
 
-//  i need to work on this tomorrow
-
-//  ia ma doing somethign else nwo
   // Save the PDF File Locally
   Future<void> savePdfTicketLocally(BuildContext context) async {
     try {
