@@ -15,6 +15,18 @@ class SubcategoryBloc extends Bloc<SubcategoryEvent, SubcategoryState> {
     on<AddSubcategory>(_onAddSubcategory);
     on<UpdateSubcategory>(_onUpdateSubcategory);
     on<DeleteSubcategory>(_onDeleteSubcategory);
+    on<LoadAllSubcategory>(_onLoadAllSubcategory);
+  }
+// Load all subcategories
+  void _onLoadAllSubcategory(
+      LoadAllSubcategory event, Emitter<SubcategoryState> emit) async {
+    try {
+      final subcategories = await _subcategoryDatabase.fetchAllSubcategories();
+      emit(SubcategoryLoaded(subcategories: subcategories));
+    } catch (e) {
+      emit(SubcategoryError(
+          errorMessage: "Failed to Load all subcategoories: $e"));
+    }
   }
 
   // Load Subcategories from Database

@@ -106,6 +106,16 @@ class CategoryDatabaseHelper {
   }
 
   // ==================== Subcategory CRUD Operations ====================
+  // Fetch all subcategories (New function)
+  Future<List<SubcategoryModel>> fetchAllSubcategories() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'subcategories',
+      orderBy: 'sortOrder ASC',
+    );
+
+    return result.map((map) => SubcategoryModel.fromMap(map)).toList();
+  }
 
   // Insert a new subcategory
   Future<int> insertSubcategory(SubcategoryModel subcategory) async {

@@ -40,7 +40,8 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
               return ListView.builder(
                 itemCount: state.holdOrders.length,
                 itemBuilder: (context, index) {
-                  final holdOrderItem = state.holdOrders[index];
+                  final holdOrderItem =
+                      state.holdOrders.reversed.toList()[index];
                   final items = holdOrderItem.menuItems;
                   final total =
                       items.fold(0.0, (sum, item) => sum + item.totalPrice);
@@ -79,8 +80,11 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           const SizedBox(width: 10),
                           OutlinedButton(
                             onPressed: () {
-                              context.read<MenuBloc>().add(
-                                    UpdateCartItemQuantity(items),
+                              context
+                                  .read<MenuBloc>()
+                                  .add(UpdateCartItemQuantity(items));
+                              context.read<HoldOrderBloc>().add(
+                                    DeleteHoldOrder(holdOrderItem.holdOrderId),
                                   );
                               Navigator.pop(context, holdOrderItem);
                             },
@@ -102,9 +106,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           IconButton(
                             onPressed: () {
                               context.read<HoldOrderBloc>().add(
-                                    DeleteHoldOrder(
-                                      holdOrderItem.holdOrderId,
-                                    ),
+                                    DeleteHoldOrder(holdOrderItem.holdOrderId),
                                   );
                             },
                             icon: const Icon(Icons.delete, size: 20),

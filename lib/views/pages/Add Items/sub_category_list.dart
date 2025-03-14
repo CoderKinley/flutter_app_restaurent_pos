@@ -12,6 +12,13 @@ class SubCategoryList extends StatefulWidget {
 
 class _AllItemsListState extends State<SubCategoryList> {
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    context.read<SubcategoryBloc>().add(LoadAllSubcategory());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       child: Stack(

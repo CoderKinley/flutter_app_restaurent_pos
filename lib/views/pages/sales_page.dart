@@ -14,7 +14,8 @@ import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/models/category_model.dart';
 import 'package:pos_system_legphel/models/new_menu_model.dart';
-import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
+import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_page.dart';
+import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_ticket.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
@@ -55,37 +56,20 @@ class _SalesPageState extends State<SalesPage> {
     context.read<MenuBlocApi>().add(FetchMenuApi());
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return Colors.green;
-      case 'inactive':
-        return Colors.deepOrange;
-      case 'pending':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Material(
       child: Padding(
-        padding: const EdgeInsets.only(
-          right: 0,
-          left: 0,
-        ),
+        padding: const EdgeInsets.all(0.00),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
               flex: 6,
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.only(right: 2),
+                    padding: const EdgeInsets.only(right: 0),
                     height: 60,
                     color: const Color.fromARGB(255, 3, 27, 48),
                     child: _mainTopMenu(action: Container()),
@@ -101,138 +85,7 @@ class _SalesPageState extends State<SalesPage> {
                             if (state is CategoryLoading) {
                               return const Center(
                                   child: CircularProgressIndicator());
-                            }
-
-                            // else if (state is CategoryLoaded) {
-                            //   return ListView.separated(
-                            //     physics:
-                            //         const AlwaysScrollableScrollPhysics(), // Ensures scrolling
-                            //     itemCount: state.categories.length + 1,
-                            //     separatorBuilder: (_, __) =>
-                            //         const SizedBox(height: 0),
-                            //     itemBuilder: (context, index) {
-                            //       if (index == 0) {
-                            //         return _itemTab(
-                            //           title: "All Categories",
-                            //           isActive: _selectedCategory == null,
-                            //           onTap: () {
-                            //             setState(
-                            //                 () => _selectedCategory = null);
-                            //             context
-                            //                 .read<ProductBloc>()
-                            //                 .add(LoadProducts());
-                            //           },
-                            //         );
-                            //       }
-
-                            //       final category = state.categories[index - 1];
-                            //       return Column(
-                            //         children: [
-                            //           InkWell(
-                            //             onTap: () {
-                            //               setState(() {
-                            //                 if (_selectedCategory ==
-                            //                     category.categoryName) {
-                            //                   _selectedCategory =
-                            //                       null; // Deactivate if same category
-                            //                 } else {
-                            //                   _selectedCategory = category
-                            //                       .categoryName; // Activate category
-                            //                 }
-                            //               });
-                            //               context.read<SubcategoryBloc>().add(
-                            //                     LoadSubcategories(
-                            //                         categoryId:
-                            //                             category.categoryId),
-                            //                   );
-                            //             },
-                            //             child: _itemTab(
-                            //               title: category.categoryName,
-                            //               isActive: _selectedCategory ==
-                            //                   category.categoryName,
-                            //               onTap: () {
-                            //                 setState(() {
-                            //                   _selectedCategory = category
-                            //                       .categoryName; // Update selected category on tap
-                            //                 });
-                            //                 context.read<SubcategoryBloc>().add(
-                            //                       LoadSubcategories(
-                            //                           categoryId:
-                            //                               category.categoryId),
-                            //                     );
-                            //               },
-                            //             ),
-                            //           ),
-                            //           if (_selectedCategory ==
-                            //               category.categoryName)
-                            //             BlocBuilder<SubcategoryBloc,
-                            //                 SubcategoryState>(
-                            //               builder: (context, subcategoryState) {
-                            //                 if (subcategoryState
-                            //                     is SubcategoryLoading) {
-                            //                   return const Center(
-                            //                       child:
-                            //                           CircularProgressIndicator());
-                            //                 } else if (subcategoryState
-                            //                     is SubcategoryLoaded) {
-                            //                   return Padding(
-                            //                     padding: const EdgeInsets.only(
-                            //                         left:
-                            //                             15.0), // Indentation for subcategories
-                            //                     child: SingleChildScrollView(
-                            //                       child: ExpansionPanelList(
-                            //                         elevation: 1,
-                            //                         expandedHeaderPadding:
-                            //                             EdgeInsets.zero,
-                            //                         children: subcategoryState
-                            //                             .subcategories
-                            //                             .map<ExpansionPanel>(
-                            //                                 (subcategory) {
-                            //                           return ExpansionPanel(
-                            //                             headerBuilder: (context,
-                            //                                 isExpanded) {
-                            //                               return Padding(
-                            //                                 padding:
-                            //                                     const EdgeInsets
-                            //                                         .all(16.0),
-                            //                                 child: Text(
-                            //                                   subcategory
-                            //                                       .subcategoryName,
-                            //                                   style:
-                            //                                       const TextStyle(
-                            //                                           fontSize:
-                            //                                               14),
-                            //                                 ),
-                            //                               );
-                            //                             },
-                            //                             body: Padding(
-                            //                               padding:
-                            //                                   const EdgeInsets
-                            //                                       .all(16.0),
-                            //                               child: Text(
-                            //                                   "Content for ${subcategory.subcategoryName}"), // Adjust with actual subcategory content
-                            //                             ),
-                            //                             isExpanded:
-                            //                                 false, // Always collapsed (can toggle if needed)
-                            //                           );
-                            //                         }).toList(),
-                            //                       ),
-                            //                     ),
-                            //                   );
-                            //                 } else {
-                            //                   return const Center(
-                            //                       child: Text(
-                            //                           "No subcategories available"));
-                            //                 }
-                            //               },
-                            //             ),
-                            //         ],
-                            //       );
-                            //     },
-                            //   );
-                            // }
-
-                            else if (state is CategoryLoaded) {
+                            } else if (state is CategoryLoaded) {
                               final sortedCategories = List<CategoryModel>.from(
                                   state.categories)
                                 ..sort((a, b) =>
@@ -255,7 +108,7 @@ class _SalesPageState extends State<SalesPage> {
                                               ? Colors.deepOrange.shade400
                                               : Colors.transparent,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: ExpansionPanelList(
                                         elevation: 1,
@@ -711,27 +564,49 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   void _showAddPersonDialog() {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController contactController = TextEditingController();
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Add Person"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: "Name"),
+          content: Scrollbar(
+            thumbVisibility: true, // Makes the scrollbar always visible
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey, // Form key to handle validation
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: "Name"),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Name is required";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: contactController,
+                      decoration:
+                          const InputDecoration(labelText: "Contact Number"),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Contact Number is required";
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: contactController,
-                  decoration:
-                      const InputDecoration(labelText: "Contact Number"),
-                  keyboardType: TextInputType.phone,
-                ),
-              ],
+              ),
             ),
           ),
           actions: [
@@ -741,12 +616,14 @@ class _SalesPageState extends State<SalesPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                String name = nameController.text;
-                String contact = contactController.text;
+                if (_formKey.currentState!.validate()) {
+                  String name = nameController.text.trim();
+                  String contact = contactController.text.trim();
 
-                print("Added: Name - $name, Contact - $contact");
+                  print("Added: Name - $name, Contact - $contact");
 
-                Navigator.pop(context);
+                  Navigator.pop(context);
+                }
               },
               child: const Text("Save"),
             ),
@@ -1069,9 +946,10 @@ class _SalesPageState extends State<SalesPage> {
                     return Expanded(
                       child: orderButton(
                         "Hold Order",
-                        const Color(0xFFFFDAB9), // Peach,
+                        const Color(0xFFFFDAB9),
+                        // Peach,
                         HoldOrderPage(menuItems: state.cartItems),
-                        () {
+                        () async {
                           const uuid = Uuid();
                           final holdItems = HoldOrderModel(
                             holdOrderId: uuid.v4(),
@@ -1080,11 +958,20 @@ class _SalesPageState extends State<SalesPage> {
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );
-
                           context
                               .read<HoldOrderBloc>()
                               .add(AddHoldOrder(holdItems));
                           context.read<MenuBloc>().add(RemoveAllFromCart());
+
+                          final ticket = HoldOrderTicket(
+                            id: "kinley",
+                            date: "2025-03-15",
+                            time: "10:00AM",
+                            user: "Kinley Penjor",
+                            tableNumber: "7",
+                          );
+
+                          await ticket.savePdfTicketLocally(context);
                         },
                       ),
                     );

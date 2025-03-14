@@ -46,3 +46,8 @@ class DeleteSubcategory extends SubcategoryEvent {
   @override
   List<Object> get props => [subcategoryId, categoryId];
 }
+
+class LoadAllSubcategory extends SubcategoryEvent {
+  @override
+  List<Object> get props => [];
+}

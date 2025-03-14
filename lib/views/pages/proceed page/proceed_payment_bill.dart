@@ -92,10 +92,11 @@ class ProceedPaymentBill extends StatelessWidget {
 
             // Bill Details
             pw.Column(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: pw.MainAxisAlignment.start,
               children: [
                 pw.Text("Bill ID: $id", style: const pw.TextStyle(fontSize: 7)),
                 pw.Text("Date: $date", style: const pw.TextStyle(fontSize: 7)),
+                pw.Text("Time: $time", style: const pw.TextStyle(fontSize: 7)),
               ],
             ),
             pw.Text("User: $user", style: const pw.TextStyle(fontSize: 7)),
@@ -140,6 +141,7 @@ class ProceedPaymentBill extends StatelessWidget {
                     style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
+
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
@@ -148,6 +150,16 @@ class ProceedPaymentBill extends StatelessWidget {
                     style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Discount: ", style: const pw.TextStyle(fontSize: 8)),
+                pw.Text("Nu. 0.00", style: const pw.TextStyle(fontSize: 8)),
+              ],
+            ),
+
+            pw.Divider(),
+
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
