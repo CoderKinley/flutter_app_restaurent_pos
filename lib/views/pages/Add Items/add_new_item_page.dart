@@ -211,7 +211,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                       BlocBuilder<CategoryBloc, CategoryState>(
                         builder: (context, state) {
                           if (state is CategoryLoading) {
-                            return Center(child: CircularProgressIndicator());
+                            return const Center(
+                                child: CircularProgressIndicator());
                           } else if (state is CategoryError) {
                             return Center(child: Text(state.errorMessage));
                           } else if (state is CategoryLoaded) {
@@ -241,7 +242,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                   value == null ? 'Select a menu type' : null,
                             );
                           } else {
-                            return Center(child: Text('No categories found'));
+                            return const Center(
+                                child: Text('No categories found'));
                           }
                         },
                       ),

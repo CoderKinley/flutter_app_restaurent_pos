@@ -178,16 +178,16 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
+                                  const Row(
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Total',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const Text(
+                                      Text(
                                         '   (Including 20% charge)',
                                         style: TextStyle(
                                           fontSize: 14,

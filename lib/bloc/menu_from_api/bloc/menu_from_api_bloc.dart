@@ -49,14 +49,15 @@ class MenuBlocApi extends Bloc<MenuApiEvent, MenuApiState> {
   Future<void> _onRemoveMenuApiItem(
       RemoveMenuApiItem event, Emitter<MenuApiState> emit) async {
     try {
-      bool isDeleted = await repository.deleteMenuItem(event.menuId);
-
-      if (isDeleted) {
-        List<MenuModel> updatedMenu = await repository.getMenuItems();
-        emit(MenuApiLoaded(updatedMenu));
-      } else {
-        emit(MenuApiError("Failed to delete menu item from API"));
-      }
+      // bool isDeleted = await repository.deleteMenuItem(event.menuId);
+      menuLocalDB.deleteMenuItem(event.menuId);
+      List<MenuModel> updatedMenu = await repository.getMenuItems();
+      emit(MenuApiLoaded(updatedMenu));
+      // if (isDeleted) {
+      //   emit(MenuApiLoaded(updatedMenu));
+      // } else {
+      //   emit(const MenuApiError("Failed to delete menu item from API"));
+      // }
     } catch (e) {
       emit(MenuApiError(e.toString()));
     }

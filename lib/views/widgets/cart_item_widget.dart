@@ -23,7 +23,7 @@ class CartItemWidget extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 90,
                       child: Text(
                         cartItem.product.menuName.length > 16

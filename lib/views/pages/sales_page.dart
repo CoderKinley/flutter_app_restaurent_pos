@@ -1,21 +1,22 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
-import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
-import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
+import 'package:pos_system_legphel/models/category_model.dart';
 import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/sub_category_model.dart';
 import 'package:pos_system_legphel/views/pages/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
@@ -44,6 +45,9 @@ class _SalesPageState extends State<SalesPage> {
   TextEditingController nameController = TextEditingController();
   TextEditingController contactController = TextEditingController();
   String? _selectedCategory;
+  String? _selectSubCategory;
+  int _expandedIndex = -1; // Keep track of the expanded tile index
+  int _selectedSubcategoryIndex = -1;
 
   @override
   void initState() {
@@ -52,6 +56,19 @@ class _SalesPageState extends State<SalesPage> {
     context.read<TableBloc>().add(LoadTables());
     context.read<CategoryBloc>().add(LoadCategories());
     context.read<MenuBlocApi>().add(FetchMenuApi());
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return Colors.green;
+      case 'inactive':
+        return Colors.deepOrange;
+      case 'pending':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
@@ -87,115 +104,399 @@ class _SalesPageState extends State<SalesPage> {
                             if (state is CategoryLoading) {
                               return const Center(
                                   child: CircularProgressIndicator());
-                            } else if (state is CategoryLoaded) {
-                              return ListView.separated(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(), // ← Ensures scrolling
-                                itemCount: state.categories.length + 1,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 0),
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return _itemTab(
-                                      title: "All Categories",
-                                      isActive: _selectedCategory == null,
-                                      onTap: () {
-                                        setState(
-                                            () => _selectedCategory = null);
-                                        context
-                                            .read<ProductBloc>()
-                                            .add(LoadProducts());
-                                      },
-                                    );
-                                  }
+                            }
 
-                                  final category = state.categories[index - 1];
-                                  return Column(
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
+                            // else if (state is CategoryLoaded) {
+                            //   return ListView.separated(
+                            //     physics:
+                            //         const AlwaysScrollableScrollPhysics(), // Ensures scrolling
+                            //     itemCount: state.categories.length + 1,
+                            //     separatorBuilder: (_, __) =>
+                            //         const SizedBox(height: 0),
+                            //     itemBuilder: (context, index) {
+                            //       if (index == 0) {
+                            //         return _itemTab(
+                            //           title: "All Categories",
+                            //           isActive: _selectedCategory == null,
+                            //           onTap: () {
+                            //             setState(
+                            //                 () => _selectedCategory = null);
+                            //             context
+                            //                 .read<ProductBloc>()
+                            //                 .add(LoadProducts());
+                            //           },
+                            //         );
+                            //       }
+
+                            //       final category = state.categories[index - 1];
+                            //       return Column(
+                            //         children: [
+                            //           InkWell(
+                            //             onTap: () {
+                            //               setState(() {
+                            //                 if (_selectedCategory ==
+                            //                     category.categoryName) {
+                            //                   _selectedCategory =
+                            //                       null; // Deactivate if same category
+                            //                 } else {
+                            //                   _selectedCategory = category
+                            //                       .categoryName; // Activate category
+                            //                 }
+                            //               });
+                            //               context.read<SubcategoryBloc>().add(
+                            //                     LoadSubcategories(
+                            //                         categoryId:
+                            //                             category.categoryId),
+                            //                   );
+                            //             },
+                            //             child: _itemTab(
+                            //               title: category.categoryName,
+                            //               isActive: _selectedCategory ==
+                            //                   category.categoryName,
+                            //               onTap: () {
+                            //                 setState(() {
+                            //                   _selectedCategory = category
+                            //                       .categoryName; // Update selected category on tap
+                            //                 });
+                            //                 context.read<SubcategoryBloc>().add(
+                            //                       LoadSubcategories(
+                            //                           categoryId:
+                            //                               category.categoryId),
+                            //                     );
+                            //               },
+                            //             ),
+                            //           ),
+                            //           if (_selectedCategory ==
+                            //               category.categoryName)
+                            //             BlocBuilder<SubcategoryBloc,
+                            //                 SubcategoryState>(
+                            //               builder: (context, subcategoryState) {
+                            //                 if (subcategoryState
+                            //                     is SubcategoryLoading) {
+                            //                   return const Center(
+                            //                       child:
+                            //                           CircularProgressIndicator());
+                            //                 } else if (subcategoryState
+                            //                     is SubcategoryLoaded) {
+                            //                   return Padding(
+                            //                     padding: const EdgeInsets.only(
+                            //                         left:
+                            //                             15.0), // Indentation for subcategories
+                            //                     child: SingleChildScrollView(
+                            //                       child: ExpansionPanelList(
+                            //                         elevation: 1,
+                            //                         expandedHeaderPadding:
+                            //                             EdgeInsets.zero,
+                            //                         children: subcategoryState
+                            //                             .subcategories
+                            //                             .map<ExpansionPanel>(
+                            //                                 (subcategory) {
+                            //                           return ExpansionPanel(
+                            //                             headerBuilder: (context,
+                            //                                 isExpanded) {
+                            //                               return Padding(
+                            //                                 padding:
+                            //                                     const EdgeInsets
+                            //                                         .all(16.0),
+                            //                                 child: Text(
+                            //                                   subcategory
+                            //                                       .subcategoryName,
+                            //                                   style:
+                            //                                       const TextStyle(
+                            //                                           fontSize:
+                            //                                               14),
+                            //                                 ),
+                            //                               );
+                            //                             },
+                            //                             body: Padding(
+                            //                               padding:
+                            //                                   const EdgeInsets
+                            //                                       .all(16.0),
+                            //                               child: Text(
+                            //                                   "Content for ${subcategory.subcategoryName}"), // Adjust with actual subcategory content
+                            //                             ),
+                            //                             isExpanded:
+                            //                                 false, // Always collapsed (can toggle if needed)
+                            //                           );
+                            //                         }).toList(),
+                            //                       ),
+                            //                     ),
+                            //                   );
+                            //                 } else {
+                            //                   return const Center(
+                            //                       child: Text(
+                            //                           "No subcategories available"));
+                            //                 }
+                            //               },
+                            //             ),
+                            //         ],
+                            //       );
+                            //     },
+                            //   );
+                            // }
+
+                            else if (state is CategoryLoaded) {
+                              final sortedCategories = List<CategoryModel>.from(
+                                  state.categories)
+                                ..sort((a, b) =>
+                                    a.categoryName.compareTo(b.categoryName));
+
+                              return ListView.builder(
+                                itemCount: sortedCategories.length,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                itemBuilder: (context, index) {
+                                  final category = sortedCategories[index];
+                                  final isSelected = _expandedIndex == index;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? Colors.deepOrange.shade400
+                                              : Colors.transparent,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: ExpansionPanelList(
+                                        elevation: 1,
+                                        expandedHeaderPadding: EdgeInsets.zero,
+                                        animationDuration:
+                                            const Duration(milliseconds: 300),
+                                        expansionCallback: (_, isExpanded) {
                                           setState(() {
-                                            if (_selectedCategory ==
-                                                category.categoryName) {
+                                            _selectSubCategory = null;
+                                            _expandedIndex =
+                                                _expandedIndex == index
+                                                    ? -1
+                                                    : index;
+                                            _selectedCategory =
+                                                category.categoryName;
+                                            if (_expandedIndex == -1) {
+                                              _selectedSubcategoryIndex = -1;
                                               _selectedCategory = null;
-                                            } else {
-                                              _selectedCategory =
-                                                  category.categoryName;
+                                              _selectSubCategory = null;
+                                            }
+
+                                            if (category.categoryName ==
+                                                "All") {
+                                              _selectedCategory = null;
+                                              _selectSubCategory = null;
                                             }
                                           });
-                                          context.read<SubcategoryBloc>().add(
-                                                LoadSubcategories(
-                                                    categoryId:
-                                                        category.categoryId),
-                                              );
                                         },
-                                        child: _itemTab(
-                                          title: category.categoryName,
-                                          isActive: _selectedCategory ==
-                                              category.categoryName,
-                                          onTap: () {
-                                            setState(() => _selectedCategory =
-                                                category.categoryName);
-                                            context.read<SubcategoryBloc>().add(
-                                                  LoadSubcategories(
-                                                      categoryId:
-                                                          category.categoryId),
-                                                );
-                                          },
-                                        ),
-                                      ),
-                                      if (_selectedCategory ==
-                                          category.categoryName)
-                                        BlocBuilder<SubcategoryBloc,
-                                            SubcategoryState>(
-                                          builder: (context, subcategoryState) {
-                                            if (subcategoryState
-                                                is SubcategoryLoading) {
-                                              return const Center(
-                                                  child:
-                                                      CircularProgressIndicator());
-                                            } else if (subcategoryState
-                                                is SubcategoryLoaded) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left:
-                                                        15.0), // Indentation for subcategories
-                                                child: Column(
-                                                  children: subcategoryState
-                                                      .subcategories
-                                                      .map((subcategory) {
-                                                    return Column(
-                                                      children: [
-                                                        ListTile(
-                                                          title: Text(
-                                                            subcategory
-                                                                .subcategoryName,
-                                                            style: TextStyle(
-                                                                fontSize: 14),
-                                                          ),
-                                                          onTap: () {},
-                                                        ),
-                                                        Divider(
-                                                          // Add a line below each ListTile
-                                                          color: Colors.grey
-                                                              .shade300, // Color of the divider
-                                                          thickness:
-                                                              1, // Thickness of the divider
-                                                        ),
-                                                      ],
-                                                    );
-                                                  }).toList(),
+                                        children: [
+                                          ExpansionPanel(
+                                            isExpanded: isSelected,
+                                            canTapOnHeader: true,
+                                            backgroundColor: Colors.white,
+                                            headerBuilder:
+                                                (context, isExpanded) {
+                                              return ListTile(
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                leading: Container(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .primaryColor
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.food_bank_rounded,
+                                                    color: isSelected
+                                                        ? Colors
+                                                            .deepOrange.shade600
+                                                        : Colors.deepOrange
+                                                            .shade400,
+                                                  ),
+                                                ),
+                                                title: Text(
+                                                  category.categoryName,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                    color: isSelected
+                                                        ? Colors
+                                                            .deepOrange.shade800
+                                                        : null,
+                                                  ),
                                                 ),
                                               );
-                                            } else {
-                                              return const Center(
-                                                child: Text(
-                                                    "No subcategories available"),
-                                              );
-                                            }
-                                          },
-                                        ),
-                                    ],
+                                            },
+                                            body: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[50],
+                                                borderRadius: BorderRadius.only(
+                                                  bottomLeft:
+                                                      Radius.circular(6),
+                                                  bottomRight:
+                                                      Radius.circular(6),
+                                                ),
+                                              ),
+                                              child: BlocProvider(
+                                                create: (_) => SubcategoryBloc()
+                                                  ..add(LoadSubcategories(
+                                                      categoryId:
+                                                          category.categoryId)),
+                                                child: BlocBuilder<
+                                                    SubcategoryBloc,
+                                                    SubcategoryState>(
+                                                  builder: (context,
+                                                      subcategoryState) {
+                                                    if (subcategoryState
+                                                        is SubcategoryLoading) {
+                                                      return Center(
+                                                        child: Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  16),
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            valueColor:
+                                                                AlwaysStoppedAnimation<
+                                                                    Color>(
+                                                              Colors.deepOrange
+                                                                  .shade300,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                    if (subcategoryState
+                                                        is SubcategoryError) {
+                                                      return Center(
+                                                        child: Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  16),
+                                                          child: Text(
+                                                            'Error: ${subcategoryState.errorMessage}',
+                                                            style: TextStyle(
+                                                                color:
+                                                                    Colors.red),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }
+                                                    if (subcategoryState
+                                                        is SubcategoryLoaded) {
+                                                      final sortedSubcategories =
+                                                          List<dynamic>.from(
+                                                              subcategoryState
+                                                                  .subcategories)
+                                                            ..sort((a, b) => a
+                                                                .subcategoryName
+                                                                .compareTo(b
+                                                                    .subcategoryName));
+
+                                                      return Column(
+                                                        children: [
+                                                          for (int subIndex = 0;
+                                                              subIndex <
+                                                                  sortedSubcategories
+                                                                      .length;
+                                                              subIndex++)
+                                                            ListTile(
+                                                              contentPadding:
+                                                                  EdgeInsets
+                                                                      .symmetric(
+                                                                horizontal: 16,
+                                                              ),
+                                                              leading: Icon(
+                                                                Icons
+                                                                    .subdirectory_arrow_right,
+                                                                color: _selectedSubcategoryIndex ==
+                                                                            subIndex &&
+                                                                        _expandedIndex ==
+                                                                            index
+                                                                    ? Colors
+                                                                        .deepOrange
+                                                                        .shade500
+                                                                    : Colors
+                                                                        .deepOrange
+                                                                        .shade300,
+                                                                size: 20,
+                                                              ),
+                                                              title: Text(
+                                                                sortedSubcategories[
+                                                                        subIndex]
+                                                                    .subcategoryName,
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                  fontSize: 14,
+                                                                  decoration: _selectedSubcategoryIndex ==
+                                                                              subIndex &&
+                                                                          _expandedIndex ==
+                                                                              index
+                                                                      ? TextDecoration
+                                                                          .none
+                                                                      : TextDecoration
+                                                                          .none,
+                                                                  decorationColor: Colors
+                                                                      .deepOrange
+                                                                      .shade400,
+                                                                  decorationThickness:
+                                                                      2,
+                                                                  color: _selectedSubcategoryIndex ==
+                                                                              subIndex &&
+                                                                          _expandedIndex ==
+                                                                              index
+                                                                      ? Colors
+                                                                          .deepOrange
+                                                                          .shade700
+                                                                      : null,
+                                                                ),
+                                                              ),
+                                                              trailing: Icon(
+                                                                Icons
+                                                                    .chevron_right,
+                                                                size: 20,
+                                                                color: _selectedSubcategoryIndex ==
+                                                                            subIndex &&
+                                                                        _expandedIndex ==
+                                                                            index
+                                                                    ? Colors
+                                                                        .deepOrange
+                                                                        .shade400
+                                                                    : null,
+                                                              ),
+                                                              onTap: () {
+                                                                setState(() {
+                                                                  _selectedSubcategoryIndex =
+                                                                      subIndex;
+                                                                  _selectSubCategory =
+                                                                      sortedSubcategories[
+                                                                              subIndex]
+                                                                          .subcategoryName;
+                                                                });
+                                                              },
+                                                            ),
+                                                          SizedBox(height: 8),
+                                                        ],
+                                                      );
+                                                    }
+                                                    return Container();
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   );
                                 },
                               );
@@ -222,64 +523,6 @@ class _SalesPageState extends State<SalesPage> {
                     color: const Color.fromARGB(255, 3, 27, 48),
                     child: Expanded(flex: 5, child: Container()),
                   ),
-                  // Container(
-                  //   margin: const EdgeInsets.only(left: 10, right: 10),
-                  //   height: 70,
-                  //   padding:
-                  //       const EdgeInsets.only(top: 10, bottom: 10, right: 0),
-                  //   child: ListView(
-                  //     scrollDirection: Axis.horizontal,
-                  //     children: [
-                  //       BlocBuilder<CategoryBloc, CategoryState>(
-                  //         builder: (context, state) {
-                  //           if (state is CategoryLoading) {
-                  //             return const Center(
-                  //               child: CircularProgressIndicator(),
-                  //             );
-                  //           } else if (state is CategoryLoaded) {
-                  //             return Row(
-                  //               children: [
-                  //                 _itemTab(
-                  //                   title: "All Categories",
-                  //                   isActive: _selectedCategory == null,
-                  //                   onTap: () {
-                  //                     setState(() {
-                  //                       _selectedCategory = null;
-                  //                     });
-                  //                     context
-                  //                         .read<ProductBloc>()
-                  //                         .add(LoadProducts());
-                  //                   },
-                  //                 ),
-                  //                 ...state.categories.map((category) {
-                  //                   return _itemTab(
-                  //                     title: category.categoryName,
-                  //                     isActive: _selectedCategory ==
-                  //                         category.categoryName,
-                  //                     onTap: () {
-                  //                       setState(() {
-                  //                         _selectedCategory =
-                  //                             category.categoryName;
-                  //                       });
-                  //                       // context.read<ProductBloc>().add(
-                  //                       //     LoadProductsByCategory(
-                  //                       //         category:
-                  //                       //             category.categoryName));
-                  //                     },
-                  //                   );
-                  //                 }).toList(),
-                  //               ],
-                  //             );
-                  //           } else {
-                  //             return const Center(
-                  //               child: Text("No categories available"),
-                  //             );
-                  //           }
-                  //         },
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
                   Expanded(
                     child: BlocBuilder<MenuBlocApi, MenuApiState>(
                       builder: (context, state) {
@@ -287,14 +530,14 @@ class _SalesPageState extends State<SalesPage> {
                           return const Center(
                               child: CircularProgressIndicator());
                         } else if (state is MenuApiLoaded) {
-                          // Filter menu items based on the selected category
-                          final filteredMenuItems = _selectedCategory == null
-                              ? state
-                                  .menuItems // Show all menu items if no category is selected
-                              : state.menuItems
-                                  .where((menuItem) =>
-                                      menuItem.menuType == _selectedCategory)
-                                  .toList();
+                          final filteredMenuItems = state.menuItems
+                              .where((menuItem) =>
+                                  _selectedCategory == null ||
+                                  menuItem.menuType == _selectedCategory)
+                              .where((menuItem) =>
+                                  _selectSubCategory == null ||
+                                  menuItem.subMenuType == _selectSubCategory)
+                              .toList();
 
                           return GridView.builder(
                             padding: const EdgeInsets.only(
@@ -544,8 +787,8 @@ class _SalesPageState extends State<SalesPage> {
                         borderRadius: BorderRadius.circular(16),
 
                         // Use the asset image directly
-                        image: DecorationImage(
-                          image: const AssetImage(
+                        image: const DecorationImage(
+                          image: AssetImage(
                               'assets/icons/logo.png'), // Directly use the logo image from assets
                           fit: BoxFit
                               .cover, // Adjust the box fit (you can change this as needed)
@@ -580,47 +823,6 @@ class _SalesPageState extends State<SalesPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _itemTab({
-    required String title,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return ExpansionTile(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              // color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
-            ),
-          ),
-        ],
-      ),
-      trailing: Icon(
-        isActive ? Icons.expand_less : Icons.expand_more,
-        // color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade700,
-      ),
-      onExpansionChanged: (bool expanded) {
-        onTap.call();
-      },
-      children: [],
-      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      // backgroundColor: isActive
-      //     ? Colors.deepOrangeAccent.withOpacity(0.1)
-      //     : Colors.transparent,
-      // shape: RoundedRectangleBorder(
-      //   // borderRadius: BorderRadius.circular(8),
-      //   side: BorderSide(
-      //     color: isActive ? Colors.deepOrangeAccent : Colors.grey.shade400,
-      //     width: isActive ? 2 : 1,
-      //   ),
-      // ),
     );
   }
 

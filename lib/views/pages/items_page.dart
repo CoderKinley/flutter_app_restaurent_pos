@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
-import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_sub_category.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_table.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/all_items_list.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/items_category_list.dart';

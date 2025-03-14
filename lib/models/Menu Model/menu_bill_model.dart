@@ -1,4 +1,3 @@
-import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
 import 'package:pos_system_legphel/models/new_menu_model.dart';
 
 class MenuBillModel {

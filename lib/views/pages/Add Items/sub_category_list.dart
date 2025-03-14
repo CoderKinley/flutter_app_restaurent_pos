@@ -52,7 +52,7 @@ class _AllItemsListState extends State<SubCategoryList> {
                                 context.read<SubcategoryBloc>().add(
                                     DeleteSubcategory(
                                         subcategoryId:
-                                            subcategory.subcategoryId!,
+                                            subcategory.subcategoryId,
                                         categoryId: subcategory.categoryId));
                               },
                               icon: const Icon(Icons.delete),

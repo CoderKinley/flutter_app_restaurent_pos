@@ -432,6 +432,8 @@ class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     int currentIndex = (scrollController.offset / 50).floor();
+    currentIndex = currentIndex.clamp(
+        0, groupedOrders.keys.length - 1); // Prevent out-of-bounds access
     String currentDate = groupedOrders.keys.elementAt(currentIndex);
 
     return Container(

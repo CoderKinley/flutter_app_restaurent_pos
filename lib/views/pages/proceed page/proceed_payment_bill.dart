@@ -69,19 +69,21 @@ class ProceedPaymentBill extends StatelessWidget {
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                     pw.SizedBox(height: 2),
                     pw.Text("Mobile 1: +975-17772393",
-                        style: pw.TextStyle(fontSize: 7)),
+                        style: const pw.TextStyle(fontSize: 7)),
                     pw.Text("Mobile 2: +975-77772393",
-                        style: pw.TextStyle(fontSize: 7)),
-                    pw.Text("TPN: LAC00091", style: pw.TextStyle(fontSize: 7)),
+                        style: const pw.TextStyle(fontSize: 7)),
+                    pw.Text("TPN: LAC00091",
+                        style: const pw.TextStyle(fontSize: 7)),
                     pw.Text("Acc No: 200108440",
-                        style: pw.TextStyle(fontSize: 7)),
-                    pw.Text("Post Box: 239", style: pw.TextStyle(fontSize: 7)),
+                        style: const pw.TextStyle(fontSize: 7)),
+                    pw.Text("Post Box: 239",
+                        style: const pw.TextStyle(fontSize: 7)),
                     pw.Text(
                       "legphel.hotel@gmail.com",
-                      style: pw.TextStyle(fontSize: 7),
+                      style: const pw.TextStyle(fontSize: 7),
                     ),
                     pw.Text("Rinchending, Phuentsholing",
-                        style: pw.TextStyle(fontSize: 7)),
+                        style: const pw.TextStyle(fontSize: 7)),
                   ],
                 ),
               ],
@@ -92,12 +94,13 @@ class ProceedPaymentBill extends StatelessWidget {
             pw.Column(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Bill ID: $id", style: pw.TextStyle(fontSize: 7)),
-                pw.Text("Date: $date", style: pw.TextStyle(fontSize: 7)),
+                pw.Text("Bill ID: $id", style: const pw.TextStyle(fontSize: 7)),
+                pw.Text("Date: $date", style: const pw.TextStyle(fontSize: 7)),
               ],
             ),
-            pw.Text("User: $user", style: pw.TextStyle(fontSize: 7)),
-            pw.Text("Table No: $tableNo", style: pw.TextStyle(fontSize: 7)),
+            pw.Text("User: $user", style: const pw.TextStyle(fontSize: 7)),
+            pw.Text("Table No: $tableNo",
+                style: const pw.TextStyle(fontSize: 7)),
             pw.SizedBox(height: 5),
 
             // Items Header
@@ -113,9 +116,9 @@ class ProceedPaymentBill extends StatelessWidget {
                     pw.Expanded(
                         child: pw.Text(
                             "${item['menuName']} x${item['quantity']}",
-                            style: pw.TextStyle(fontSize: 7))),
+                            style: const pw.TextStyle(fontSize: 7))),
                     pw.Text("Nu.${item['price']}",
-                        style: pw.TextStyle(fontSize: 7)),
+                        style: const pw.TextStyle(fontSize: 7)),
                   ],
                 )),
             pw.Divider(thickness: 1),
@@ -124,32 +127,34 @@ class ProceedPaymentBill extends StatelessWidget {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Subtotal:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Subtotal:", style: const pw.TextStyle(fontSize: 8)),
                 pw.Text("Nu.${subTotal.toStringAsFixed(2)}",
-                    style: pw.TextStyle(fontSize: 8)),
+                    style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Service 10%:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Service 10%:", style: const pw.TextStyle(fontSize: 8)),
                 pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
-                    style: pw.TextStyle(fontSize: 8)),
+                    style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("B.S.T 10%:", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("B.S.T 10%:", style: const pw.TextStyle(fontSize: 8)),
                 pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
-                    style: pw.TextStyle(fontSize: 8)),
+                    style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Total Quantity:", style: pw.TextStyle(fontSize: 8)),
-                pw.Text("$totalQuantity", style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Total Quantity:",
+                    style: const pw.TextStyle(fontSize: 8)),
+                pw.Text("$totalQuantity",
+                    style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
             pw.Row(
@@ -169,7 +174,7 @@ class ProceedPaymentBill extends StatelessWidget {
                 pw.Text("Payment Mode:",
                     style: pw.TextStyle(
                         fontSize: 8, fontWeight: pw.FontWeight.bold)),
-                pw.Text("$payMode",
+                pw.Text(payMode,
                     style: pw.TextStyle(
                         fontSize: 8, fontWeight: pw.FontWeight.bold)),
               ],
@@ -180,7 +185,8 @@ class ProceedPaymentBill extends StatelessWidget {
             pw.Text("Thank You! Visit Again!",
                 style:
                     pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-            pw.Text("Have a great day!", style: pw.TextStyle(fontSize: 9)),
+            pw.Text("Have a great day!",
+                style: const pw.TextStyle(fontSize: 9)),
           ],
         ),
       ),
