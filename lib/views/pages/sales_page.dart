@@ -186,7 +186,7 @@ class _SalesPageState extends State<SalesPage> {
                                             body: Container(
                                               decoration: BoxDecoration(
                                                 color: Colors.grey[50],
-                                                borderRadius: BorderRadius.only(
+                                                borderRadius: const BorderRadius.only(
                                                   bottomLeft:
                                                       Radius.circular(6),
                                                   bottomRight:
@@ -208,7 +208,7 @@ class _SalesPageState extends State<SalesPage> {
                                                       return Center(
                                                         child: Padding(
                                                           padding:
-                                                              EdgeInsets.all(
+                                                              const EdgeInsets.all(
                                                                   16),
                                                           child:
                                                               CircularProgressIndicator(
@@ -227,11 +227,11 @@ class _SalesPageState extends State<SalesPage> {
                                                       return Center(
                                                         child: Padding(
                                                           padding:
-                                                              EdgeInsets.all(
+                                                              const EdgeInsets.all(
                                                                   16),
                                                           child: Text(
                                                             'Error: ${subcategoryState.errorMessage}',
-                                                            style: TextStyle(
+                                                            style: const TextStyle(
                                                                 color:
                                                                     Colors.red),
                                                           ),
@@ -258,7 +258,7 @@ class _SalesPageState extends State<SalesPage> {
                                                               subIndex++)
                                                             ListTile(
                                                               contentPadding:
-                                                                  EdgeInsets
+                                                                  const EdgeInsets
                                                                       .symmetric(
                                                                 horizontal: 16,
                                                               ),
@@ -334,7 +334,7 @@ class _SalesPageState extends State<SalesPage> {
                                                                 });
                                                               },
                                                             ),
-                                                          SizedBox(height: 8),
+                                                          const SizedBox(height: 8),
                                                         ],
                                                       );
                                                     }
@@ -566,7 +566,7 @@ class _SalesPageState extends State<SalesPage> {
   void _showAddPersonDialog() {
     TextEditingController nameController = TextEditingController();
     TextEditingController contactController = TextEditingController();
-    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -577,7 +577,7 @@ class _SalesPageState extends State<SalesPage> {
             thumbVisibility: true, // Makes the scrollbar always visible
             child: SingleChildScrollView(
               child: Form(
-                key: _formKey, // Form key to handle validation
+                key: formKey, // Form key to handle validation
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -616,7 +616,7 @@ class _SalesPageState extends State<SalesPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   String name = nameController.text.trim();
                   String contact = contactController.text.trim();
 
