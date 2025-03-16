@@ -18,3 +18,5 @@ class DeleteProduct extends ProductEvent {
   final String id;
   DeleteProduct(this.id);
 }
+
+class DeleteAllProducts extends ProductEvent {}

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
@@ -186,7 +188,8 @@ class _SalesPageState extends State<SalesPage> {
                                             body: Container(
                                               decoration: BoxDecoration(
                                                 color: Colors.grey[50],
-                                                borderRadius: const BorderRadius.only(
+                                                borderRadius:
+                                                    const BorderRadius.only(
                                                   bottomLeft:
                                                       Radius.circular(6),
                                                   bottomRight:
@@ -208,8 +211,8 @@ class _SalesPageState extends State<SalesPage> {
                                                       return Center(
                                                         child: Padding(
                                                           padding:
-                                                              const EdgeInsets.all(
-                                                                  16),
+                                                              const EdgeInsets
+                                                                  .all(16),
                                                           child:
                                                               CircularProgressIndicator(
                                                             valueColor:
@@ -227,13 +230,14 @@ class _SalesPageState extends State<SalesPage> {
                                                       return Center(
                                                         child: Padding(
                                                           padding:
-                                                              const EdgeInsets.all(
-                                                                  16),
+                                                              const EdgeInsets
+                                                                  .all(16),
                                                           child: Text(
                                                             'Error: ${subcategoryState.errorMessage}',
-                                                            style: const TextStyle(
-                                                                color:
-                                                                    Colors.red),
+                                                            style:
+                                                                const TextStyle(
+                                                                    color: Colors
+                                                                        .red),
                                                           ),
                                                         ),
                                                       );
@@ -334,7 +338,8 @@ class _SalesPageState extends State<SalesPage> {
                                                                 });
                                                               },
                                                             ),
-                                                          const SizedBox(height: 8),
+                                                          const SizedBox(
+                                                              height: 8),
                                                         ],
                                                       );
                                                     }
@@ -660,13 +665,22 @@ class _SalesPageState extends State<SalesPage> {
                         // Optional: Add a border radius if needed
                         borderRadius: BorderRadius.circular(16),
 
-                        // Use the asset image directly
-                        image: const DecorationImage(
-                          image: AssetImage(
-                              'assets/icons/logo.png'), // Directly use the logo image from assets
-                          fit: BoxFit
-                              .cover, // Adjust the box fit (you can change this as needed)
-                        ),
+                        // Use the product image or fallback to logo image if not available
+                        image: (product.dishImage != null &&
+                                product.dishImage!.isNotEmpty &&
+                                product.dishImage != "No Image" &&
+                                File(product.dishImage!).existsSync())
+                            ? DecorationImage(
+                                image: FileImage(File(product.dishImage!)),
+                                fit: BoxFit
+                                    .cover, // Adjust the box fit (you can change this as needed)
+                              )
+                            : const DecorationImage(
+                                image: AssetImage(
+                                    'assets/icons/logo.png'), // Fallback logo image
+                                fit: BoxFit
+                                    .cover, // Adjust the box fit (you can change this as needed)
+                              ),
                       ),
                     ),
                     const SizedBox(height: 10),

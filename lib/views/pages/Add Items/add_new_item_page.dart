@@ -6,12 +6,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
-import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
-import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
+import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
+import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
+import 'package:pos_system_legphel/models/new_menu_model.dart';
 import 'package:uuid/uuid.dart';
 
 class AddNewItemPage extends StatefulWidget {
-  final Product? product;
+  final MenuModel? product;
 
   const AddNewItemPage({super.key, this.product});
 
@@ -25,21 +26,35 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _menuIdController = TextEditingController();
 
   String? _imagePath;
-  String? _selectedAvailability = "1";
+  bool _selectedAvailability = true;
   String? _selectedMenuType;
+  String? _selectedSubMenuType;
 
   @override
   void initState() {
     super.initState();
     if (widget.product != null) {
-      _nameController.text = widget.product!.name;
+      _nameController.text = widget.product!.menuName;
+      _menuIdController.text = widget.product!.menuId;
       _priceController.text = widget.product!.price.toString();
       _descriptionController.text = widget.product!.description;
-      _imagePath = widget.product!.image;
-      _selectedAvailability = widget.product!.availiability.toString();
-      _selectedMenuType = widget.product!.menutype;
+      _imagePath = (widget.product!.dishImage != null &&
+              widget.product!.dishImage!.isNotEmpty &&
+              widget.product!.dishImage! != "No Image")
+          ? widget.product!.dishImage
+          : "assets/icons/logo.png";
+
+      _selectedAvailability = widget.product!.availability;
+      _selectedMenuType = widget.product!.menuType;
+      _selectedSubMenuType = widget.product!.subMenuType;
+
+      // If subMenuType is empty string, set it to null to avoid dropdown error
+      if (_selectedSubMenuType != null && _selectedSubMenuType!.isEmpty) {
+        _selectedSubMenuType = null;
+      }
     }
   }
 
@@ -47,50 +62,58 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   Future<void> _pickImage() async {
     var status = await Permission.photos.request();
     if (status.isGranted) {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        final directory = await getApplicationDocumentsDirectory();
-        final fileName = basename(pickedFile.path);
-        final savedImage =
-            await File(pickedFile.path).copy('${directory.path}/$fileName');
-        if (mounted) {
-          setState(() {
-            _imagePath = savedImage.path;
-          });
+      try {
+        final pickedFile =
+            await ImagePicker().pickImage(source: ImageSource.gallery);
+        if (pickedFile != null) {
+          final directory = await getApplicationDocumentsDirectory();
+          final fileName = basename(pickedFile.path);
+          final savedImage =
+              await File(pickedFile.path).copy('${directory.path}/$fileName');
+          if (mounted) {
+            setState(() {
+              _imagePath = savedImage.path;
+            });
+          }
         }
+      } catch (e) {
+        print(e);
       }
     }
   }
 
   // save the product to the local database that i have created earlier
   void _saveProduct(BuildContext context) {
-    if (_formKey.currentState!.validate() &&
-        _imagePath != null &&
-        _selectedMenuType != null) {
+    if (_formKey.currentState!.validate() && _selectedMenuType != null) {
+      if (_imagePath == null) {
+        _imagePath = "assets/icons/logo.png";
+      }
+
       var uuid = const Uuid();
-      final product = Product(
-        id: widget.product?.id ?? uuid.v4(), // Assign UUID if new product
-        name: _nameController.text,
-        price: int.parse(_priceController.text),
-        availiability: int.parse(_selectedAvailability!),
+      final product = MenuModel(
+        uuid: widget.product?.uuid ?? uuid.v4(),
+        menuName: _nameController.text,
+        price: _priceController.text,
+        availability: _selectedAvailability,
         description: _descriptionController.text,
-        menutype: _selectedMenuType!,
-        image: _imagePath!,
+        menuType: _selectedMenuType!,
+        dishImage: _imagePath!,
+        subMenuType:
+            _selectedSubMenuType ?? '', // Provide a default empty string
+        menuId: _menuIdController.text,
       );
 
       if (widget.product == null) {
-        context.read<ProductBloc>().add(AddProduct(product));
+        context.read<MenuBlocApi>().add(AddMenuApiItem(product));
       } else {
-        context.read<ProductBloc>().add(UpdateProduct(product));
+        context.read<MenuBlocApi>().add(UpdateMenuApiItem(product));
       }
 
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              "Please fill all fields, select a menu type, and choose an image."),
+          content: Text("Please fill all fields and select a menu type."),
           backgroundColor: Colors.red,
         ),
       );
@@ -139,6 +162,19 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                       ),
                       const SizedBox(height: 15),
 
+                      TextFormField(
+                        controller: _menuIdController,
+                        decoration: InputDecoration(
+                          labelText: 'Product ID',
+                          prefixIcon: const Icon(Icons.tag),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        validator: (value) =>
+                            value!.isEmpty ? 'Enter product ID' : null,
+                      ),
+                      const SizedBox(height: 15),
+
                       /// Product Name
                       TextFormField(
                         controller: _nameController,
@@ -169,7 +205,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                       const SizedBox(height: 15),
 
                       /// Availability
-                      DropdownButtonFormField<String>(
+                      DropdownButtonFormField<bool>(
                         decoration: InputDecoration(
                           labelText: 'Availability (1 = Yes, 0 = No)',
                           prefixIcon: const Icon(Icons.check_circle),
@@ -177,17 +213,16 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                               borderRadius: BorderRadius.circular(10)),
                         ),
                         value: _selectedAvailability,
-                        onChanged: (String? newValue) {
+                        onChanged: (bool? newValue) {
                           setState(() {
-                            _selectedAvailability = newValue;
+                            _selectedAvailability = newValue!;
                           });
                         },
-                        items: ["1", "0"]
+                        items: [true, false]
                             .map((value) => DropdownMenuItem(
                                   value: value,
-                                  child: Text(value == "1"
-                                      ? "Available"
-                                      : "Not Available"),
+                                  child: Text(
+                                      value ? "Available" : "Not Available"),
                                 ))
                             .toList(),
                       ),
@@ -249,6 +284,56 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                       ),
 
                       const SizedBox(height: 15.0),
+                      BlocBuilder<SubcategoryBloc, SubcategoryState>(
+                        builder: (context, state) {
+                          if (state is CategoryLoading) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (state is CategoryError) {
+                            return Center(child: Text("Error Loading"));
+                          } else if (state is SubcategoryLoaded) {
+                            final subcategories = state.subcategories;
+
+                            // Check if selected subMenuType exists in the list
+                            bool valueExists = false;
+                            if (_selectedSubMenuType != null) {
+                              valueExists = subcategories.any((category) =>
+                                  category.subcategoryName ==
+                                  _selectedSubMenuType);
+                              if (!valueExists) {
+                                // If not found in list, set to null to avoid dropdown error
+                                _selectedSubMenuType = null;
+                              }
+                            }
+
+                            return DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                labelText: 'Sub Menu Type',
+                                prefixIcon: const Icon(Icons.restaurant_menu),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                              value: _selectedSubMenuType,
+                              hint: Text('Select a sub menu type (optional)'),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedSubMenuType = newValue;
+                                });
+                              },
+                              items: subcategories
+                                  .map((category) => DropdownMenuItem(
+                                        value: category.subcategoryName,
+                                        child: Text(category.subcategoryName),
+                                      ))
+                                  .toList(),
+                            );
+                          } else {
+                            return const Center(
+                                child: Text('No sub categories found'));
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 15.0),
 
                       /// Image Picker
                       _imagePath != null
@@ -256,8 +341,20 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
-                                  child: Image.file(File(_imagePath!),
-                                      height: 120, fit: BoxFit.cover),
+                                  child: Container(
+                                    width: 120,
+                                    height: 120,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      image: DecorationImage(
+                                        image: _imagePath!.startsWith('assets/')
+                                            ? AssetImage(_imagePath!)
+                                                as ImageProvider
+                                            : FileImage(File(_imagePath!)),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 10),
                                 TextButton.icon(

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_item_page.dart';
 
 class AllItemsList extends StatefulWidget {
@@ -18,71 +18,83 @@ class _AllItemsListState extends State<AllItemsList> {
     return Container(
       child: Stack(
         children: [
-          BlocBuilder<ProductBloc, ProductState>(builder: (context, state) {
-            if (state is ProductLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (state is ProductLoaded) {
-              return ListView.builder(
-                itemCount: state.products.length,
-                itemBuilder: (context, index) {
-                  final product = state.products[index];
-                  return Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(context, MaterialPageRoute(
-                            builder: (context) {
-                              return AddNewItemPage(product: product);
-                            },
-                          ));
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 8.0, right: 8.0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          child: ListTile(
-                            leading: product.image.isNotEmpty
-                                ? Image.file(
-                                    File(product.image),
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(
-                                    width: 50,
-                                    height: 50,
-                                    color: Colors.green,
-                                  ),
-                            title: Text(product.name),
-                            subtitle: Text(
-                              'Nu.${product.price.toString()}',
-                              style: const TextStyle(
-                                color: Colors.green,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              onPressed: () {
-                                context
-                                    .read<ProductBloc>()
-                                    .add(DeleteProduct(product.id!));
+          BlocBuilder<MenuBlocApi, MenuApiState>(
+            builder: (context, state) {
+              if (state is MenuApiLoading) {
+                return CircularProgressIndicator();
+              } else if (state is MenuApiLoaded) {
+                return ListView.builder(
+                  itemCount: state.menuItems.length,
+                  itemBuilder: (context, index) {
+                    final items = state.menuItems[index];
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (context) {
+                                return AddNewItemPage(
+                                  product: items,
+                                );
                               },
-                              icon: const Icon(Icons.delete),
+                            ));
+                          },
+                          child: Container(
+                            margin:
+                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            child: ListTile(
+                              leading: (items.dishImage != null &&
+                                      items.dishImage!.isNotEmpty &&
+                                      items.dishImage != "No Image" &&
+                                      File(items.dishImage!).existsSync())
+                                  ? Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        image: DecorationImage(
+                                          image:
+                                              FileImage(File(items.dishImage!)),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    )
+                                  : Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                            255, 255, 231, 224),
+                                        borderRadius: BorderRadius.circular(50),
+                                        image: DecorationImage(
+                                          image: AssetImage(
+                                              'assets/icons/logo.png'), // Default image
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                              title: Text(items.menuName),
+                              subtitle: Text(
+                                'Nu. ${items.price}',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      // Divider added here between list items
-                      const Divider(),
-                    ],
-                  );
-                },
-              );
-            }
-            return Container();
-          }),
+                        const Divider(),
+                      ],
+                    );
+                  },
+                );
+              }
+              return Container();
+            },
+          ),
           // Custom Floating Action Button ------------------------------->
           Positioned(
             bottom: 20,

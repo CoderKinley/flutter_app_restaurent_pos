@@ -94,4 +94,10 @@ class DatabaseHelper {
     );
     return result.isNotEmpty; // Returns true if the category is used
   }
+
+  Future<int> deleteAllProducts() async {
+    final db = await instance.database;
+    return await db
+        .delete('products'); // Deletes all rows from the products table
+  }
 }

@@ -39,7 +39,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
         BlocProvider(create: (context) => TableBloc()),
-        BlocProvider(create: (context) => SubcategoryBloc()),
+        BlocProvider(
+            create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
         BlocProvider(
           create: (context) => MenuBlocApi(
             MenuRepository(

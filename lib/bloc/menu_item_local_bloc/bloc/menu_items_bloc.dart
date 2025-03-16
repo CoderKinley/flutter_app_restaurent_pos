@@ -29,5 +29,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       await dbHelper.deleteProduct(event.id);
       add(LoadProducts());
     });
+
+    on<DeleteAllProducts>((event, emit) async {
+      await dbHelper.deleteAllProducts();
+      add(LoadProducts());
+    });
   }
 }
