@@ -2,7 +2,7 @@
 
 ## 🚀 About the Project
 
-This **POS System** is a feature-rich and efficient Point of Sale application built with **Flutter** and **SQLite** for seamless order management and payment processing. Designed for businesses, this system enhances sales operations, providing an intuitive and user-friendly interface.
+The POS system is a comprehensive application developed using Flutter to manage sales transactions, product inventory, and customer interactions in a seamless and efficient manner. The system allows businesses to handle various aspects of their operations, from managing menu items and customers to processing payments and generating receipts.
 
 ## ✨ Features
 
@@ -20,6 +20,7 @@ This **POS System** is a feature-rich and efficient Point of Sale application bu
 - **Dart** (Programming Language)
 - **SQLite (sqflite)** (Local Database)
 - **BLoC Pattern** (State Management)
+- **Json Parsing** (handling data exchange between app and server)
 
 ## App Screenshots
 
