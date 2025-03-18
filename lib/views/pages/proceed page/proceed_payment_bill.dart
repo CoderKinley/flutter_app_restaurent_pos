@@ -45,7 +45,7 @@ class ProceedPaymentBill extends StatelessWidget {
 
     pdf.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.roll57,
+        pageFormat: PdfPageFormat.roll80,
         build: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
@@ -55,8 +55,8 @@ class ProceedPaymentBill extends StatelessWidget {
               children: [
                 // Left: Logo
                 pw.Container(
-                  width: 50,
-                  height: 50,
+                  width: 100,
+                  height: 100,
                   child: pw.Image(pw.MemoryImage(logoBytes)),
                 ),
                 // Right: Business Details
@@ -356,7 +356,10 @@ class ProceedPaymentBill extends StatelessWidget {
                       children: [
                         _buildSummaryRow(
                             "Subtotal", "Nu.${subTotal.toStringAsFixed(2)}"),
-                        _buildSummaryRow("GST", "Nu.${gst.toStringAsFixed(2)}"),
+                        _buildSummaryRow("B.S.T 10%",
+                            "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
+                        _buildSummaryRow("Service Charge 10%",
+                            "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
                         _buildSummaryRow(
                             "Total Quantity", totalQuantity.toString()),
                         const Divider(height: 24),
@@ -374,25 +377,25 @@ class ProceedPaymentBill extends StatelessWidget {
                   const SizedBox(height: 24),
                   Row(
                     children: [
+                      // Expanded(
+                      //   child: ElevatedButton.icon(
+                      //     icon: const Icon(Icons.print),
+                      //     label: const Text("Print"),
+                      //     onPressed: () async {
+                      //       final pdfData = await _generatePdf();
+                      //       await Printing.layoutPdf(
+                      //           onLayout: (format) async => pdfData);
+                      //     },
+                      //     style: ElevatedButton.styleFrom(
+                      //       padding: const EdgeInsets.all(16),
+                      //     ),
+                      //   ),
+                      // ),
+                      // const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.print),
                           label: const Text("Print"),
-                          onPressed: () async {
-                            final pdfData = await _generatePdf();
-                            await Printing.layoutPdf(
-                                onLayout: (format) async => pdfData);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.share),
-                          label: const Text("Share"),
                           onPressed: () async {
                             final pdfData = await _generatePdf();
                             await Printing.sharePdf(

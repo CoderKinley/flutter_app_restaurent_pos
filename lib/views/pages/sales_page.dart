@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
@@ -567,8 +568,6 @@ class _SalesPageState extends State<SalesPage> {
   }
 
   void _showAddPersonDialog() {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController contactController = TextEditingController();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -963,8 +962,9 @@ class _SalesPageState extends State<SalesPage> {
                         HoldOrderPage(menuItems: state.cartItems),
                         () async {
                           const uuid = Uuid();
+                          final holdOrderId = uuid.v4();
                           final holdItems = HoldOrderModel(
-                            holdOrderId: uuid.v4(),
+                            holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
                             customerName: nameController.text,
                             customerContact: contactController.text,
@@ -977,11 +977,15 @@ class _SalesPageState extends State<SalesPage> {
                           context.read<MenuBloc>().add(RemoveAllFromCart());
 
                           final ticket = HoldOrderTicket(
-                            id: "kinley",
-                            date: "2025-03-15",
-                            time: "10:00AM",
-                            user: "Kinley Penjor",
-                            tableNumber: "7",
+                            id: holdOrderId,
+                            date: DateFormat('yyyy-MM-dd')
+                                .format(holdItems.orderDateTime),
+                            time: DateFormat('hh:mm a')
+                                .format(holdItems.orderDateTime),
+                            user: holdItems.customerName,
+                            tableNumber: holdItems.tableNumber,
+                            items: state.cartItems,
+                            contact: holdItems.customerContact,
                           );
 
                           await ticket.savePdfTicketLocally(context);
