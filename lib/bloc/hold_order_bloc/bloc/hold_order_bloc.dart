@@ -47,5 +47,14 @@ class HoldOrderBloc extends Bloc<HoldOrderEvent, HoldOrderState> {
         emit(HoldOrderError("Failed to delete hold order"));
       }
     });
+
+    on<LoadHoldOrdersById>((event, emit) async {
+      try {
+        await databaseHelper.fetchHoldOrderById(event.holdOrderId);
+        add(LoadHoldOrders());
+      } catch (e) {
+        emit(HoldOrderError("failed to Load by Id"));
+      }
+    });
   }
 }

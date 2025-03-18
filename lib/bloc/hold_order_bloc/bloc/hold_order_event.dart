@@ -23,6 +23,14 @@ class UpdateHoldOrder extends HoldOrderEvent {
   List<Object?> get props => [holdOrder];
 }
 
+class LoadHoldOrdersById extends HoldOrderEvent {
+  final String holdOrderId;
+  LoadHoldOrdersById(this.holdOrderId);
+
+  @override
+  List<Object?> get props => [holdOrderId];
+}
+
 class DeleteHoldOrder extends HoldOrderEvent {
   final String holdOrderId;
   DeleteHoldOrder(this.holdOrderId);

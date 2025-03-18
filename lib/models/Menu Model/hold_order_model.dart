@@ -7,12 +7,14 @@ class HoldOrderModel extends Equatable {
   final String holdOrderId;
   final String tableNumber;
   final String customerName;
+  final String customerContact;
   final DateTime orderDateTime;
   final List<MenuBillModel> menuItems;
 
   const HoldOrderModel({
     required this.holdOrderId,
     required this.tableNumber,
+    required this.customerContact,
     required this.customerName,
     required this.orderDateTime,
     required this.menuItems,
@@ -27,12 +29,14 @@ class HoldOrderModel extends Equatable {
     String? tableNumber,
     String? customerName,
     DateTime? orderDateTime,
+    String? customerContact,
     List<MenuBillModel>? menuItems,
   }) {
     return HoldOrderModel(
       holdOrderId: holdOrderId ?? this.holdOrderId,
       tableNumber: tableNumber ?? this.tableNumber,
       customerName: customerName ?? this.customerName,
+      customerContact: customerContact ?? this.customerContact,
       orderDateTime: orderDateTime ?? this.orderDateTime,
       menuItems: menuItems ?? this.menuItems,
     );
@@ -44,6 +48,7 @@ class HoldOrderModel extends Equatable {
       'holdOrderId': holdOrderId,
       'tableNumber': tableNumber,
       'customerName': customerName,
+      'customerContact': customerContact,
       'orderDateTime': orderDateTime.toIso8601String(),
       'menuItems': jsonEncode(menuItems
           .map((item) => item.toMap())
@@ -57,6 +62,7 @@ class HoldOrderModel extends Equatable {
       holdOrderId: map['holdOrderId'],
       tableNumber: map['tableNumber'],
       customerName: map['customerName'],
+      customerContact: map['customerContact'],
       orderDateTime: DateTime.parse(map['orderDateTime']),
       menuItems: List<MenuBillModel>.from(
         jsonDecode(map['menuItems']).map((item) => MenuBillModel.fromMap(item)),

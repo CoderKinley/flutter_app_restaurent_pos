@@ -66,6 +66,16 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const SizedBox(
+                            width: 20,
+                          ),
+                          Text(
+                            'Customer Name: ${holdOrderItem.customerName}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                       trailing: Row(
@@ -78,6 +88,31 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                 color: Colors.green,
                               )),
                           const SizedBox(width: 10),
+                          OutlinedButton(
+                            onPressed: () {
+                              context
+                                  .read<MenuBloc>()
+                                  .add(UpdateCartItemQuantity(items));
+                              context.read<HoldOrderBloc>().add(
+                                    DeleteHoldOrder(holdOrderItem.holdOrderId),
+                                  );
+                              Navigator.pop(context, holdOrderItem);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: const Text(
+                              'Edit',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           OutlinedButton(
                             onPressed: () {
                               context
@@ -158,7 +193,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                 },
               );
             }
-            return const Center(child: Text("Nothing"));
+            return const Center(child: Text("Nothing To Show!"));
           },
         ),
       ),

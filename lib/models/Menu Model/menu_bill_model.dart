@@ -3,10 +3,18 @@ import 'package:pos_system_legphel/models/new_menu_model.dart';
 class MenuBillModel {
   final MenuModel product;
   int quantity;
+  String? menuId;
+  String? customerName;
+  String? CustomerContact;
+  String? TableNo;
 
   MenuBillModel({
     required this.product,
     this.quantity = 1,
+    this.menuId,
+    this.CustomerContact,
+    this.TableNo,
+    this.customerName,
   });
 
   double get totalPrice {
@@ -21,6 +29,7 @@ class MenuBillModel {
     return MenuBillModel(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
+      menuId: menuId ?? this.menuId,
     );
   }
 
@@ -35,6 +44,7 @@ class MenuBillModel {
     return MenuBillModel(
       product: MenuModel.fromMap(map['product']),
       quantity: map['quantity'],
+      menuId: map['menuId'],
     );
   }
 }

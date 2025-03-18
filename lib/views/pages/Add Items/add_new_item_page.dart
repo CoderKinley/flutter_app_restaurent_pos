@@ -85,9 +85,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   // save the product to the local database that i have created earlier
   void _saveProduct(BuildContext context) {
     if (_formKey.currentState!.validate() && _selectedMenuType != null) {
-      if (_imagePath == null) {
-        _imagePath = "assets/icons/logo.png";
-      }
+      _imagePath ??= "assets/icons/logo.png";
 
       var uuid = const Uuid();
       final product = MenuModel(
@@ -290,7 +288,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             return const Center(
                                 child: CircularProgressIndicator());
                           } else if (state is CategoryError) {
-                            return Center(child: Text("Error Loading"));
+                            return const Center(child: Text("Error Loading"));
                           } else if (state is SubcategoryLoaded) {
                             final subcategories = state.subcategories;
 
@@ -314,7 +312,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                     borderRadius: BorderRadius.circular(10)),
                               ),
                               value: _selectedSubMenuType,
-                              hint: Text('Select a sub menu type (optional)'),
+                              hint: const Text(
+                                  'Select a sub menu type (optional)'),
                               onChanged: (String? newValue) {
                                 setState(() {
                                   _selectedSubMenuType = newValue;

@@ -521,7 +521,6 @@ class _SalesPageState extends State<SalesPage> {
                     child: BlocBuilder<MenuBloc, MenuState>(
                       builder: (context, state) {
                         if (state is MenuLoaded) {
-                          // Reverse the list to show the latest added item at the top
                           final reversedCartItems =
                               state.cartItems.reversed.toList();
 
@@ -968,6 +967,7 @@ class _SalesPageState extends State<SalesPage> {
                             holdOrderId: uuid.v4(),
                             tableNumber: tableNumber,
                             customerName: nameController.text,
+                            customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );

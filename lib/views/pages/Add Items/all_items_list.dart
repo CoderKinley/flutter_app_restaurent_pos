@@ -21,7 +21,7 @@ class _AllItemsListState extends State<AllItemsList> {
           BlocBuilder<MenuBlocApi, MenuApiState>(
             builder: (context, state) {
               if (state is MenuApiLoading) {
-                return CircularProgressIndicator();
+                return const CircularProgressIndicator();
               } else if (state is MenuApiLoaded) {
                 return ListView.builder(
                   itemCount: state.menuItems.length,
@@ -69,7 +69,7 @@ class _AllItemsListState extends State<AllItemsList> {
                                         color: const Color.fromARGB(
                                             255, 255, 231, 224),
                                         borderRadius: BorderRadius.circular(50),
-                                        image: DecorationImage(
+                                        image: const DecorationImage(
                                           image: AssetImage(
                                               'assets/icons/logo.png'), // Default image
                                           fit: BoxFit.cover,
@@ -79,7 +79,7 @@ class _AllItemsListState extends State<AllItemsList> {
                               title: Text(items.menuName),
                               subtitle: Text(
                                 'Nu. ${items.price}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.green,
                                 ),
                               ),
