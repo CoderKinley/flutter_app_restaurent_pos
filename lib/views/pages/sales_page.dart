@@ -16,6 +16,7 @@ import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/models/category_model.dart';
 import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_bar_ticket.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_ticket.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
@@ -987,8 +988,20 @@ class _SalesPageState extends State<SalesPage> {
                             items: state.cartItems,
                             contact: holdItems.customerContact,
                           );
+                          final barTicket = HoldOrderBarTicket(
+                            id: holdOrderId,
+                            date: DateFormat('yyyy-MM-dd')
+                                .format(holdItems.orderDateTime),
+                            time: DateFormat('hh:mm a')
+                                .format(holdItems.orderDateTime),
+                            user: holdItems.customerName,
+                            tableNumber: holdItems.tableNumber,
+                            items: state.cartItems,
+                            contact: holdItems.customerContact,
+                          );
 
                           await ticket.savePdfTicketLocally(context);
+                          await barTicket.savePdfTicketLocally(context);
                         },
                       ),
                     );
