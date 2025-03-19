@@ -28,6 +28,7 @@ The **Point of Sale (POS) System** is a comprehensive application developed usin
 ## App Screenshots
 
 Here’s a preview of the app's UI:
+![Screen_Recording_20250319_114738-ezgif com-crop](https://github.com/user-attachments/assets/e65e53d4-416c-4e0b-bd7a-419e4c0d84c1)
 
 <div style="display: flex; justify-content: center;">
   <table style="width: 100%; border-collapse: collapse;">
