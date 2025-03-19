@@ -111,6 +111,78 @@ Here’s a preview of the app's UI:
 - Use of SQLite for persisting held orders and enabling smooth transitions between the active and held states.
 
 ---
+# Flutter App Folder Structure
+
+This project follows a structured folder architecture to separate concerns and improve maintainability. Below is an explanation of each folder and its purpose.
+
+## 📂 bloc
+This folder is the core of state management. It contains all the necessary files and logic for handling business logic using BLoC.
+
+---
+
+## 📂 data
+This directory handles all data-related operations, including fetching and managing data.
+
+### 📂 repositories
+Contains files responsible for fetching data from various sources like APIs, databases, and local storage.
+- `items_data.dart` - Handles fetching and managing item-related data.
+- `menu_api_service.dart` - Manages API calls related to menus.
+- `receipt_data.dart` - Manages receipt-related data operations.
+
+### 📂 models
+Includes all the data models used in the app for structured data representation.
+- `category_model.dart` - Defines the structure for category data.
+- `new_menu_model.dart` - Represents the new menu structure.
+- `sub_category_model.dart` - Defines sub-category data.
+- `table_no_model.dart` - Represents table number details.
+- `card_item` (Folder) - Likely contains models related to cart items.
+
+### 📂 SQL
+Handles local database operations (likely using SQLite). This folder might contain scripts or classes for database management.
+
+---
+
+## 📂 views
+This folder manages all UI components, including pages and widgets.
+
+### 📂 pages
+Contains different screens and their subdirectories.
+
+#### 📂 Add Items
+Manages screens related to adding items.
+
+#### 📂 Hold Order
+Handles UI related to holding orders.
+
+#### 📂 proceed page
+Manages the screens related to order processing.
+
+Other important pages:
+- `home_page.dart` - The main home screen of the application.
+- `items_page.dart` - Displays available items.
+- `notification_page.dart` - Handles user notifications.
+- `receipt_page.dart` - Displays receipt details.
+- `sales_page.dart` - Manages sales tracking and displays relevant data.
+- `setting_page.dart` - Handles user settings.
+- `shift_page.dart` - Manages shift-related operations.
+
+### 📂 widgets
+Contains reusable UI components used across different pages to maintain consistency.
+- `add_items_widget.dart` - Widget for adding items.
+- `cart_item_widget.dart` - Displays a cart item.
+- `drawer_menu_widget.dart` - Handles the sidebar menu.
+- `dropdown_widget.dart` - A dropdown UI component.
+- `items_list_widget.dart` - Displays a list of items.
+- `top_menu_bar_widget.dart` - Widget for the top menu bar.
+
+---
+
+## 📜 main.dart
+The entry point of the Flutter application. It initializes the app and runs the main UI.
+
+---
+
+This structure ensures clean separation of concerns and makes the codebase easier to navigate and maintain.
 
 ## How It Works
 1. **Product Management**: Add and manage products with attributes like name, price, and category.
