@@ -27,7 +27,8 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     final currentState = state as MenuLoaded;
     final existingCartItem = currentState.cartItems.firstWhere(
         (item) => item.product.menuId == event.item.menuId,
-        orElse: () => MenuBillModel(product: event.item));
+        orElse: () => MenuBillModel(
+            product: event.item, customerName: event.customerName));
 
     List<MenuBillModel> updatedCart = List.from(currentState.cartItems);
 

@@ -82,7 +82,7 @@ class _ShiftPageState extends State<ShiftPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             "Order Details",
                           ),
                           const SizedBox(height: 10),
@@ -91,7 +91,7 @@ class _ShiftPageState extends State<ShiftPage> {
                           Text("Contact: ${selectedOrder!.customerContact}"),
                           Text("Order Date: ${selectedOrder!.orderDateTime}"),
                           const SizedBox(height: 10),
-                          Text("Menu Items:",
+                          const Text("Menu Items:",
                               style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),

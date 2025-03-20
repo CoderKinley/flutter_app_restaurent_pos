@@ -76,7 +76,7 @@ class HoldOrderTicket {
             pw.Text("User: $user", style: const pw.TextStyle(fontSize: 7)),
             pw.Text("Table No: $tableNumber",
                 style: const pw.TextStyle(fontSize: 7)),
-            pw.Text("Contact: ${contact}",
+            pw.Text("Contact: $contact",
                 style: const pw.TextStyle(fontSize: 7)),
             pw.SizedBox(height: 5),
             pw.Divider(),

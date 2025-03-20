@@ -5,15 +5,15 @@ class MenuBillModel {
   int quantity;
   String? menuId;
   String? customerName;
-  String? CustomerContact;
-  String? TableNo;
+  String? customerContact;
+  String? tableNo;
 
   MenuBillModel({
     required this.product,
     this.quantity = 1,
     this.menuId,
-    this.CustomerContact,
-    this.TableNo,
+    this.customerContact,
+    this.tableNo,
     this.customerName,
   });
 
@@ -29,7 +29,7 @@ class MenuBillModel {
     return MenuBillModel(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
-      menuId: menuId ?? this.menuId,
+      menuId: menuId ?? menuId,
     );
   }
 

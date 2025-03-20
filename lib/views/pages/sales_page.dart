@@ -533,8 +533,7 @@ class _SalesPageState extends State<SalesPage> {
                               children: [
                                 Expanded(
                                   child: ListView.builder(
-                                    itemCount: reversedCartItems
-                                        .length, // Use the reversed list
+                                    itemCount: reversedCartItems.length,
                                     itemBuilder: (context, index) {
                                       final cartItem = reversedCartItems[index];
                                       return CartItemWidget(cartItem: cartItem);
@@ -642,9 +641,10 @@ class _SalesPageState extends State<SalesPage> {
   }) {
     return InkWell(
       onTap: () {
-        context
-            .read<MenuBloc>()
-            .add(AddToCart(product)); // Use the MenuItem object
+        context.read<MenuBloc>().add(AddToCart(
+              product,
+              "Kinley",
+            )); // Use the MenuItem object
       },
       child: Card(
         child: Container(
@@ -941,20 +941,18 @@ class _SalesPageState extends State<SalesPage> {
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               Text(
-                "Nu. ${payableAmount.toStringAsFixed(2)}", // Updated payable amount
+                "Nu. ${payableAmount.toStringAsFixed(2)}",
                 style:
                     const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          // Buttons Row for Hold Order and Proceed
           Row(
             children: [
               BlocBuilder<MenuBloc, MenuState>(
                 builder: (context, state) {
                   if (state is MenuLoaded && state.cartItems.isNotEmpty) {
-                    // If cart has items, show "Hold Order" button
                     return Expanded(
                       child: orderButton(
                         "Hold Order",
@@ -967,7 +965,10 @@ class _SalesPageState extends State<SalesPage> {
                           final holdItems = HoldOrderModel(
                             holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
-                            customerName: nameController.text,
+                            customerName: (state.cartItems.isNotEmpty &&
+                                    state.cartItems[0].customerName != null)
+                                ? state.cartItems[0].customerName!
+                                : nameController.text,
                             customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
@@ -988,6 +989,7 @@ class _SalesPageState extends State<SalesPage> {
                             items: state.cartItems,
                             contact: holdItems.customerContact,
                           );
+
                           final barTicket = HoldOrderBarTicket(
                             id: holdOrderId,
                             date: DateFormat('yyyy-MM-dd')

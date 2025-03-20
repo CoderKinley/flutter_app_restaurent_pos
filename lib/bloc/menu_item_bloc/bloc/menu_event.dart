@@ -9,7 +9,11 @@ class LoadMenuItems extends MenuEvent {
 
 class AddToCart extends MenuEvent {
   final MenuModel item;
-  AddToCart(this.item);
+  final String customerName;
+  AddToCart(
+    this.item,
+    this.customerName,
+  );
 
   @override
   List<Object> get props => [item];
