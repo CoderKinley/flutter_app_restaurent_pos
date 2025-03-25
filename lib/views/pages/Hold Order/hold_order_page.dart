@@ -70,7 +70,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                             width: 20,
                           ),
                           Text(
-                            'Customer Name: ${holdOrderItem.menuItems[0].quantity}',
+                            'Customer Name: ${holdOrderItem.customerName}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,

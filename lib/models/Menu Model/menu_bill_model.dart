@@ -25,11 +25,13 @@ class MenuBillModel {
   MenuBillModel copyWith({
     MenuModel? product,
     int? quantity,
+    String? customerName,
   }) {
     return MenuBillModel(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
       menuId: menuId ?? menuId,
+      customerName: customerName ?? this.customerName,
     );
   }
 
@@ -45,6 +47,7 @@ class MenuBillModel {
       product: MenuModel.fromMap(map['product']),
       quantity: map['quantity'],
       menuId: map['menuId'],
+      customerName: map['customerName'],
     );
   }
 }

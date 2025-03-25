@@ -38,3 +38,6 @@ class DeleteHoldOrder extends HoldOrderEvent {
   @override
   List<Object?> get props => [holdOrderId];
 }
+
+
+// Id, Name, Contactnumber and table number should be same but above all the ID should be same for the same quantity

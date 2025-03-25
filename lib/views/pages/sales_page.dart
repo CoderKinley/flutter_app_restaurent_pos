@@ -641,10 +641,12 @@ class _SalesPageState extends State<SalesPage> {
   }) {
     return InkWell(
       onTap: () {
-        context.read<MenuBloc>().add(AddToCart(
-              product,
-              "Kinley",
-            )); // Use the MenuItem object
+        context.read<MenuBloc>().add(
+              AddToCart(
+                product,
+                "Kinley",
+              ),
+            );
       },
       child: Card(
         child: Container(
@@ -660,24 +662,18 @@ class _SalesPageState extends State<SalesPage> {
                       height: 80,
                       width: 120,
                       decoration: BoxDecoration(
-                        // Optional: Add a border radius if needed
                         borderRadius: BorderRadius.circular(16),
-
-                        // Use the product image or fallback to logo image if not available
                         image: (product.dishImage != null &&
                                 product.dishImage!.isNotEmpty &&
                                 product.dishImage != "No Image" &&
                                 File(product.dishImage!).existsSync())
                             ? DecorationImage(
                                 image: FileImage(File(product.dishImage!)),
-                                fit: BoxFit
-                                    .cover, // Adjust the box fit (you can change this as needed)
+                                fit: BoxFit.cover,
                               )
                             : const DecorationImage(
-                                image: AssetImage(
-                                    'assets/icons/logo.png'), // Fallback logo image
-                                fit: BoxFit
-                                    .cover, // Adjust the box fit (you can change this as needed)
+                                image: AssetImage('assets/icons/logo.png'),
+                                fit: BoxFit.cover,
                               ),
                       ),
                     ),
@@ -685,7 +681,7 @@ class _SalesPageState extends State<SalesPage> {
                     Text(
                       product.menuName.length > 28
                           ? '${product.menuName.substring(0, 28)}...'
-                          : product.menuName, // Use MenuItem's name
+                          : product.menuName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
