@@ -11,11 +11,13 @@ import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
+import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/models/category_model.dart';
 import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/tables%20and%20names/customer_info_model.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_bar_ticket.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_ticket.dart';
@@ -426,7 +428,7 @@ class _SalesPageState extends State<SalesPage> {
                 ],
               ),
             ),
-            // next item the right side menu------------------------------------------->
+            // Right side menu------------------------------------------->
             Expanded(
               flex: 6,
               child: Column(
@@ -579,7 +581,7 @@ class _SalesPageState extends State<SalesPage> {
             thumbVisibility: true, // Makes the scrollbar always visible
             child: SingleChildScrollView(
               child: Form(
-                key: formKey, // Form key to handle validation
+                key: formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -969,10 +971,28 @@ class _SalesPageState extends State<SalesPage> {
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );
+
+// ########################################################################################
+                          final customerInfo = CustomerInfoModel(
+                            orderId: holdOrderId,
+                            tableNumber: tableNumber,
+                            customerName: (state.cartItems.isNotEmpty &&
+                                    state.cartItems[0].customerName != null)
+                                ? state.cartItems[0].customerName!
+                                : nameController.text,
+                            customerContact: contactController.text,
+                            orderDateTime: DateTime.now(),
+                            orderedItems: state.cartItems,
+                          );
+// ########################################################################################
+
                           context
                               .read<HoldOrderBloc>()
                               .add(AddHoldOrder(holdItems));
                           context.read<MenuBloc>().add(RemoveAllFromCart());
+                          context
+                              .read<CustomerInfoBloc>()
+                              .add(AddCustomerOrder(customerInfo));
 
                           final ticket = HoldOrderTicket(
                             id: holdOrderId,

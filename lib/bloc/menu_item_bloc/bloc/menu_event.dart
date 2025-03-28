@@ -16,7 +16,7 @@ class AddToCart extends MenuEvent {
   );
 
   @override
-  List<Object> get props => [item];
+  List<Object> get props => [item, customerName];
 }
 
 class RemoveFromCart extends MenuEvent {
