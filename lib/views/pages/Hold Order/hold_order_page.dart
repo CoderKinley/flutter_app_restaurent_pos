@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
+import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
-import 'package:pos_system_legphel/views/pages/Hold%20Order/customer_order_page.dart';
 
 class HoldOrderPage extends StatefulWidget {
   final List<MenuBillModel> menuItems;
@@ -116,18 +116,21 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           const SizedBox(width: 4),
                           OutlinedButton(
                             onPressed: () {
-                              // context
-                              //     .read<MenuBloc>()
-                              //     .add(UpdateCartItemQuantity(items));
-                              // context.read<HoldOrderBloc>().add(
-                              //       DeleteHoldOrder(holdOrderItem.holdOrderId),
-                              //     );
-                              // Navigator.pop(context, holdOrderItem);
-                              Navigator.push(context, MaterialPageRoute(
-                                builder: (context) {
-                                  return CustomerOrderPage();
-                                },
-                              ));
+                              context
+                                  .read<MenuBloc>()
+                                  .add(UpdateCartItemQuantity(items));
+                              context.read<HoldOrderBloc>().add(
+                                    DeleteHoldOrder(holdOrderItem.holdOrderId),
+                                  );
+                              context.read<CustomerInfoBloc>().add(
+                                  FetchCustomerOrderById(
+                                      holdOrderItem.holdOrderId));
+                              Navigator.pop(context, holdOrderItem);
+                              // Navigator.push(context, MaterialPageRoute(
+                              //   builder: (context) {
+                              //     return CustomerOrderPage();
+                              //   },
+                              // ));
                             },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(

@@ -37,7 +37,7 @@ class CustomerInfoBloc extends Bloc<CustomerInfoEvent, CustomerInfoState> {
       if (order != null) {
         emit(CustomerInfoByIdLoaded(order));
       } else {
-        emit(CustomerInfoError("Order not found"));
+        emit(const CustomerInfoError("Order not found"));
       }
     } catch (e) {
       emit(CustomerInfoError(e.toString()));

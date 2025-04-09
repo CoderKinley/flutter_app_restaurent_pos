@@ -482,8 +482,7 @@ class _SalesPageState extends State<SalesPage> {
                                         );
                                       }),
                                     ],
-                                    underline:
-                                        Container(), // Remove the underline
+                                    underline: Container(),
                                   );
                                 }
                                 return Container();

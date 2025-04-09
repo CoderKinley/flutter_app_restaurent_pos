@@ -90,7 +90,7 @@ class HoldOrderTicket {
                   children: [
                     pw.Expanded(
                         child: pw.Text(
-                            "${item.product.menuType} x ${item.quantity}",
+                            "${item.product.dishImage} x ${item.quantity}",
                             style: const pw.TextStyle(fontSize: 7))),
                     pw.Text("Nu.${item.totalPrice}",
                         style: const pw.TextStyle(fontSize: 7)),

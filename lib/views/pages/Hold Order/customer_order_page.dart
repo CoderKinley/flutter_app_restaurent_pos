@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_bloc.dart';
 
 class CustomerOrderPage extends StatelessWidget {
+  const CustomerOrderPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Customer Orders')),
+      appBar: AppBar(title: const Text('Customer Orders')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -19,14 +21,14 @@ class CustomerOrderPage extends StatelessWidget {
                   BlocProvider.of<CustomerInfoBloc>(context)
                       .add(FetchCustomerOrders()); // Fetch all orders
                 },
-                child: Text('Fetch All Orders'),
+                child: const Text('Fetch All Orders'),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // BlocBuilder to handle the UI based on the state
               BlocBuilder<CustomerInfoBloc, CustomerInfoState>(
                 builder: (context, state) {
                   if (state is CustomerInfoLoading) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else if (state is CustomerInfoLoaded) {
                     final orders = state.orders;
                     return ListView.builder(
@@ -35,7 +37,7 @@ class CustomerOrderPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final order = orders[index];
                         return Card(
-                          margin: EdgeInsets.symmetric(vertical: 5),
+                          margin: const EdgeInsets.symmetric(vertical: 5),
                           child: ListTile(
                             title: Text('Order ID: ${order.orderId}'),
                             subtitle: Column(
@@ -49,14 +51,14 @@ class CustomerOrderPage extends StatelessWidget {
                               ],
                             ),
                             trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
+                              icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
                                 // Show a confirmation dialog before deleting
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: Text('Delete Order'),
-                                    content: Text(
+                                    title: const Text('Delete Order'),
+                                    content: const Text(
                                       'Are you sure you want to delete this order?',
                                     ),
                                     actions: [
@@ -64,7 +66,7 @@ class CustomerOrderPage extends StatelessWidget {
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
-                                        child: Text('Cancel'),
+                                        child: const Text('Cancel'),
                                       ),
                                       TextButton(
                                         onPressed: () {
@@ -75,7 +77,7 @@ class CustomerOrderPage extends StatelessWidget {
                                                   order.orderId));
                                           Navigator.of(context).pop();
                                         },
-                                        child: Text('Delete'),
+                                        child: const Text('Delete'),
                                       ),
                                     ],
                                   ),
@@ -89,7 +91,7 @@ class CustomerOrderPage extends StatelessWidget {
                   } else if (state is CustomerInfoError) {
                     return Center(child: Text('Error: ${state.message}'));
                   } else {
-                    return Center(child: Text('No data available'));
+                    return const Center(child: Text('No data available'));
                   }
                 },
               ),
