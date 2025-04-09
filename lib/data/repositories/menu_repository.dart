@@ -1,6 +1,6 @@
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/data/menu_api_service.dart';
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 class MenuRepository {
   final MenuApiService apiService;

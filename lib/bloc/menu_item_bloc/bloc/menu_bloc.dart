@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_items_model_local_stg.dart';
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 part 'menu_event.dart';
 part 'menu_state.dart';

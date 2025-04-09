@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
-import 'package:pos_system_legphel/models/category_model.dart';
+import 'package:pos_system_legphel/models/others/category_model.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCategoryPage extends StatefulWidget {

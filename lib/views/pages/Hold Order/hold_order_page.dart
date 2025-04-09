@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/customer_info_order_bloc/bloc/customer_info_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_bloc.dart';
@@ -71,7 +72,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                             width: 20,
                           ),
                           Text(
-                            'Customer Name: ${holdOrderItem.menuItems[0].customerName}',
+                            'Customer Name: ${holdOrderItem.customerName}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -116,6 +117,14 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           const SizedBox(width: 4),
                           OutlinedButton(
                             onPressed: () {
+                              context.read<CustomerInfoOrderBloc>().add(
+                                    AddCustomerInfoOrder(
+                                      name: holdOrderItem.customerName,
+                                      contact: holdOrderItem.customerContact,
+                                      orderId: holdOrderItem.holdOrderId,
+                                      tableNo: holdOrderItem.tableNumber,
+                                    ),
+                                  );
                               context
                                   .read<MenuBloc>()
                                   .add(UpdateCartItemQuantity(items));

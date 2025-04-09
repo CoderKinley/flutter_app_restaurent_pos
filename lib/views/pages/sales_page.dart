@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
+import 'package:pos_system_legphel/bloc/customer_info_order_bloc/bloc/customer_info_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
@@ -15,8 +16,8 @@ import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
-import 'package:pos_system_legphel/models/category_model.dart';
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/category_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:pos_system_legphel/models/tables%20and%20names/customer_info_model.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_bar_ticket.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_page.dart';
@@ -490,7 +491,7 @@ class _SalesPageState extends State<SalesPage> {
                             ),
                             IconButton(
                               onPressed: () {
-                                return _showAddPersonDialog();
+                                return _showAddPersonDialog(context);
                               },
                               icon: const Icon(Icons.person_add),
                             ),
@@ -568,9 +569,23 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  void _showAddPersonDialog() {
+  void _showAddPersonDialog(BuildContext context) {
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+    // Fetch the current state from the Bloc
+    final currentState = context.read<CustomerInfoOrderBloc>().state;
+
+    // Get existing customer info if present, else default to empty values
+    String existingName = '';
+    String existingContact = '';
+
+    if (currentState is CustomerInfoOrderLoaded) {
+      existingName = currentState.customerInfo.name;
+      existingContact = currentState.customerInfo.contact;
+    }
+
+    nameController.text = existingName;
+    contactController.text = existingContact;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -620,11 +635,6 @@ class _SalesPageState extends State<SalesPage> {
             ElevatedButton(
               onPressed: () {
                 if (formKey.currentState!.validate()) {
-                  String name = nameController.text.trim();
-                  String contact = contactController.text.trim();
-
-                  print("Added: Name - $name, Contact - $contact");
-
                   Navigator.pop(context);
                 }
               },
@@ -643,10 +653,7 @@ class _SalesPageState extends State<SalesPage> {
     return InkWell(
       onTap: () {
         context.read<MenuBloc>().add(
-              AddToCart(
-                product,
-                "Kinley",
-              ),
+              AddToCart(product, ""),
             );
       },
       child: Card(
@@ -962,16 +969,14 @@ class _SalesPageState extends State<SalesPage> {
                           final holdItems = HoldOrderModel(
                             holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
-                            customerName: (state.cartItems.isNotEmpty &&
-                                    state.cartItems[0].customerName != null)
-                                ? state.cartItems[0].customerName!
-                                : nameController.text,
+                            customerName: nameController.text,
                             customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );
 
 // ########################################################################################
+// no need I guess
                           final customerInfo = CustomerInfoModel(
                             orderId: holdOrderId,
                             tableNumber: tableNumber,

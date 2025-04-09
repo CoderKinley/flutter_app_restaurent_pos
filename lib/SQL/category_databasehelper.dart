@@ -1,7 +1,7 @@
-import 'package:pos_system_legphel/models/sub_category_model.dart';
+import 'package:pos_system_legphel/models/others/sub_category_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:pos_system_legphel/models/category_model.dart';
+import 'package:pos_system_legphel/models/others/category_model.dart';
 
 class CategoryDatabaseHelper {
   static final CategoryDatabaseHelper instance = CategoryDatabaseHelper._init();

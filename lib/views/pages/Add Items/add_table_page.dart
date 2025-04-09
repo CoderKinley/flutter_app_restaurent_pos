@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
-import 'package:pos_system_legphel/models/table_no_model.dart';
+import 'package:pos_system_legphel/models/others/table_no_model.dart';
 
 class AddTablePage extends StatefulWidget {
   final TableNoModel? tableModel;

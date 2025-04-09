@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 class MenuApiService {
   static const String apiUrl = "http://119.2.105.142:3800/api/menu";

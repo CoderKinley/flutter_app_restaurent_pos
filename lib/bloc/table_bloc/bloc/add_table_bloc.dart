@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/SQL/table_database_helper.dart';
-import 'package:pos_system_legphel/models/table_no_model.dart';
+import 'package:pos_system_legphel/models/others/table_no_model.dart';
 
 part 'add_table_event.dart';
 part 'add_table_state.dart';

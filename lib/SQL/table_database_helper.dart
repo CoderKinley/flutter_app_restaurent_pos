@@ -1,4 +1,4 @@
-import 'package:pos_system_legphel/models/table_no_model.dart';
+import 'package:pos_system_legphel/models/others/table_no_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 

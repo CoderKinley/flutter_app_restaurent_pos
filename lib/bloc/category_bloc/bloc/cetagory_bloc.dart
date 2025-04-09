@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pos_system_legphel/SQL/category_databasehelper.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart';
-import 'package:pos_system_legphel/models/category_model.dart';
+import 'package:pos_system_legphel/models/others/category_model.dart';
 
 part 'cetagory_event.dart';
 part 'cetagory_state.dart';

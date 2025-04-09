@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
-import 'package:pos_system_legphel/models/sub_category_model.dart';
+import 'package:pos_system_legphel/models/others/sub_category_model.dart';
 import 'package:uuid/uuid.dart';
 
 class AddNewSubCategory extends StatefulWidget {

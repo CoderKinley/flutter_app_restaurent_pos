@@ -4,6 +4,7 @@ import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
+import 'package:pos_system_legphel/bloc/customer_info_order_bloc/bloc/customer_info_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/list_bloc/bloc/itemlist_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => ProceedOrderBloc()),
         BlocProvider(create: (context) => TableBloc()),
         BlocProvider(create: (context) => CustomerInfoBloc()),
+        BlocProvider(create: (context) => CustomerInfoOrderBloc()),
         BlocProvider(
             create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
         BlocProvider(

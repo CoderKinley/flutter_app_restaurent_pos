@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_widget.dart';
 
 class SettingPage extends StatefulWidget {

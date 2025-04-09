@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 part 'menu_from_api_event.dart';
 part 'menu_from_api_state.dart';

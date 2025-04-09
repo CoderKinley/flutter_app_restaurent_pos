@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pos_system_legphel/SQL/category_databasehelper.dart';
-import 'package:pos_system_legphel/models/sub_category_model.dart';
+import 'package:pos_system_legphel/models/others/sub_category_model.dart';
 
 part 'sub_category_event.dart';
 part 'sub_category_state.dart';

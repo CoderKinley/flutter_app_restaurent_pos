@@ -1,4 +1,4 @@
-import 'package:pos_system_legphel/models/new_menu_model.dart';
+import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 class MenuBillModel {
   final MenuModel product;
