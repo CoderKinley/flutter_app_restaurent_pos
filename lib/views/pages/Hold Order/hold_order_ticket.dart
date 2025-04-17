@@ -26,6 +26,13 @@ class HoldOrderTicket {
     required this.items,
   });
 
+  /// Generates a PDF ticket with Kitchen Order Ticket (KOT) and Bill Order Ticket (BOT) sections.
+  ///
+  /// Loads the logo, separates menu items into beverage and non-beverage categories,
+  /// and creates a PDF document with detailed order information including table number,
+  /// date, time, user, contact, and itemized list of ordered products.
+  ///
+  /// Returns a [Uint8List] containing the generated PDF data.
   Future<Uint8List> _generatePdfTicket() async {
     final pdf = pw.Document();
 
@@ -34,6 +41,8 @@ class HoldOrderTicket {
 
     final nonBeverageItems =
         items.where((item) => item.product.menuType != "Beverage").toList();
+    final beverageItems =
+        items.where((item) => item.product.menuType == "Beverage").toList();
 
     pdf.addPage(
       pw.Page(
@@ -41,19 +50,18 @@ class HoldOrderTicket {
         build: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            /// ----------- KOT Section -----------
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.start,
               children: [
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left: Logo
                     pw.Container(
                       width: 100,
                       height: 100,
                       child: pw.Image(pw.MemoryImage(logoBytes)),
                     ),
-                    // Right: Business Details
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
@@ -80,7 +88,6 @@ class HoldOrderTicket {
                 style: const pw.TextStyle(fontSize: 7)),
             pw.SizedBox(height: 5),
             pw.Divider(),
-            // Items Header
             pw.Text("Items Ordered",
                 style:
                     pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
@@ -90,7 +97,87 @@ class HoldOrderTicket {
                   children: [
                     pw.Expanded(
                         child: pw.Text(
-                            "${item.product.dishImage} x ${item.quantity}",
+                            "${item.product.menuName} x ${item.quantity}",
+                            style: const pw.TextStyle(fontSize: 7))),
+                    pw.Text("Nu.${item.totalPrice}",
+                        style: const pw.TextStyle(fontSize: 7)),
+                  ],
+                )),
+            pw.Divider(thickness: 1),
+
+            pw.SizedBox(height: 10),
+
+            // Dashed line between KOT and BOT
+            pw.Container(
+              margin: const pw.EdgeInsets.symmetric(vertical: 0),
+              child: pw.Row(
+                children: List.generate(
+                  75, // Adjust the count as needed for width
+                  (index) =>
+                      pw.Text('-', style: const pw.TextStyle(fontSize: 8)),
+                ),
+              ),
+            ),
+            // Dashed line between KOT and BOT
+            pw.Container(
+              margin: const pw.EdgeInsets.symmetric(vertical: 0),
+              child: pw.Row(
+                children: List.generate(
+                  75, // Adjust the count as needed for width
+                  (index) =>
+                      pw.Text('-', style: const pw.TextStyle(fontSize: 8)),
+                ),
+              ),
+            ),
+
+            /// ----------- BOT Section -----------
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Container(
+                      width: 100,
+                      height: 100,
+                      child: pw.Image(pw.MemoryImage(logoBytes)),
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("BOT",
+                            style: pw.TextStyle(
+                                fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 2),
+                        pw.Text("Table no: $tableNumber",
+                            style: pw.TextStyle(
+                                fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            pw.Divider(thickness: 1),
+            pw.Text("Date: $date", style: const pw.TextStyle(fontSize: 7)),
+            pw.Text("Time: $time", style: const pw.TextStyle(fontSize: 7)),
+            pw.Text("User: $user", style: const pw.TextStyle(fontSize: 7)),
+            pw.Text("Table No: $tableNumber",
+                style: const pw.TextStyle(fontSize: 7)),
+            pw.Text("Contact: $contact",
+                style: const pw.TextStyle(fontSize: 7)),
+            pw.SizedBox(height: 5),
+            pw.Divider(),
+            pw.Text("Items Ordered",
+                style:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+            pw.Divider(thickness: 0.5),
+            ...beverageItems.map((item) => pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Expanded(
+                        child: pw.Text(
+                            "${item.product.menuName} x ${item.quantity}",
                             style: const pw.TextStyle(fontSize: 7))),
                     pw.Text("Nu.${item.totalPrice}",
                         style: const pw.TextStyle(fontSize: 7)),
@@ -101,6 +188,7 @@ class HoldOrderTicket {
         ),
       ),
     );
+
     return pdf.save();
   }
 

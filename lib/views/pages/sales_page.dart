@@ -1085,18 +1085,6 @@ class _SalesPageState extends State<SalesPage> {
                             contact: holdItems.customerContact,
                           );
 
-                          final barTicket = HoldOrderBarTicket(
-                            id: holdOrderId,
-                            date: DateFormat('yyyy-MM-dd')
-                                .format(holdItems.orderDateTime),
-                            time: DateFormat('hh:mm a')
-                                .format(holdItems.orderDateTime),
-                            user: holdItems.customerName,
-                            tableNumber: holdItems.tableNumber,
-                            items: state.cartItems,
-                            contact: holdItems.customerContact,
-                          );
-
                           existingContact = '';
                           existingName = '';
                           nameController.text = '';
@@ -1106,7 +1094,7 @@ class _SalesPageState extends State<SalesPage> {
                               .read<CustomerInfoOrderBloc>()
                               .add(RemoveCustomerInfoOrder());
 
-                          // await ticket.savePdfTicketLocally(context);
+                          await ticket.savePdfTicketLocally(context);
                           // await barTicket.savePdfTicketLocally(context);
                         },
                       ),

@@ -92,12 +92,23 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           const SizedBox(width: 10),
                           OutlinedButton(
                             onPressed: () {
+                              context.read<CustomerInfoOrderBloc>().add(
+                                    AddCustomerInfoOrder(
+                                      name: holdOrderItem.customerName,
+                                      contact: holdOrderItem.customerContact,
+                                      orderId: holdOrderItem.holdOrderId,
+                                      tableNo: holdOrderItem.tableNumber,
+                                    ),
+                                  );
                               context
                                   .read<MenuBloc>()
                                   .add(UpdateCartItemQuantity(items));
                               context.read<HoldOrderBloc>().add(
                                     DeleteHoldOrder(holdOrderItem.holdOrderId),
                                   );
+                              context.read<CustomerInfoBloc>().add(
+                                  FetchCustomerOrderById(
+                                      holdOrderItem.holdOrderId));
                               Navigator.pop(context, holdOrderItem);
                             },
                             style: OutlinedButton.styleFrom(
