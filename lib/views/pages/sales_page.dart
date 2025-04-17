@@ -46,12 +46,16 @@ class SalesPage extends StatefulWidget {
 
 class _SalesPageState extends State<SalesPage> {
   String? selectedTableNumber = 'Table';
+  String? reSelectTableNumber = '';
   TextEditingController nameController = TextEditingController();
   TextEditingController contactController = TextEditingController();
   String? _selectedCategory;
   String? _selectSubCategory;
   int _expandedIndex = -1; // Keep track of the expanded tile index
   int _selectedSubcategoryIndex = -1;
+  // Get existing customer info if present, else default to empty values
+  String existingName = '';
+  String existingContact = '';
 
   @override
   void initState() {
@@ -62,8 +66,50 @@ class _SalesPageState extends State<SalesPage> {
     context.read<MenuBlocApi>().add(FetchMenuApi());
   }
 
+// Used to see the change in dependencies automatically updating the UserInformation widget
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Add a listener to update local variables when CustomerInfoOrderBloc state changes
+    final customerInfoBloc = context.read<CustomerInfoOrderBloc>();
+    customerInfoBloc.stream.listen((state) {
+      if (state is CustomerInfoOrderLoaded) {
+        setState(() {
+          existingName = state.customerInfo.name;
+          existingContact = state.customerInfo.contact;
+          if (state.customerInfo.tableNo.isNotEmpty) {
+            reSelectTableNumber = state.customerInfo.tableNo;
+            selectedTableNumber = state.customerInfo.tableNo;
+          }
+          // Make sure we update both table variables
+          if (state.customerInfo.tableNo.isNotEmpty &&
+              state.customerInfo.tableNo != 'Table') {
+            reSelectTableNumber = state.customerInfo.tableNo;
+            selectedTableNumber = state.customerInfo.tableNo;
+          }
+          // Update the controllers
+          nameController.text = existingName;
+          contactController.text = existingContact;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // listen to customerInfoOrderBLoc state changes
+    final customerInfoState = context.watch<CustomerInfoOrderBloc>().state;
+
+    // Update local variables if there's customer info
+    if (customerInfoState is CustomerInfoOrderLoaded) {
+      existingName = customerInfoState.customerInfo.name;
+      existingContact = customerInfoState.customerInfo.contact;
+      if (customerInfoState.customerInfo.tableNo.isNotEmpty) {
+        reSelectTableNumber = customerInfoState.customerInfo.tableNo;
+        selectedTableNumber = customerInfoState.customerInfo.tableNo;
+      }
+    }
     return Material(
       child: Padding(
         padding: const EdgeInsets.all(0.00),
@@ -458,32 +504,58 @@ class _SalesPageState extends State<SalesPage> {
                                 } else if (state is TableError) {
                                   return Text('Error: ${state.errorMessage}');
                                 } else if (state is TableLoaded) {
-                                  return DropdownButton<String>(
-                                    value: selectedTableNumber ?? 'Table',
-                                    onChanged: (String? newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          selectedTableNumber = newValue;
-                                        });
+                                  // Use BlocBuilder for CustomerInfoOrderBloc to ensure the dropdown updates
+                                  return BlocBuilder<CustomerInfoOrderBloc,
+                                      CustomerInfoOrderState>(
+                                    builder: (context, customerState) {
+                                      // Determine the current table value
+                                      String? currentTable = 'Table';
+
+                                      if (customerState
+                                              is CustomerInfoOrderLoaded &&
+                                          customerState.customerInfo.tableNo
+                                              .isNotEmpty) {
+                                        currentTable =
+                                            customerState.customerInfo.tableNo;
+                                      } else if (reSelectTableNumber!
+                                          .isNotEmpty) {
+                                        currentTable = reSelectTableNumber;
+                                      } else if (selectedTableNumber !=
+                                          'Table') {
+                                        currentTable = selectedTableNumber!;
                                       }
-                                    },
-                                    items: [
-                                      const DropdownMenuItem<String>(
-                                        value: 'Table',
-                                        child: Text('Table'),
-                                      ),
-                                      ...state.tables
-                                          .map<DropdownMenuItem<String>>(
-                                              (table) {
-                                        return DropdownMenuItem<String>(
-                                          value: table.tableNumber.toString(),
-                                          child: Text(
-                                            'Table ${table.tableNumber}',
+
+                                      return DropdownButton<String>(
+                                        value: currentTable,
+                                        onChanged: (String? newValue) {
+                                          if (newValue != null &&
+                                              newValue != 'Table') {
+                                            setState(() {
+                                              selectedTableNumber = newValue;
+                                              reSelectTableNumber = newValue;
+                                            });
+                                          }
+                                        },
+                                        items: [
+                                          const DropdownMenuItem<String>(
+                                            value: 'Table',
+                                            child: Text('Table'),
                                           ),
-                                        );
-                                      }),
-                                    ],
-                                    underline: Container(),
+                                          ...state.tables
+                                              .map<DropdownMenuItem<String>>(
+                                                  (table) {
+                                            return DropdownMenuItem<String>(
+                                              value:
+                                                  table.tableNumber.toString(),
+                                              child: Text(
+                                                'Table ${table.tableNumber}',
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                        underline: Container(),
+                                      );
+                                    },
                                   );
                                 }
                                 return Container();
@@ -506,7 +578,7 @@ class _SalesPageState extends State<SalesPage> {
                               itemBuilder: (context) => [
                                 const PopupMenuItem(
                                   value: 'View Hold Order',
-                                  child: Text('View Hold Order'),
+                                  child: Text('View Orders'),
                                 ),
                               ],
                               child: const IconButton(
@@ -575,17 +647,15 @@ class _SalesPageState extends State<SalesPage> {
     // Fetch the current state from the Bloc
     final currentState = context.read<CustomerInfoOrderBloc>().state;
 
-    // Get existing customer info if present, else default to empty values
-    String existingName = '';
-    String existingContact = '';
-
     if (currentState is CustomerInfoOrderLoaded) {
       existingName = currentState.customerInfo.name;
       existingContact = currentState.customerInfo.contact;
+      reSelectTableNumber = currentState.customerInfo.tableNo;
     }
 
     nameController.text = existingName;
     contactController.text = existingContact;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -959,11 +1029,16 @@ class _SalesPageState extends State<SalesPage> {
                   if (state is MenuLoaded && state.cartItems.isNotEmpty) {
                     return Expanded(
                       child: orderButton(
-                        "Hold Order",
+                        "Save",
                         const Color(0xFFFFDAB9),
                         // Peach,
                         HoldOrderPage(menuItems: state.cartItems),
                         () async {
+                          setState(() {
+                            reSelectTableNumber = '';
+                            selectedTableNumber = 'Table';
+                          });
+
                           const uuid = Uuid();
                           final holdOrderId = uuid.v4();
                           final holdItems = HoldOrderModel(
@@ -1022,18 +1097,32 @@ class _SalesPageState extends State<SalesPage> {
                             contact: holdItems.customerContact,
                           );
 
-                          await ticket.savePdfTicketLocally(context);
-                          await barTicket.savePdfTicketLocally(context);
+                          existingContact = '';
+                          existingName = '';
+                          nameController.text = '';
+                          contactController.text = '';
+
+                          context
+                              .read<CustomerInfoOrderBloc>()
+                              .add(RemoveCustomerInfoOrder());
+
+                          // await ticket.savePdfTicketLocally(context);
+                          // await barTicket.savePdfTicketLocally(context);
                         },
                       ),
                     );
                   } else {
                     return Expanded(
                       child: orderButton(
-                        "View Hold Order",
+                        "View Orders",
                         const Color.fromARGB(255, 3, 27, 48),
                         const HoldOrderPage(menuItems: []), // Empty cart
-                        () {},
+                        () {
+                          setState(() {
+                            selectedTableNumber = 'Table';
+                            reSelectTableNumber = '';
+                          });
+                        },
                       ),
                     );
                   }
