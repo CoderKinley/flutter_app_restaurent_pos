@@ -10,6 +10,7 @@ import 'package:pos_system_legphel/bloc/list_bloc/bloc/itemlist_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_local_bloc/bloc/menu_items_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_print_bloc/bloc/menu_print_bloc.dart';
 import 'package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => TableBloc()),
         BlocProvider(create: (context) => CustomerInfoBloc()),
         BlocProvider(create: (context) => CustomerInfoOrderBloc()),
+        BlocProvider(create: (context) => MenuPrintBloc()),
         BlocProvider(
             create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
         BlocProvider(

@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/menu_print_model.dart';
 import 'package:printing/printing.dart';
 
 class HoldOrderTicket {
@@ -14,7 +15,7 @@ class HoldOrderTicket {
   final String user;
   final String tableNumber;
   final String contact;
-  final List<MenuBillModel> items;
+  final List<MenuPrintModel> items;
 
   HoldOrderTicket({
     required this.id,

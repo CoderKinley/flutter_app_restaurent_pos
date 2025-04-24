@@ -9,17 +9,18 @@ import 'package:pos_system_legphel/bloc/customer_info_order_bloc/bloc/customer_i
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_print_bloc/bloc/menu_print_bloc.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
 import 'package:pos_system_legphel/bloc/table_bloc/bloc/add_table_bloc.dart';
 import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/hold_order_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/menu_print_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:pos_system_legphel/models/others/category_model.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:pos_system_legphel/models/tables%20and%20names/customer_info_model.dart';
-import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_bar_ticket.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_page.dart';
 import 'package:pos_system_legphel/views/pages/Hold%20Order/hold_order_ticket.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart';
@@ -61,6 +62,7 @@ class _SalesPageState extends State<SalesPage> {
   void initState() {
     super.initState();
     context.read<MenuBloc>().add(LoadMenuItems());
+    context.read<MenuPrintBloc>().add(LoadMenuPrintItems());
     context.read<TableBloc>().add(LoadTables());
     context.read<CategoryBloc>().add(LoadCategories());
     context.read<MenuBlocApi>().add(FetchMenuApi());
@@ -595,35 +597,60 @@ class _SalesPageState extends State<SalesPage> {
                   Expanded(
                     flex: 1,
                     child: BlocBuilder<MenuBloc, MenuState>(
-                      builder: (context, state) {
-                        if (state is MenuLoaded) {
+                      builder: (context, menuState) {
+                        if (menuState is MenuLoaded) {
                           final reversedCartItems =
-                              state.cartItems.reversed.toList();
+                              menuState.cartItems.reversed.toList();
 
-                          return Container(
-                            padding: const EdgeInsets.only(left: 10, top: 15),
-                            color: Colors.grey[200],
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: ListView.builder(
-                                    itemCount: reversedCartItems.length,
-                                    itemBuilder: (context, index) {
-                                      final cartItem = reversedCartItems[index];
-                                      return CartItemWidget(cartItem: cartItem);
-                                    },
+                          return BlocBuilder<MenuPrintBloc, MenuPrintState>(
+                            builder: (context, menuPrintState) {
+                              if (menuPrintState is MenuPrintLoaded) {
+                                return Container(
+                                  padding:
+                                      const EdgeInsets.only(left: 10, top: 15),
+                                  color: Colors.grey[200],
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: reversedCartItems.length,
+                                          itemBuilder: (context, index) {
+                                            final cartItem =
+                                                reversedCartItems[index];
+
+                                            final matchedPrintItem =
+                                                menuPrintState.printItems
+                                                    .firstWhere(
+                                              (item) =>
+                                                  item.product.menuId ==
+                                                  cartItem.product.menuId,
+                                              orElse: () => MenuPrintModel(
+                                                  product: cartItem
+                                                      .product), // ✅ Valid default
+                                            );
+
+                                            return CartItemWidget(
+                                              cartItem: cartItem,
+                                              cartItemPrint: matchedPrintItem,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      summarySection(
+                                        context,
+                                        menuState.totalAmount,
+                                        menuState.cartItems,
+                                        selectedTableNumber!,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(
-                                    height: 10), // Spacing for better UI
-                                summarySection(
-                                  context,
-                                  state.totalAmount,
-                                  state.cartItems,
-                                  selectedTableNumber!,
-                                ),
-                              ],
-                            ),
+                                );
+                              } else {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                            },
                           );
                         } else {
                           return const Center(
@@ -722,9 +749,14 @@ class _SalesPageState extends State<SalesPage> {
   }) {
     return InkWell(
       onTap: () {
-        context.read<MenuBloc>().add(
-              AddToCart(product, ""),
-            );
+        // First, add to MenuBloc
+        context.read<MenuBloc>().add(AddToCart(product, ""));
+
+        try {
+          context.read<MenuPrintBloc>().add(AddToPrint(product, ""));
+        } catch (e) {
+          print("Error adding to MenuPrintBloc: $e");
+        }
       },
       child: Card(
         child: Container(
@@ -1073,6 +1105,9 @@ class _SalesPageState extends State<SalesPage> {
                               .read<CustomerInfoBloc>()
                               .add(AddCustomerOrder(customerInfo));
 
+                          final menuPrintState =
+                              context.read<MenuPrintBloc>().state;
+
                           final ticket = HoldOrderTicket(
                             id: holdOrderId,
                             date: DateFormat('yyyy-MM-dd')
@@ -1081,7 +1116,8 @@ class _SalesPageState extends State<SalesPage> {
                                 .format(holdItems.orderDateTime),
                             user: holdItems.customerName,
                             tableNumber: holdItems.tableNumber,
-                            items: state.cartItems,
+                            items:
+                                (menuPrintState as MenuPrintLoaded).printItems,
                             contact: holdItems.customerContact,
                           );
 
@@ -1093,6 +1129,9 @@ class _SalesPageState extends State<SalesPage> {
                           context
                               .read<CustomerInfoOrderBloc>()
                               .add(RemoveCustomerInfoOrder());
+                          context
+                              .read<MenuPrintBloc>()
+                              .add(RemoveAllFromPrint());
 
                           await ticket.savePdfTicketLocally(context);
                           // await barTicket.savePdfTicketLocally(context);
@@ -1164,6 +1203,9 @@ class _SalesPageState extends State<SalesPage> {
 
                             // removed the menu items form the previous page
                             context.read<MenuBloc>().add(RemoveAllFromCart());
+                            context
+                                .read<MenuPrintBloc>()
+                                .add(RemoveAllFromPrint());
                           },
                         ),
                       ),

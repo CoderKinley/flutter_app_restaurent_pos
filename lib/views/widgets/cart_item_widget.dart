@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
+import 'package:pos_system_legphel/bloc/menu_print_bloc/bloc/menu_print_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/menu_print_model.dart';
 
 class CartItemWidget extends StatelessWidget {
   final MenuBillModel cartItem;
+  final MenuPrintModel cartItemPrint;
 
-  const CartItemWidget({super.key, required this.cartItem});
+  const CartItemWidget({
+    super.key,
+    required this.cartItem,
+    required this.cartItemPrint,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +76,8 @@ class CartItemWidget extends StatelessWidget {
                             context
                                 .read<MenuBloc>()
                                 .add(ReduceCartItemQuantity(cartItem));
+                            context.read<MenuPrintBloc>().add(
+                                ReducePrintItemQuantity(item: cartItemPrint));
                           },
                         ),
                       ),
@@ -98,6 +107,8 @@ class CartItemWidget extends StatelessWidget {
                             context
                                 .read<MenuBloc>()
                                 .add(IncreaseCartItemQuantity(cartItem));
+                            context.read<MenuPrintBloc>().add(
+                                IncreasePrintItemQuantity(item: cartItemPrint));
                           },
                         ),
                       ),
@@ -110,6 +121,9 @@ class CartItemWidget extends StatelessWidget {
                   ),
                   onPressed: () {
                     context.read<MenuBloc>().add(RemoveFromCart(cartItem));
+                    context.read()<MenuPrintBloc>().add(
+                          RemoveFromPrint(item: cartItemPrint),
+                        );
                   },
                 ),
               ],
