@@ -121,7 +121,7 @@ class CartItemWidget extends StatelessWidget {
                   ),
                   onPressed: () {
                     context.read<MenuBloc>().add(RemoveFromCart(cartItem));
-                    context.read()<MenuPrintBloc>().add(
+                    context.read<MenuPrintBloc>().add(
                           RemoveFromPrint(item: cartItemPrint),
                         );
                   },

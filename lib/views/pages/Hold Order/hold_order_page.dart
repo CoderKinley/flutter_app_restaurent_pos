@@ -146,11 +146,6 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                   FetchCustomerOrderById(
                                       holdOrderItem.holdOrderId));
                               Navigator.pop(context, holdOrderItem);
-                              // Navigator.push(context, MaterialPageRoute(
-                              //   builder: (context) {
-                              //     return CustomerOrderPage();
-                              //   },
-                              // ));
                             },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
