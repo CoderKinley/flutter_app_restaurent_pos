@@ -20,7 +20,7 @@ class MenuPrintBloc extends Bloc<MenuPrintEvent, MenuPrintState> {
   void _onLoadMenuPrintItems(
       LoadMenuPrintItems event, Emitter<MenuPrintState> emit) {
     emit(MenuPrintLoading());
-    emit(MenuPrintLoaded(menuItems: [], printItems: [], totalAmount: 0));
+    emit(const MenuPrintLoaded(menuItems: [], printItems: [], totalAmount: 0));
   }
 
   void _onAddToPrint(AddToPrint event, Emitter<MenuPrintState> emit) {
@@ -154,7 +154,7 @@ class MenuPrintBloc extends Bloc<MenuPrintEvent, MenuPrintState> {
     final currentState = state as MenuPrintLoaded;
     emit(MenuPrintLoaded(
       menuItems: currentState.menuItems,
-      printItems: [],
+      printItems: const [],
       totalAmount: 0,
     ));
   }

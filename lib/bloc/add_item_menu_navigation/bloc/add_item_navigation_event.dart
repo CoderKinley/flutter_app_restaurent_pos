@@ -9,7 +9,7 @@ abstract class AddItemNavigationEvent extends Equatable {
 
 class SelectScreen extends AddItemNavigationEvent {
   final int index;
-  SelectScreen(this.index);
+  const SelectScreen(this.index);
 
   @override
   List<Object> get props => [index];

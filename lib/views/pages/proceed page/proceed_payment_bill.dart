@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -36,6 +38,7 @@ class ProceedPaymentBill extends StatelessWidget {
     required this.totalAmount,
     required this.payMode,
   });
+
   Future<Uint8List> _generatePdf() async {
     final pdf = pw.Document();
 
@@ -240,6 +243,152 @@ class ProceedPaymentBill extends StatelessWidget {
     }
   }
 
+  /// Print directly to thermal printer using ESC/POS commands
+  Future<void> printWithEscPos(BuildContext context) async {
+    try {
+      // Connect to the thermal printer
+      final socket = await Socket.connect('192.168.1.251', 9100);
+
+      // Initialize printer
+      List<int> bytes = [];
+
+      // ESC @ - Initialize printer
+      bytes.addAll([27, 64]);
+
+      // Center align
+      bytes.addAll([27, 97, 1]);
+
+      // Bold text for header
+      bytes.addAll([27, 69, 1]);
+      bytes.addAll(utf8.encode('LEGPHEL\n'));
+      bytes.addAll([27, 69, 0]); // Bold off
+
+      // Normal text for address
+      bytes.addAll(utf8.encode('Rinchending, Phuentsholing\n'));
+      bytes.addAll(utf8.encode('Mobile: +975-17772393, +975-77772393\n'));
+      bytes.addAll(utf8.encode('TPN: LAC00091\n'));
+      bytes.addAll(utf8.encode('Email: legphel.hotel@gmail.com\n'));
+
+      // Divider
+      bytes.addAll(utf8.encode('--------------------------------\n'));
+
+      // Left align
+      bytes.addAll([27, 97, 0]);
+
+      // Bill details
+      bytes.addAll(utf8.encode('Bill ID: $id\n'));
+      bytes.addAll(utf8.encode('Date: $date\n'));
+      bytes.addAll(utf8.encode('Time: $time\n'));
+      bytes.addAll(utf8.encode('User: $user\n'));
+      bytes.addAll(utf8.encode('Table No: $tableNo\n'));
+
+      // Divider
+      bytes.addAll(utf8.encode('--------------------------------\n'));
+
+      // Center align for header
+      bytes.addAll([27, 97, 1]);
+      bytes.addAll(utf8.encode('ITEMS PURCHASED\n'));
+
+      // Left align for items
+      bytes.addAll([27, 97, 0]);
+
+      // Items list
+      for (var item in items) {
+        String itemLine = '${item['menuName']} x${item['quantity']}';
+        String priceLine = 'Nu.${item['price']}';
+
+        // Calculate spaces needed to align price to the right
+        int lineLength = 32; // Typical thermal printer width
+        int spacesNeeded = lineLength - itemLine.length - priceLine.length;
+        if (spacesNeeded < 1) spacesNeeded = 1;
+
+        String spaces = ' ' * spacesNeeded;
+        bytes.addAll(utf8.encode('$itemLine$spaces$priceLine\n'));
+      }
+
+      // Divider
+      bytes.addAll(utf8.encode('--------------------------------\n'));
+
+      // Bill summary
+      String subtotalLine = 'Subtotal:';
+      String subtotalValue = 'Nu.${subTotal.toStringAsFixed(2)}';
+      int subtotalSpaces = 32 - subtotalLine.length - subtotalValue.length;
+      bytes.addAll(
+          utf8.encode('$subtotalLine${' ' * subtotalSpaces}$subtotalValue\n'));
+
+      String serviceLine = 'Service 10%:';
+      String serviceValue = 'Nu.${(gst / 2).toStringAsFixed(2)}';
+      int serviceSpaces = 32 - serviceLine.length - serviceValue.length;
+      bytes.addAll(
+          utf8.encode('$serviceLine${' ' * serviceSpaces}$serviceValue\n'));
+
+      String bstLine = 'B.S.T 10%:';
+      String bstValue = 'Nu.${(gst / 2).toStringAsFixed(2)}';
+      int bstSpaces = 32 - bstLine.length - bstValue.length;
+      bytes.addAll(utf8.encode('$bstLine${' ' * bstSpaces}$bstValue\n'));
+
+      String discountLine = 'Discount:';
+      String discountValue = 'Nu. 0.00';
+      int discountSpaces = 32 - discountLine.length - discountValue.length;
+      bytes.addAll(
+          utf8.encode('$discountLine${' ' * discountSpaces}$discountValue\n'));
+
+      // Divider
+      bytes.addAll(utf8.encode('--------------------------------\n'));
+
+      String quantityLine = 'Total Quantity:';
+      String quantityValue = '$totalQuantity';
+      int quantitySpaces = 32 - quantityLine.length - quantityValue.length;
+      bytes.addAll(
+          utf8.encode('$quantityLine${' ' * quantitySpaces}$quantityValue\n'));
+
+      // Bold for total amount
+      bytes.addAll([27, 69, 1]);
+      String totalLine = 'Total Amount:';
+      String totalValue = 'Nu.${totalAmount.toStringAsFixed(2)}';
+      int totalSpaces = 32 - totalLine.length - totalValue.length;
+      bytes.addAll(utf8.encode('$totalLine${' ' * totalSpaces}$totalValue\n'));
+      bytes.addAll([27, 69, 0]); // Bold off
+
+      String paymentLine = 'Payment Mode:';
+      String paymentValue = payMode;
+      int paymentSpaces = 32 - paymentLine.length - paymentValue.length;
+      bytes.addAll(
+          utf8.encode('$paymentLine${' ' * paymentSpaces}$paymentValue\n'));
+
+      // Divider
+      bytes.addAll(utf8.encode('--------------------------------\n'));
+
+      // Center align for footer
+      bytes.addAll([27, 97, 1]);
+
+      // Bold for thank you
+      // Bold for thank you
+      bytes.addAll([27, 69, 1]);
+      bytes.addAll(utf8.encode('Thank You! Visit Again!\n'));
+      bytes.addAll([27, 69, 0]); // Bold off
+
+      bytes.addAll(utf8.encode('Have a great day!\n'));
+
+      // Feed and cut paper
+      bytes.addAll([27, 100, 3]); // Feed 3 lines
+      bytes.addAll([29, 86, 1]); // Cut paper
+
+      // Send data to printer
+      socket.add(bytes);
+      await socket.flush();
+      socket.destroy();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Print job sent to thermal printer')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to print: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -377,25 +526,10 @@ class ProceedPaymentBill extends StatelessWidget {
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      // Expanded(
-                      //   child: ElevatedButton.icon(
-                      //     icon: const Icon(Icons.print),
-                      //     label: const Text("Print"),
-                      //     onPressed: () async {
-                      //       final pdfData = await _generatePdf();
-                      //       await Printing.layoutPdf(
-                      //           onLayout: (format) async => pdfData);
-                      //     },
-                      //     style: ElevatedButton.styleFrom(
-                      //       padding: const EdgeInsets.all(16),
-                      //     ),
-                      //   ),
-                      // ),
-                      // const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           icon: const Icon(Icons.print),
-                          label: const Text("Print"),
+                          label: const Text("Share PDF"),
                           onPressed: () async {
                             final pdfData = await _generatePdf();
                             await Printing.sharePdf(
@@ -403,6 +537,18 @@ class ProceedPaymentBill extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.all(16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.receipt),
+                          label: const Text("Thermal Print"),
+                          onPressed: () => printWithEscPos(context),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                            backgroundColor: Colors.green,
                           ),
                         ),
                       ),
@@ -453,5 +599,4 @@ class ProceedPaymentBill extends StatelessWidget {
       ),
     );
   }
-// Helper method for summary rows
 }

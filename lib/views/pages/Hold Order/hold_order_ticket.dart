@@ -1,12 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_print_model.dart';
-import 'package:printing/printing.dart';
+import 'dart:convert';
 
 class HoldOrderTicket {
   final String id;
@@ -193,6 +193,165 @@ class HoldOrderTicket {
     return pdf.save();
   }
 
+  /// Generates plain text for direct printing to thermal printer
+  String _generatePlainTextTicket() {
+    final nonBeverageItems =
+        items.where((item) => item.product.menuType != "Beverage").toList();
+    final beverageItems =
+        items.where((item) => item.product.menuType == "Beverage").toList();
+
+    // ESC/POS commands for formatting
+    final String esc = '\x1B';
+    final String gs = '\x1D';
+    final String centerAlign = '$esc\x61\x01';
+    final String leftAlign = '$esc\x61\x00';
+    final String rightAlign = '$esc\x61\x02';
+    final String boldOn = '$esc\x45\x01';
+    final String boldOff = '$esc\x45\x00';
+    final String doubleHeight = '$gs\x21\x01';
+    final String normalHeight = '$gs\x21\x00';
+    final String cut = '$esc\x69';
+    final String feed = '$esc\x64\x10'; // Feed 10 lines
+
+    StringBuffer buffer = StringBuffer();
+
+    // KOT Section
+    buffer.write(centerAlign);
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('KOT\n');
+    buffer.write(normalHeight);
+    buffer.write('Table no: $tableNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(leftAlign);
+    buffer.write('Date: $date\n');
+    buffer.write('Time: $time\n');
+    buffer.write('User: $user\n');
+    buffer.write('Table No: $tableNumber\n');
+    buffer.write('Contact: $contact\n\n');
+    buffer.write('--------------------------------\n');
+    buffer.write(boldOn);
+    buffer.write('Items Ordered\n');
+    buffer.write(boldOff);
+    buffer.write('--------------------------------\n');
+
+    for (var item in nonBeverageItems) {
+      buffer.write('${item.product.menuName} x ${item.quantity}');
+      buffer.write(rightAlign);
+      buffer.write('Nu.${item.totalPrice}\n');
+      buffer.write(leftAlign);
+    }
+    buffer.write('--------------------------------\n\n');
+
+    // Separator between KOT and BOT
+    buffer.write(centerAlign);
+    buffer.write('- - - - - - - - - - - - - - - -\n');
+    buffer.write('- - - - - - - - - - - - - - - -\n\n');
+
+    // BOT Section
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('BOT\n');
+    buffer.write(normalHeight);
+    buffer.write('Table no: $tableNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(leftAlign);
+    buffer.write('Date: $date\n');
+    buffer.write('Time: $time\n');
+    buffer.write('User: $user\n');
+    buffer.write('Table No: $tableNumber\n');
+    buffer.write('Contact: $contact\n\n');
+    buffer.write('--------------------------------\n');
+    buffer.write(boldOn);
+    buffer.write('Items Ordered\n');
+    buffer.write(boldOff);
+    buffer.write('--------------------------------\n');
+
+    for (var item in beverageItems) {
+      buffer.write('${item.product.menuName} x ${item.quantity}');
+      buffer.write(rightAlign);
+      buffer.write('Nu.${item.totalPrice}\n');
+      buffer.write(leftAlign);
+    }
+    buffer.write('--------------------------------\n\n');
+
+    // Cut the paper
+    buffer.write(feed);
+    buffer.write(cut);
+
+    return buffer.toString();
+  }
+
+  /// Print directly to thermal printer using raw socket
+  Future<void> printToThermalPrinter(BuildContext context) async {
+    try {
+      // For direct printing, we'll use plain text with ESC/POS commands
+      final String textToPrint = _generatePlainTextTicket();
+
+      // Connect to the printer via socket
+      final socket = await Socket.connect('192.168.1.251', 9100);
+
+      // Send the data to the printer
+      socket.add(utf8.encode(textToPrint));
+
+      // Wait for the data to be sent
+      await socket.flush();
+
+      // Close the socket
+      socket.close();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Successfully sent to printer"),
+        ),
+      );
+      print("Data successfully sent to thermal printer");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Printing error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print("Error printing to thermal printer: $e");
+    }
+  }
+
+  /// Alternative method that sends PDF data directly to printer
+  Future<void> printPdfToThermalPrinter(BuildContext context) async {
+    try {
+      final pdfData = await _generatePdfTicket();
+
+      // Connect to the printer via socket
+      final socket = await Socket.connect('192.168.1.251', 9100);
+
+      // Send the PDF data to the printer
+      socket.add(pdfData);
+
+      // Wait for the data to be sent
+      await socket.flush();
+
+      // Close the socket
+      socket.close();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Successfully sent PDF to printer"),
+        ),
+      );
+      print("PDF successfully sent to thermal printer");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Printing error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print("Error printing to thermal printer: $e");
+    }
+  }
+
+  // Keep this method if you still want the option to save locally
   Future<void> savePdfTicketLocally(BuildContext context) async {
     try {
       // Request permission for external storage
@@ -215,17 +374,15 @@ class HoldOrderTicket {
         );
 
         print("PDF saved to ${file.path}");
-
-        // Print the PDF directly to a specific printer
-        await Printing.sharePdf(
-          bytes: pdfData,
-          filename: "bill__$id.pdf",
-        );
-
-        print("PDF sent to printer.");
       }
     } catch (e) {
-      print("Failed to save or print PDF: $e");
+      print("Failed to save PDF locally: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to save PDF: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

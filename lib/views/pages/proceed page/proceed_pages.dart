@@ -338,37 +338,45 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       width: 80, // Fixed width for square
       height: 50, // Fixed height for square
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProceedPaymentBill(
-                  id: widget.orderID,
-                  user: widget.customername,
-                  phoneNo: widget.phoneNumber,
-                  tableNo: widget.tableNumber,
-                  items: widget.items
-                      .map((item) => {
-                            "menuName": item.product.menuName,
-                            "quantity": item.quantity,
-                            "price": item.product.price
-                          })
-                      .toList(),
-                  subTotal: calculateTotal(),
-                  gst: calculateTotal() * 0.2,
-                  totalQuantity:
-                      widget.items.fold(0, (sum, item) => sum + item.quantity),
-                  date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
-                  time: DateFormat('hh:mm a').format(DateTime.now()),
-                  totalAmount: calculateTotal() * 1.2,
-                  payMode: method,
-                ),
-              ));
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProceedPaymentBill(
+                id: widget.orderID,
+                user: widget.customername,
+                phoneNo: widget.phoneNumber,
+                tableNo: widget.tableNumber,
+                items: widget.items
+                    .map((item) => {
+                          "menuName": item.product.menuName,
+                          "quantity": item.quantity,
+                          "price":
+                              (double.parse(item.product.price) * item.quantity)
+                                  .toStringAsFixed(2),
+                        })
+                    .toList(),
+                subTotal: calculateTotal(),
+                gst: calculateTotal() * 0.2,
+                totalQuantity:
+                    widget.items.fold(0, (sum, item) => sum + item.quantity),
+                date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+                time: DateFormat('hh:mm a').format(DateTime.now()),
+                totalAmount: calculateTotal() * 1.2,
+                payMode: method,
+              ),
+            ),
+          );
+
+          // You can now handle the result if needed
+          if (result != null) {
+            // Do something with the result returned from ProceedPaymentBill
+          }
         },
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8), // Slightly rounded corners
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         child: Container(

@@ -62,7 +62,7 @@ class _SalesPageState extends State<SalesPage> {
   void initState() {
     super.initState();
     context.read<MenuBloc>().add(LoadMenuItems());
-    context.read<MenuPrintBloc>().add(LoadMenuPrintItems());
+    context.read<MenuPrintBloc>().add(const LoadMenuPrintItems());
     context.read<TableBloc>().add(LoadTables());
     context.read<CategoryBloc>().add(LoadCategories());
     context.read<MenuBlocApi>().add(FetchMenuApi());
@@ -1131,9 +1131,11 @@ class _SalesPageState extends State<SalesPage> {
                               .add(RemoveCustomerInfoOrder());
                           context
                               .read<MenuPrintBloc>()
-                              .add(RemoveAllFromPrint());
+                              .add(const RemoveAllFromPrint());
 
-                          await ticket.savePdfTicketLocally(context);
+                          // await ticket.savePdfTicketLocally(context);
+                          // await ticket.printToThermalPrinter(context);
+                          await ticket.printToThermalPrinter(context);
                           // await barTicket.savePdfTicketLocally(context);
                         },
                       ),
@@ -1205,7 +1207,7 @@ class _SalesPageState extends State<SalesPage> {
                             context.read<MenuBloc>().add(RemoveAllFromCart());
                             context
                                 .read<MenuPrintBloc>()
-                                .add(RemoveAllFromPrint());
+                                .add(const RemoveAllFromPrint());
                           },
                         ),
                       ),

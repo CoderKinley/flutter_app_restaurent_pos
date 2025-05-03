@@ -1,0 +1,2 @@
+C:/Users/Dell/Downloads/pos_system_legphel/android/app/.cxx/Debug/5v54513p/x86/CMakeFiles/edit_cache.dir
+C:/Users/Dell/Downloads/pos_system_legphel/android/app/.cxx/Debug/5v54513p/x86/CMakeFiles/rebuild_cache.dir
