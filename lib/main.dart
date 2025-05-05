@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
@@ -20,7 +22,13 @@ import 'package:pos_system_legphel/data/menu_api_service.dart';
 import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+  ]);
+
   runApp(const MyApp());
 }
 
