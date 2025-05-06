@@ -14,6 +14,7 @@ class ReceiptPage extends StatefulWidget {
 
 class _ReceiptPageState extends State<ReceiptPage> {
   ProceedOrderModel? selectedReceiptItem;
+  int _orderNumberCounter = 1; // Add counter variable
 
   final ScrollController scrollController = ScrollController();
   @override
@@ -78,6 +79,23 @@ class _ReceiptPageState extends State<ReceiptPage> {
                               return value;
                             });
 
+                            // Set the selectedReceiptItem to the most recent order if not already set
+                            if (selectedReceiptItem == null &&
+                                reversedGroupedOrders.isNotEmpty) {
+                              final firstDate =
+                                  reversedGroupedOrders.keys.first;
+                              final firstOrders =
+                                  reversedGroupedOrders[firstDate]!;
+                              if (firstOrders.isNotEmpty) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  setState(() {
+                                    selectedReceiptItem = firstOrders.first;
+                                  });
+                                });
+                              }
+                            }
+
                             return CustomScrollView(
                               controller: scrollController,
                               slivers: [
@@ -115,7 +133,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                                           .format(proceedOrder
                                                               .orderDateTime)
                                                           .toString(),
-                                                      'Name: ${proceedOrder.customerName}',
+                                                      'Order Number: ${proceedOrder.orderNumber}',
                                                       time: DateFormat('HH:mm')
                                                           .format(proceedOrder
                                                               .orderDateTime),
@@ -228,7 +246,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                                 MainAxisAlignment.center,
                                             children: [
                                               Text(
-                                                '${selectedReceiptItem!.totalPrice}Nu',
+                                                '${selectedReceiptItem?.totalPrice ?? 0}Nu',
                                                 style: const TextStyle(
                                                   fontSize: 24,
                                                   fontWeight: FontWeight.bold,
@@ -249,26 +267,28 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                       ),
                                       const Divider(),
                                       Text(
-                                          'Customer Name: ${selectedReceiptItem!.customerName}'),
+                                          'Customer Name: ${selectedReceiptItem?.customerName ?? 'N/A'}'),
                                       Text(
-                                          'Contace Number: ${selectedReceiptItem!.phoneNumber}'),
+                                          'Contact Number: ${selectedReceiptItem?.phoneNumber ?? 'N/A'}'),
                                       Text(
-                                          'POS: ${selectedReceiptItem!.restaurantBranchName}'),
+                                          'POS: ${selectedReceiptItem?.restaurantBranchName ?? 'N/A'}'),
                                       const SizedBox(height: 8),
                                       const Text('Dine in',
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold)),
 
                                       // List of menu items
-                                      for (var item
-                                          in selectedReceiptItem!.menuItems)
-                                        ListTile(
-                                          title: Text(item.product.menuName),
-                                          trailing:
-                                              Text('${item.totalPrice}Nu'),
-                                          subtitle: Text(
-                                              '${item.quantity} x ${item.product.price}Nu'),
-                                        ),
+                                      if (selectedReceiptItem?.menuItems !=
+                                          null)
+                                        for (var item
+                                            in selectedReceiptItem!.menuItems)
+                                          ListTile(
+                                            title: Text(item.product.menuName),
+                                            trailing:
+                                                Text('${item.totalPrice}Nu'),
+                                            subtitle: Text(
+                                                '${item.quantity} x ${item.product.price}Nu'),
+                                          ),
                                       const Divider(),
                                       const Text('Total',
                                           style: TextStyle(
@@ -279,12 +299,12 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                         children: [
                                           const Text('Cash'),
                                           Text(
-                                              '${selectedReceiptItem!.totalPrice}Nu'),
+                                              '${selectedReceiptItem?.totalPrice ?? 0}Nu'),
                                         ],
                                       ),
                                       const Divider(),
                                       Text(
-                                          '${selectedReceiptItem!.orderDateTime.toLocal()}'),
+                                          '${selectedReceiptItem?.orderDateTime.toLocal() ?? 'N/A'}'),
                                     ],
                                   ),
                                 ),
@@ -357,14 +377,20 @@ class _ReceiptPageState extends State<ReceiptPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.receipt, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(title),
-                ],
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.receipt, size: 16, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              // Add the PopupMenuButton for delete option
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert, color: Colors.grey),
                 onSelected: (String value) {
@@ -431,16 +457,30 @@ class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    if (groupedOrders.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        color: Colors.green,
+        child: const Text(
+          'No Orders',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18.0,
+          ),
+        ),
+      );
+    }
+
     int currentIndex = (scrollController.offset / 50).floor();
-    currentIndex = currentIndex.clamp(
-        0, groupedOrders.keys.length - 1); // Prevent out-of-bounds access
+    currentIndex = currentIndex.clamp(0, groupedOrders.keys.length - 1);
     String currentDate = groupedOrders.keys.elementAt(currentIndex);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       color: Colors.green,
       child: Text(
-        currentDate, // Displaying the current date based on scroll
+        currentDate,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,

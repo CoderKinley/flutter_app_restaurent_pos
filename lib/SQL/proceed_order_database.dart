@@ -11,7 +11,7 @@ class ProceedOrderDatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('ProceedOrdersFromAPI.db');
+    _database = await _initDB('ProceedOrdersFromAPINew.db');
     return _database!;
   }
 
@@ -30,6 +30,7 @@ class ProceedOrderDatabaseHelper {
         tableNumber TEXT,
         customerName TEXT,
         phoneNumber TEXT,
+        orderNumber TEXT, 
         restaurantBranchName TEXT,
         orderDateTime TEXT,
         menuItems TEXT

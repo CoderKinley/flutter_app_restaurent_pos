@@ -48,6 +48,9 @@ dependencies:
   open_filex: ^4.7.0
   flutter_native_splash: ^2.3.10
   printing: ^5.14.2
+  device_info_plus: ^11.4.0
+  image: ^4.1.7  # For image processing in thermal printing
+  shared_preferences: ^2.5.3
 
 
 dev_dependencies:

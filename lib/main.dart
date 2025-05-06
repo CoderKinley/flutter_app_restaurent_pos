@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
 import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
@@ -25,11 +29,30 @@ import 'package:pos_system_legphel/views/pages/home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await _requestImageAndStoragePermissions();
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
   ]);
 
   runApp(const MyApp());
+}
+
+Future<void> _requestImageAndStoragePermissions() async {
+  if (Platform.isAndroid) {
+    final deviceInfo = await DeviceInfoPlugin().androidInfo;
+    final sdkInt = deviceInfo.version.sdkInt;
+
+    if (sdkInt >= 33) {
+      // Android 13 and above
+      await Permission.photos.request(); // For image picker
+    } else {
+      // Android 12 and below
+      await Permission.storage.request();
+    }
+  } else if (Platform.isIOS) {
+    await Permission.photos.request(); // iOS image picker
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -43,9 +66,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(
             create: (context) =>
                 ProductBloc(DatabaseHelper.instance)..add(LoadProducts())),
-        BlocProvider(
-          create: (context) => AddItemNavigationBloc(),
-        ),
+        BlocProvider(create: (context) => AddItemNavigationBloc()),
         BlocProvider(create: (context) => MenuBloc()),
         BlocProvider(create: (context) => HoldOrderBloc()),
         BlocProvider(create: (context) => ProceedOrderBloc()),
@@ -58,8 +79,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => MenuBlocApi(
             MenuRepository(
-              MenuApiService(), // Create an instance
-              MenuLocalDb(), // Create an instance
+              MenuApiService(),
+              MenuLocalDb(),
             ),
           ),
         ),

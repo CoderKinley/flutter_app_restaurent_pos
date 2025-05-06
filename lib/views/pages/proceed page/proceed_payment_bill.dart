@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
@@ -22,9 +21,11 @@ class ProceedPaymentBill extends StatelessWidget {
   final String time;
   final double totalAmount;
   final String payMode;
+  final String orderNumber;
 
   const ProceedPaymentBill({
     super.key,
+    required this.orderNumber,
     required this.id,
     required this.user,
     required this.phoneNo,
@@ -97,6 +98,8 @@ class ProceedPaymentBill extends StatelessWidget {
               mainAxisAlignment: pw.MainAxisAlignment.start,
               children: [
                 pw.Text("Bill ID: $id", style: const pw.TextStyle(fontSize: 7)),
+                pw.Text("Order No: $orderNumber",
+                    style: const pw.TextStyle(fontSize: 7)),
                 pw.Text("Date: $date", style: const pw.TextStyle(fontSize: 7)),
                 pw.Text("Time: $time", style: const pw.TextStyle(fontSize: 7)),
               ],
@@ -246,136 +249,91 @@ class ProceedPaymentBill extends StatelessWidget {
   /// Print directly to thermal printer using ESC/POS commands
   Future<void> printWithEscPos(BuildContext context) async {
     try {
-      // Connect to the thermal printer
       final socket = await Socket.connect('192.168.1.251', 9100);
 
-      // Initialize printer
-      List<int> bytes = [];
+      // ESC/POS command constants
+      const String esc = '\x1B';
+      const String gs = '\x1D';
+      final String init = '$esc\x40';
+      final String centerAlign = '$esc\x61\x01';
+      final String leftAlign = '$esc\x61\x00';
+      final String boldOn = '$esc\x45\x01';
+      final String boldOff = '$esc\x45\x00';
+      final String feed = '$esc\x64\x03';
+      final String cut = '$gs\x56\x01';
 
-      // ESC @ - Initialize printer
-      bytes.addAll([27, 64]);
+      const int lineLength = 48;
 
-      // Center align
-      bytes.addAll([27, 97, 1]);
+      StringBuffer buffer = StringBuffer();
+      buffer.write(init);
+      buffer.write(centerAlign);
+      buffer.write(boldOn);
+      buffer.writeln('LEGPHEL EATS');
+      buffer.write(boldOff);
+      buffer.writeln('Rinchending, Phuentsholing');
+      buffer.writeln('Mobile: +975-17872219');
+      // buffer.writeln('TPN: LAC00091');
+      // buffer.writeln('Email: legphel.hotel@gmail.com');
 
-      // Bold text for header
-      bytes.addAll([27, 69, 1]);
-      bytes.addAll(utf8.encode('LEGPHEL\n'));
-      bytes.addAll([27, 69, 0]); // Bold off
+      buffer.writeln('-' * lineLength);
+      buffer.write(leftAlign);
 
-      // Normal text for address
-      bytes.addAll(utf8.encode('Rinchending, Phuentsholing\n'));
-      bytes.addAll(utf8.encode('Mobile: +975-17772393, +975-77772393\n'));
-      bytes.addAll(utf8.encode('TPN: LAC00091\n'));
-      bytes.addAll(utf8.encode('Email: legphel.hotel@gmail.com\n'));
+      buffer.writeln('Bill ID: $id');
+      buffer.writeln('Order No: $orderNumber');
+      buffer.write('Date: $date  ');
+      buffer.writeln('Time: $time');
+      // buffer.writeln('User: $user');
+      // buffer.writeln('Table No: $tableNo');
 
-      // Divider
-      bytes.addAll(utf8.encode('--------------------------------\n'));
+      buffer.writeln('-' * lineLength);
 
-      // Left align
-      bytes.addAll([27, 97, 0]);
+      buffer.write(centerAlign);
+      buffer.writeln('ITEMS PURCHASED');
+      buffer.write(leftAlign);
 
-      // Bill details
-      bytes.addAll(utf8.encode('Bill ID: $id\n'));
-      bytes.addAll(utf8.encode('Date: $date\n'));
-      bytes.addAll(utf8.encode('Time: $time\n'));
-      bytes.addAll(utf8.encode('User: $user\n'));
-      bytes.addAll(utf8.encode('Table No: $tableNo\n'));
-
-      // Divider
-      bytes.addAll(utf8.encode('--------------------------------\n'));
-
-      // Center align for header
-      bytes.addAll([27, 97, 1]);
-      bytes.addAll(utf8.encode('ITEMS PURCHASED\n'));
-
-      // Left align for items
-      bytes.addAll([27, 97, 0]);
-
-      // Items list
       for (var item in items) {
         String itemLine = '${item['menuName']} x${item['quantity']}';
         String priceLine = 'Nu.${item['price']}';
 
-        // Calculate spaces needed to align price to the right
-        int lineLength = 32; // Typical thermal printer width
         int spacesNeeded = lineLength - itemLine.length - priceLine.length;
         if (spacesNeeded < 1) spacesNeeded = 1;
-
         String spaces = ' ' * spacesNeeded;
-        bytes.addAll(utf8.encode('$itemLine$spaces$priceLine\n'));
+
+        buffer.writeln('$itemLine$spaces$priceLine');
       }
 
-      // Divider
-      bytes.addAll(utf8.encode('--------------------------------\n'));
+      buffer.writeln('-' * lineLength);
 
-      // Bill summary
-      String subtotalLine = 'Subtotal:';
-      String subtotalValue = 'Nu.${subTotal.toStringAsFixed(2)}';
-      int subtotalSpaces = 32 - subtotalLine.length - subtotalValue.length;
-      bytes.addAll(
-          utf8.encode('$subtotalLine${' ' * subtotalSpaces}$subtotalValue\n'));
+      void addSummaryLine(String label, String value, {bool bold = false}) {
+        int space = lineLength - label.length - value.length;
+        String padding = ' ' * (space < 0 ? 0 : space);
+        if (bold) buffer.write(boldOn);
+        buffer.writeln('$label$padding$value');
+        if (bold) buffer.write(boldOff);
+      }
 
-      String serviceLine = 'Service 10%:';
-      String serviceValue = 'Nu.${(gst / 2).toStringAsFixed(2)}';
-      int serviceSpaces = 32 - serviceLine.length - serviceValue.length;
-      bytes.addAll(
-          utf8.encode('$serviceLine${' ' * serviceSpaces}$serviceValue\n'));
+      // addSummaryLine('Subtotal:', 'Nu.${subTotal.toStringAsFixed(2)}');
+      // addSummaryLine('Service 10%:', 'Nu.${(gst / 2).toStringAsFixed(2)}');
+      // addSummaryLine('B.S.T 10%:', 'Nu.${(gst / 2).toStringAsFixed(2)}');
+      // addSummaryLine('Discount:', 'Nu. 0.00');
 
-      String bstLine = 'B.S.T 10%:';
-      String bstValue = 'Nu.${(gst / 2).toStringAsFixed(2)}';
-      int bstSpaces = 32 - bstLine.length - bstValue.length;
-      bytes.addAll(utf8.encode('$bstLine${' ' * bstSpaces}$bstValue\n'));
+      addSummaryLine('Total Quantity:', '$totalQuantity');
+      addSummaryLine('Total Amount:', 'Nu.${totalAmount.toStringAsFixed(2)}',
+          bold: true);
+      addSummaryLine('Payment Mode:', payMode);
 
-      String discountLine = 'Discount:';
-      String discountValue = 'Nu. 0.00';
-      int discountSpaces = 32 - discountLine.length - discountValue.length;
-      bytes.addAll(
-          utf8.encode('$discountLine${' ' * discountSpaces}$discountValue\n'));
+      buffer.writeln('-' * lineLength);
 
-      // Divider
-      bytes.addAll(utf8.encode('--------------------------------\n'));
+      buffer.write(centerAlign);
+      buffer.write(boldOn);
+      buffer.writeln('Thank You! Visit Again!');
+      buffer.write(boldOff);
+      buffer.writeln('Have a great day!');
 
-      String quantityLine = 'Total Quantity:';
-      String quantityValue = '$totalQuantity';
-      int quantitySpaces = 32 - quantityLine.length - quantityValue.length;
-      bytes.addAll(
-          utf8.encode('$quantityLine${' ' * quantitySpaces}$quantityValue\n'));
+      buffer.write(feed);
+      buffer.write(cut);
 
-      // Bold for total amount
-      bytes.addAll([27, 69, 1]);
-      String totalLine = 'Total Amount:';
-      String totalValue = 'Nu.${totalAmount.toStringAsFixed(2)}';
-      int totalSpaces = 32 - totalLine.length - totalValue.length;
-      bytes.addAll(utf8.encode('$totalLine${' ' * totalSpaces}$totalValue\n'));
-      bytes.addAll([27, 69, 0]); // Bold off
-
-      String paymentLine = 'Payment Mode:';
-      String paymentValue = payMode;
-      int paymentSpaces = 32 - paymentLine.length - paymentValue.length;
-      bytes.addAll(
-          utf8.encode('$paymentLine${' ' * paymentSpaces}$paymentValue\n'));
-
-      // Divider
-      bytes.addAll(utf8.encode('--------------------------------\n'));
-
-      // Center align for footer
-      bytes.addAll([27, 97, 1]);
-
-      // Bold for thank you
-      // Bold for thank you
-      bytes.addAll([27, 69, 1]);
-      bytes.addAll(utf8.encode('Thank You! Visit Again!\n'));
-      bytes.addAll([27, 69, 0]); // Bold off
-
-      bytes.addAll(utf8.encode('Have a great day!\n'));
-
-      // Feed and cut paper
-      bytes.addAll([27, 100, 3]); // Feed 3 lines
-      bytes.addAll([29, 86, 1]); // Cut paper
-
-      // Send data to printer
-      socket.add(bytes);
+      socket.add(utf8.encode(buffer.toString()));
       await socket.flush();
       socket.destroy();
 
@@ -503,12 +461,12 @@ class ProceedPaymentBill extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        _buildSummaryRow(
-                            "Subtotal", "Nu.${subTotal.toStringAsFixed(2)}"),
-                        _buildSummaryRow("B.S.T 10%",
-                            "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
-                        _buildSummaryRow("Service Charge 10%",
-                            "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
+                        // _buildSummaryRow(
+                        //     "Subtotal", "Nu.${subTotal.toStringAsFixed(2)}"),
+                        // _buildSummaryRow("B.S.T 10%",
+                        //     "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
+                        // _buildSummaryRow("Service Charge 10%",
+                        //     "Nu.${(subTotal * 0.1).toStringAsFixed(2)}"),
                         _buildSummaryRow(
                             "Total Quantity", totalQuantity.toString()),
                         const Divider(height: 24),

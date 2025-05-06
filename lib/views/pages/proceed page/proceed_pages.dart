@@ -11,11 +11,13 @@ class ProceedPages extends StatefulWidget {
   final String orderID;
   final String branchName;
   final double totalCostWithTax;
+  final String orderNumber;
 
   const ProceedPages({
     super.key,
     required this.items,
     required this.branchName,
+    required this.orderNumber,
     required this.customername,
     required this.orderID,
     required this.phoneNumber,
@@ -83,9 +85,9 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text(
-          'Proceed Order',
-          style: TextStyle(
+        title: Text(
+          'Proceed Order (#${widget.orderNumber})',
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -155,7 +157,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               ),
             ),
           ),
-          // Right Side: Payment and Total
+          // Right Side: Payment and Total --------------------------------------------------------------
           Expanded(
             flex: 3,
             child: Container(
@@ -187,13 +189,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      Text(
-                                        '   (Including 20% charge)',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      // Text(
+                                      //   '   (Including 20% charge)',
+                                      //   style: TextStyle(
+                                      //     fontSize: 14,
+                                      //     fontWeight: FontWeight.bold,
+                                      //   ),
+                                      // ),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
@@ -343,6 +345,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             context,
             MaterialPageRoute(
               builder: (context) => ProceedPaymentBill(
+                orderNumber: widget.orderNumber,
                 id: widget.orderID,
                 user: widget.customername,
                 phoneNo: widget.phoneNumber,
@@ -362,7 +365,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                     widget.items.fold(0, (sum, item) => sum + item.quantity),
                 date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
                 time: DateFormat('hh:mm a').format(DateTime.now()),
-                totalAmount: calculateTotal() * 1.2,
+                // totalAmount: calculateTotal() * 1.2,
+                totalAmount: calculateTotal(),
                 payMode: method,
               ),
             ),

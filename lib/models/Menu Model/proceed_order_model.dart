@@ -9,9 +9,11 @@ class ProceedOrderModel extends Equatable {
   final String phoneNumber;
   final String restaurantBranchName;
   final DateTime orderDateTime;
+  final String orderNumber;
   final List<MenuBillModel> menuItems;
 
   const ProceedOrderModel({
+    required this.orderNumber,
     required this.holdOrderId,
     required this.tableNumber,
     required this.customerName,
@@ -29,6 +31,7 @@ class ProceedOrderModel extends Equatable {
     String? holdOrderId,
     String? tableNumber,
     String? customerName,
+    String? orderNumber,
     String? phoneNumber,
     String? restaurantBranchName,
     DateTime? orderDateTime,
@@ -38,6 +41,7 @@ class ProceedOrderModel extends Equatable {
       holdOrderId: holdOrderId ?? this.holdOrderId,
       tableNumber: tableNumber ?? this.tableNumber,
       customerName: customerName ?? this.customerName,
+      orderNumber: orderNumber ?? this.orderNumber,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       restaurantBranchName: restaurantBranchName ?? this.restaurantBranchName,
       orderDateTime: orderDateTime ?? this.orderDateTime,
@@ -50,6 +54,7 @@ class ProceedOrderModel extends Equatable {
       'holdOrderId': holdOrderId,
       'tableNumber': tableNumber,
       'customerName': customerName,
+      'orderNumber': orderNumber,
       'phoneNumber': phoneNumber,
       'restaurantBranchName': restaurantBranchName,
       'orderDateTime': orderDateTime.toIso8601String(),
@@ -63,6 +68,7 @@ class ProceedOrderModel extends Equatable {
       tableNumber: map['tableNumber'],
       customerName: map['customerName'],
       phoneNumber: map['phoneNumber'],
+      orderNumber: map['orderNumber'],
       restaurantBranchName: map['restaurantBranchName'],
       orderDateTime: DateTime.parse(map['orderDateTime']),
       menuItems: List<MenuBillModel>.from(
@@ -74,6 +80,7 @@ class ProceedOrderModel extends Equatable {
   @override
   List<Object?> get props => [
         holdOrderId,
+        orderNumber,
         tableNumber,
         customerName,
         phoneNumber,

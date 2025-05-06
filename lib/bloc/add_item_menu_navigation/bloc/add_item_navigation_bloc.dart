@@ -6,7 +6,7 @@ part 'add_item_navigation_state.dart';
 
 class AddItemNavigationBloc
     extends Bloc<AddItemNavigationEvent, AddItemNavigationState> {
-  AddItemNavigationBloc() : super(AddItemNavigationState(0)) {
+  AddItemNavigationBloc() : super(const AddItemNavigationState(0)) {
     on<SelectScreen>((event, emit) {
       emit(
         AddItemNavigationState(event.index),

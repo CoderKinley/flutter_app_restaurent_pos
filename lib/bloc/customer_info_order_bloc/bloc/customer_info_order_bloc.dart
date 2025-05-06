@@ -23,6 +23,7 @@ class CustomerInfoOrderBloc
       contact: event.contact,
       orderId: event.orderId,
       tableNo: event.tableNo,
+      orderNumber: event.orderNumber,
     );
 
     // Emit the loaded state with the new customer info
@@ -36,6 +37,7 @@ class CustomerInfoOrderBloc
       orderId: "",
       name: "",
       tableNo: "",
+      orderNumber: "",
     );
 
     emit(CustomerInfoOrderLoaded(customerInfo));

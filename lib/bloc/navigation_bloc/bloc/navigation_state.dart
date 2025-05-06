@@ -26,7 +26,7 @@ class NotificationPageState extends NavigationState {
 }
 
 class ShiftPageState extends NavigationState {
-  ShiftPageState() : super(const ShiftPage());
+  const ShiftPageState() : super(const ShiftPage());
 }
 
 class SettingsPageState extends NavigationState {

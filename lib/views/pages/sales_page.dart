@@ -27,6 +27,7 @@ import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_pages.dart
 import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:uuid/uuid.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // https://mobipos.com.au/resources/guide/cash-register/ordering-menu/
 
@@ -57,18 +58,66 @@ class _SalesPageState extends State<SalesPage> {
   // Get existing customer info if present, else default to empty values
   String existingName = '';
   String existingContact = '';
+  static int _orderCounter = 1000;
+  int _orderCounterNew = 1000;
+  int _orderNumberCounter = 1000;
 
   @override
   void initState() {
     super.initState();
-    context.read<MenuBloc>().add(LoadMenuItems());
-    context.read<MenuPrintBloc>().add(const LoadMenuPrintItems());
-    context.read<TableBloc>().add(LoadTables());
-    context.read<CategoryBloc>().add(LoadCategories());
-    context.read<MenuBlocApi>().add(FetchMenuApi());
+    _initializeData();
   }
 
-// Used to see the change in dependencies automatically updating the UserInformation widget
+  Future<void> _initializeData() async {
+    await _loadOrderCounter();
+    if (mounted) {
+      context.read<MenuBloc>().add(LoadMenuItems());
+      context.read<MenuPrintBloc>().add(const LoadMenuPrintItems());
+      context.read<TableBloc>().add(LoadTables());
+      context.read<CategoryBloc>().add(LoadCategories());
+      context.read<MenuBlocApi>().add(FetchMenuApi());
+    }
+  }
+
+  Future<void> _loadOrderCounter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCounter = prefs.getInt('orderCounterNew');
+      final savedNumberCounter = prefs.getInt('orderNumberCounter');
+
+      if (mounted) {
+        setState(() {
+          _orderCounter = savedCounter ?? 1000;
+          _orderNumberCounter = savedNumberCounter ?? 1000;
+        });
+        print('Loaded order counter: $_orderCounter'); // Debug print
+        print(
+            'Loaded order number counter: $_orderNumberCounter'); // Debug print
+      }
+    } catch (e) {
+      print('Error loading order counter: $e');
+      if (mounted) {
+        setState(() {
+          _orderCounter = 1000;
+          _orderNumberCounter = 1000;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveOrderCounter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('orderCounterNew', _orderCounter);
+      await prefs.setInt('orderNumberCounter', _orderNumberCounter);
+      print('Saved order counter: $_orderCounter'); // Debug print
+      print('Saved order number counter: $_orderNumberCounter'); // Debug print
+    } catch (e) {
+      print('Error saving order counter: $e');
+    }
+  }
+
+  // Used to see the change in dependencies automatically updating the UserInformation widget
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -93,6 +142,12 @@ class _SalesPageState extends State<SalesPage> {
           // Update the controllers
           nameController.text = existingName;
           contactController.text = existingContact;
+
+          // Handle order number
+          if (state.customerInfo.orderNumber.isNotEmpty) {
+            // _orderCounter = int.parse(state.customerInfo.orderNumber);
+            _orderCounterNew = int.parse(state.customerInfo.orderNumber);
+          }
         });
       }
     });
@@ -499,70 +554,70 @@ class _SalesPageState extends State<SalesPage> {
                         // const DropdownButtonExample(),
                         Row(
                           children: [
-                            BlocBuilder<TableBloc, TableState>(
-                              builder: (context, state) {
-                                if (state is TableLoading) {
-                                  return const CircularProgressIndicator();
-                                } else if (state is TableError) {
-                                  return Text('Error: ${state.errorMessage}');
-                                } else if (state is TableLoaded) {
-                                  // Use BlocBuilder for CustomerInfoOrderBloc to ensure the dropdown updates
-                                  return BlocBuilder<CustomerInfoOrderBloc,
-                                      CustomerInfoOrderState>(
-                                    builder: (context, customerState) {
-                                      // Determine the current table value
-                                      String? currentTable = 'Table';
+                            // BlocBuilder<TableBloc, TableState>(
+                            //   builder: (context, state) {
+                            //     if (state is TableLoading) {
+                            //       return const CircularProgressIndicator();
+                            //     } else if (state is TableError) {
+                            //       return Text('Error: ${state.errorMessage}');
+                            //     } else if (state is TableLoaded) {
+                            //       // Use BlocBuilder for CustomerInfoOrderBloc to ensure the dropdown updates
+                            //       return BlocBuilder<CustomerInfoOrderBloc,
+                            //           CustomerInfoOrderState>(
+                            //         builder: (context, customerState) {
+                            //           // Determine the current table value
+                            //           String? currentTable = 'Table';
 
-                                      if (customerState
-                                              is CustomerInfoOrderLoaded &&
-                                          customerState.customerInfo.tableNo
-                                              .isNotEmpty) {
-                                        currentTable =
-                                            customerState.customerInfo.tableNo;
-                                      } else if (reSelectTableNumber!
-                                          .isNotEmpty) {
-                                        currentTable = reSelectTableNumber;
-                                      } else if (selectedTableNumber !=
-                                          'Table') {
-                                        currentTable = selectedTableNumber!;
-                                      }
+                            //           if (customerState
+                            //                   is CustomerInfoOrderLoaded &&
+                            //               customerState.customerInfo.tableNo
+                            //                   .isNotEmpty) {
+                            //             currentTable =
+                            //                 customerState.customerInfo.tableNo;
+                            //           } else if (reSelectTableNumber!
+                            //               .isNotEmpty) {
+                            //             currentTable = reSelectTableNumber;
+                            //           } else if (selectedTableNumber !=
+                            //               'Table') {
+                            //             currentTable = selectedTableNumber!;
+                            //           }
 
-                                      return DropdownButton<String>(
-                                        value: currentTable,
-                                        onChanged: (String? newValue) {
-                                          if (newValue != null &&
-                                              newValue != 'Table') {
-                                            setState(() {
-                                              selectedTableNumber = newValue;
-                                              reSelectTableNumber = newValue;
-                                            });
-                                          }
-                                        },
-                                        items: [
-                                          const DropdownMenuItem<String>(
-                                            value: 'Table',
-                                            child: Text('Table'),
-                                          ),
-                                          ...state.tables
-                                              .map<DropdownMenuItem<String>>(
-                                                  (table) {
-                                            return DropdownMenuItem<String>(
-                                              value:
-                                                  table.tableNumber.toString(),
-                                              child: Text(
-                                                'Table ${table.tableNumber}',
-                                              ),
-                                            );
-                                          }),
-                                        ],
-                                        underline: Container(),
-                                      );
-                                    },
-                                  );
-                                }
-                                return Container();
-                              },
-                            ),
+                            //           return DropdownButton<String>(
+                            //             value: currentTable,
+                            //             onChanged: (String? newValue) {
+                            //               if (newValue != null &&
+                            //                   newValue != 'Table') {
+                            //                 setState(() {
+                            //                   selectedTableNumber = newValue;
+                            //                   reSelectTableNumber = newValue;
+                            //                 });
+                            //               }
+                            //             },
+                            //             items: [
+                            //               const DropdownMenuItem<String>(
+                            //                 value: 'Table',
+                            //                 child: Text('Table'),
+                            //               ),
+                            //               ...state.tables
+                            //                   .map<DropdownMenuItem<String>>(
+                            //                       (table) {
+                            //                 return DropdownMenuItem<String>(
+                            //                   value:
+                            //                       table.tableNumber.toString(),
+                            //                   child: Text(
+                            //                     'Table ${table.tableNumber}',
+                            //                   ),
+                            //                 );
+                            //               }),
+                            //             ],
+                            //             underline: Container(),
+                            //           );
+                            //         },
+                            //       );
+                            //     }
+                            //     return Container();
+                            //   },
+                            // ),
                             IconButton(
                               onPressed: () {
                                 return _showAddPersonDialog(context);
@@ -995,47 +1050,48 @@ class _SalesPageState extends State<SalesPage> {
     String tableNumber, {
     num? tax = 0.2,
   }) {
-    double payableAmount =
-        totalAmount + ((totalAmount * tax!)); // Add tax to total amount
+    // double payableAmount =
+    //     totalAmount + ((totalAmount * tax!)); // Add tax to total amount
+    double payableAmount = totalAmount;
     return Container(
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.only(top: 15, bottom: 15),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey,
-            width: 0.5,
-          ),
-        ),
-      ),
+      // decoration: const BoxDecoration(
+      //   border: Border(
+      //     top: BorderSide(
+      //       color: Colors.grey,
+      //       width: 0.5,
+      //     ),
+      //   ),
+      // ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Subtotal Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Subtotal"),
-              Text("Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
-            ],
-          ),
-          // Tax Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("B.S.T 10%"),
-              Text(
-                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Service 10%"),
-              Text(
-                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-            ],
-          ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     const Text("Subtotal"),
+          //     Text("Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
+          //   ],
+          // ),
+          // // Tax Row
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     const Text("B.S.T 10%"),
+          //     Text(
+          //         "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
+          //   ],
+          // ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     const Text("Service 10%"),
+          //     Text(
+          //         "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
+          //   ],
+          // ),
 
           const Divider(),
           // Payable Amount Row
@@ -1073,14 +1129,35 @@ class _SalesPageState extends State<SalesPage> {
 
                           const uuid = Uuid();
                           final holdOrderId = uuid.v4();
+
+                          // Get customer info from CustomerInfoOrderBloc
+                          final customerInfoState =
+                              context.read<CustomerInfoOrderBloc>().state;
+
+                          // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
+                          int currentOrderNumber = _orderCounter;
+                          if (customerInfoState is CustomerInfoOrderLoaded &&
+                              customerInfoState
+                                  .customerInfo.orderNumber.isNotEmpty) {
+                            currentOrderNumber = int.parse(
+                                customerInfoState.customerInfo.orderNumber);
+                          }
+
                           final holdItems = HoldOrderModel(
                             holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
+                            orderNumber: currentOrderNumber.toString(),
                             customerName: nameController.text,
                             customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
                             menuItems: state.cartItems,
                           );
+
+                          // Always increment the shared preference counter for new orders
+                          setState(() {
+                            _orderCounter = _orderCounter + 1;
+                          });
+                          await _saveOrderCounter();
 
 // ########################################################################################
 // no need I guess
@@ -1116,6 +1193,7 @@ class _SalesPageState extends State<SalesPage> {
                                 .format(holdItems.orderDateTime),
                             user: holdItems.customerName,
                             tableNumber: holdItems.tableNumber,
+                            orderNumber: holdItems.orderNumber,
                             items:
                                 (menuPrintState as MenuPrintLoaded).printItems,
                             contact: holdItems.customerContact,
@@ -1129,6 +1207,7 @@ class _SalesPageState extends State<SalesPage> {
                           context
                               .read<CustomerInfoOrderBloc>()
                               .add(RemoveCustomerInfoOrder());
+
                           context
                               .read<MenuPrintBloc>()
                               .add(const RemoveAllFromPrint());
@@ -1178,17 +1257,38 @@ class _SalesPageState extends State<SalesPage> {
                             items: isEnabled ? state.cartItems : [],
                             branchName: "Legphel Hotel",
                             customername: nameController.text,
-                            tableNumber: tableNumber,
+                            // for later reference
+                            // tableNumber: tableNumber,
+                            tableNumber: _orderCounter.toString(),
                             phoneNumber: "+975-${contactController.text}",
                             orderID: const Uuid().v4(),
-                            totalCostWithTax:
-                                (totalAmount + (totalAmount * 0.2)),
+                            // totalCostWithTax:
+                            //     (totalAmount + (totalAmount * 0.2)),
+                            totalCostWithTax: totalAmount,
+                            orderNumber: _orderCounterNew.toString(),
                           ),
-                          () {
+                          () async {
                             const uuid = Uuid();
+
+                            // Get customer info from CustomerInfoOrderBloc
+                            final customerInfoState =
+                                context.read<CustomerInfoOrderBloc>().state;
+
+                            // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
+                            int currentOrderNumber = _orderCounter;
+                            if (customerInfoState is CustomerInfoOrderLoaded &&
+                                customerInfoState
+                                    .customerInfo.orderNumber.isNotEmpty) {
+                              currentOrderNumber = int.parse(
+                                  customerInfoState.customerInfo.orderNumber);
+                            }
+
                             final proceedOrderItems = ProceedOrderModel(
                               holdOrderId: uuid.v4().toString(),
-                              tableNumber: tableNumber,
+                              orderNumber: _orderCounterNew == 1000
+                                  ? _orderNumberCounter.toString()
+                                  : _orderCounterNew.toString(),
+                              tableNumber: currentOrderNumber.toString(),
                               customerName: nameController.text.toString(),
                               phoneNumber:
                                   "+975-${contactController.text.toString()}",
@@ -1198,12 +1298,30 @@ class _SalesPageState extends State<SalesPage> {
                               menuItems: cartItems,
                             );
 
-                            // aDD THE PROCESSED ORDR TO THE WHATEVER PAGE IT IS THERE
+                            // Only increment and save counter if we're creating a new order
+                            if (customerInfoState is! CustomerInfoOrderLoaded) {
+                              setState(() {
+                                _orderCounter = _orderCounter + 1;
+                              });
+                              await _saveOrderCounter();
+                            }
+
+                            existingContact = '';
+                            existingName = '';
+                            nameController.text = '';
+                            contactController.text = '';
+
+                            setState(() {
+                              reSelectTableNumber = '';
+                              selectedTableNumber = 'Table';
+                            });
+
+                            // Add the processed order
                             context
                                 .read<ProceedOrderBloc>()
                                 .add(AddProceedOrder(proceedOrderItems));
 
-                            // removed the menu items form the previous page
+                            // Remove the menu items from the previous page
                             context.read<MenuBloc>().add(RemoveAllFromCart());
                             context
                                 .read<MenuPrintBloc>()

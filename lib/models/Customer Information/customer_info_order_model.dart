@@ -3,12 +3,14 @@ class CustomerInfoOrderModel {
   final String contact;
   final String orderId;
   final String tableNo;
+  final String orderNumber;
 
   CustomerInfoOrderModel({
     required this.name,
     required this.contact,
     required this.orderId,
     required this.tableNo,
+    required this.orderNumber,
   });
 
   // Convert a CustomerInfoOrderModel instance to a map (for database or API purposes)
@@ -18,6 +20,7 @@ class CustomerInfoOrderModel {
       'contact': contact,
       'orderId': orderId,
       'tableNo': tableNo,
+      'orderNumber': orderNumber,
     };
   }
 
@@ -28,6 +31,7 @@ class CustomerInfoOrderModel {
       contact: map['contact'],
       orderId: map['orderId'],
       tableNo: map['tableNo'],
+      orderNumber: map['orderNumber'],
     );
   }
 }

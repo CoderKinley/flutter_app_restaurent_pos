@@ -10,16 +10,18 @@ class AddCustomerInfoOrder extends CustomerInfoOrderEvent {
   final String contact;
   final String orderId;
   final String tableNo;
+  final String orderNumber;
 
   AddCustomerInfoOrder({
     required this.name,
     required this.contact,
     required this.orderId,
     required this.tableNo,
+    required this.orderNumber,
   });
 
   @override
-  List<Object> get props => [name, contact, orderId, tableNo];
+  List<Object> get props => [name, contact, orderId, tableNo, orderNumber];
 }
 
 class RemoveCustomerInfoOrder extends CustomerInfoOrderEvent {

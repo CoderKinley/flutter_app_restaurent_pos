@@ -62,7 +62,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                       title: Row(
                         children: [
                           Text(
-                            'Table No: ${holdOrderItem.tableNumber}',
+                            'Order Number: ${holdOrderItem.orderNumber}',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -71,13 +71,13 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                           const SizedBox(
                             width: 20,
                           ),
-                          Text(
-                            'Customer Name: ${holdOrderItem.customerName}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          // Text(
+                          // 'Customer Name: ${holdOrderItem.customerName}',
+                          // style: const TextStyle(
+                          // fontSize: 12,
+                          // fontWeight: FontWeight.bold,
+                          // ),
+                          // ),
                         ],
                       ),
                       trailing: Row(
@@ -98,6 +98,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                       contact: holdOrderItem.customerContact,
                                       orderId: holdOrderItem.holdOrderId,
                                       tableNo: holdOrderItem.tableNumber,
+                                      orderNumber: holdOrderItem.orderNumber,
                                     ),
                                   );
                               context
@@ -134,6 +135,7 @@ class _HoldOrderPageState extends State<HoldOrderPage> {
                                       contact: holdOrderItem.customerContact,
                                       orderId: holdOrderItem.holdOrderId,
                                       tableNo: holdOrderItem.tableNumber,
+                                      orderNumber: holdOrderItem.orderNumber,
                                     ),
                                   );
                               context

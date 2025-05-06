@@ -11,7 +11,7 @@ class HoldOrderDatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('NewHoldOrder02.db');
+    _database = await _initDB('NewHoldOrder03.db');
     return _database!;
   }
 
@@ -29,6 +29,7 @@ class HoldOrderDatabaseHelper {
         holdOrderId TEXT PRIMARY KEY,
         tableNumber TEXT,
         customerName TEXT,
+        orderNumber TEXT,
         customerContact TEXT,
         orderDateTime TEXT,
         menuItems TEXT

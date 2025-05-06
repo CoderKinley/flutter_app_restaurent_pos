@@ -7,6 +7,7 @@
 
     <application
         android:label="DrukPOS"
+        android:requestLegacyExternalStorage="true"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

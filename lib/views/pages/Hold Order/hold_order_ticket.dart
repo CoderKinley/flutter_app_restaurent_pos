@@ -15,12 +15,14 @@ class HoldOrderTicket {
   final String user;
   final String tableNumber;
   final String contact;
+  final String orderNumber;
   final List<MenuPrintModel> items;
 
   HoldOrderTicket({
     required this.id,
     required this.date,
     required this.time,
+    required this.orderNumber,
     required this.user,
     required this.contact,
     required this.tableNumber,
@@ -195,14 +197,21 @@ class HoldOrderTicket {
 
   /// Generates plain text for direct printing to thermal printer
   String _generatePlainTextTicket() {
-    final nonBeverageItems =
-        items.where((item) => item.product.menuType != "Beverage").toList();
-    final beverageItems =
-        items.where((item) => item.product.menuType == "Beverage").toList();
+    final nonBeverageItems = items
+        .where((item) =>
+            item.product.menuType == "Food" ||
+            item.product.menuType == "Beverage")
+        .toList();
+
+    final beverageItems = items
+        .where((item) =>
+            item.product.menuType == "Cold Drinks" ||
+            item.product.menuType == "Shake")
+        .toList();
 
     // ESC/POS commands for formatting
-    final String esc = '\x1B';
-    final String gs = '\x1D';
+    const String esc = '\x1B';
+    const String gs = '\x1D';
     final String centerAlign = '$esc\x61\x01';
     final String leftAlign = '$esc\x61\x00';
     final String rightAlign = '$esc\x61\x02';
@@ -210,72 +219,229 @@ class HoldOrderTicket {
     final String boldOff = '$esc\x45\x00';
     final String doubleHeight = '$gs\x21\x01';
     final String normalHeight = '$gs\x21\x00';
-    final String cut = '$esc\x69';
-    final String feed = '$esc\x64\x10'; // Feed 10 lines
+    final String cut = '$gs\x56\x00'; // Full cut
+    final String feed = '$esc\x64\x05'; // Feed 5 lines
+    final String init = '$esc\x40'; // Initialize printer
+
+    // For 80mm printers, use max 48 characters
+    const int maxWidth = 48;
+    const int priceWidth = 10;
+
+    String formatItemLine(String itemName, int quantity, double price) {
+      String itemText = "$itemName x$quantity";
+      String priceText = "Nu.${price.toStringAsFixed(2)}";
+
+      if (itemText.length > (maxWidth - priceWidth)) {
+        String firstLine = itemText.substring(0, maxWidth - priceWidth);
+        String remainingText = itemText.substring(maxWidth - priceWidth);
+        int spaceCount = maxWidth - remainingText.length - priceText.length;
+        spaceCount = spaceCount < 0 ? 0 : spaceCount;
+        return "$firstLine\n$remainingText${" " * spaceCount}$priceText";
+      }
+
+      final spaceCount = maxWidth - itemText.length - priceText.length;
+      return "$itemText${' ' * spaceCount}$priceText";
+    }
 
     StringBuffer buffer = StringBuffer();
+    buffer.write(init);
 
-    // KOT Section
+    // === KOT Section ===
     buffer.write(centerAlign);
     buffer.write(boldOn);
     buffer.write(doubleHeight);
     buffer.write('KOT\n');
-    buffer.write(normalHeight);
-    buffer.write('Table no: $tableNumber\n\n');
-    buffer.write(boldOff);
     buffer.write(leftAlign);
-    buffer.write('Date: $date\n');
-    buffer.write('Time: $time\n');
-    buffer.write('User: $user\n');
-    buffer.write('Table No: $tableNumber\n');
-    buffer.write('Contact: $contact\n\n');
-    buffer.write('--------------------------------\n');
+    buffer.write('LEGPHEL EATS\n');
+    buffer.write('Order no: #$orderNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(normalHeight);
+
+    buffer.write(leftAlign);
+    buffer.write('Date : $date  ');
+    buffer.write('Time : $time\n');
+    // buffer.write('User   : $user\n');
+    // buffer.write('Contact: $contact\n');
+    // buffer.write('Table  : $tableNumber\n\n');
+
+    buffer.write('-' * maxWidth + '\n');
     buffer.write(boldOn);
     buffer.write('Items Ordered\n');
     buffer.write(boldOff);
-    buffer.write('--------------------------------\n');
+    buffer.write('-' * maxWidth + '\n');
 
     for (var item in nonBeverageItems) {
-      buffer.write('${item.product.menuName} x ${item.quantity}');
-      buffer.write(rightAlign);
-      buffer.write('Nu.${item.totalPrice}\n');
-      buffer.write(leftAlign);
+      buffer.writeln(formatItemLine(
+          item.product.menuName, item.quantity, item.totalPrice));
     }
-    buffer.write('--------------------------------\n\n');
 
-    // Separator between KOT and BOT
+    buffer.write('-' * maxWidth + '\n\n');
+
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('\n\nOrder no: #$orderNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(normalHeight);
+
+    buffer.write(feed);
+    buffer.write(cut);
+
+    // === BOT Section ===
+    // buffer.write(init);
+    // buffer.write(centerAlign);
+    // buffer.write(boldOn);
+    // buffer.write(doubleHeight);
+    // buffer.write('Summary Bill\n');
+    // buffer.write(doubleHeight);
+    // buffer.write('Order no: #$orderNumber\n\n');
+    // buffer.write(boldOff);
+    // buffer.write(normalHeight);
+
+    // buffer.write(leftAlign);
+    // buffer.write('Date : $date');
+    // buffer.write('Time : $time\n');
+    // // buffer.write('User   : $user\n');
+    // // buffer.write('Contact: $contact\n');
+    // // buffer.write('Table  : $tableNumber\n\n');
+
+    // buffer.write('-' * maxWidth + '\n');
+    // buffer.write(boldOn);
+    // buffer.write('Items Ordered\n');
+    // buffer.write(boldOff);
+    // buffer.write('-' * maxWidth + '\n');
+
+    // for (var item in beverageItems) {
+    //   buffer.writeln(formatItemLine(
+    //       item.product.menuName, item.quantity, item.totalPrice));
+    // }
+
+    // buffer.write('-' * maxWidth + '\n');
+    // buffer.write(feed);
+    // buffer.write(cut);
+
+// === KOT Section ===
     buffer.write(centerAlign);
-    buffer.write('- - - - - - - - - - - - - - - -\n');
-    buffer.write('- - - - - - - - - - - - - - - -\n\n');
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('Order Summary\n');
+    buffer.write(leftAlign);
+    buffer.write('LEGPHEL EATS\n');
+    buffer.write('Order no: #$orderNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(normalHeight);
 
-    // BOT Section
+    buffer.write(leftAlign);
+    buffer.write('Date : $date  ');
+    buffer.write('Time : $time\n');
+    // buffer.write('User   : $user\n');
+    // buffer.write('Contact: $contact\n');
+    // buffer.write('Table  : $tableNumber\n\n');
+
+    buffer.write('-' * maxWidth + '\n');
+    buffer.write(boldOn);
+    buffer.write('Items Ordered\n');
+    buffer.write(boldOff);
+    buffer.write('-' * maxWidth + '\n');
+
+    for (var item in nonBeverageItems) {
+      buffer.writeln(formatItemLine(
+          item.product.menuName, item.quantity, item.totalPrice));
+    }
+
+    buffer.write('-' * maxWidth + '\n\n');
+
+    // === BOT Section ===
+    buffer.write(init);
+    buffer.write(centerAlign);
     buffer.write(boldOn);
     buffer.write(doubleHeight);
     buffer.write('BOT\n');
     buffer.write(normalHeight);
-    buffer.write('Table no: $tableNumber\n\n');
     buffer.write(boldOff);
+
     buffer.write(leftAlign);
-    buffer.write('Date: $date\n');
-    buffer.write('Time: $time\n');
-    buffer.write('User: $user\n');
-    buffer.write('Table No: $tableNumber\n');
-    buffer.write('Contact: $contact\n\n');
-    buffer.write('--------------------------------\n');
+    buffer.write('-' * maxWidth + '\n');
     buffer.write(boldOn);
     buffer.write('Items Ordered\n');
     buffer.write(boldOff);
-    buffer.write('--------------------------------\n');
+    buffer.write('-' * maxWidth + '\n');
 
     for (var item in beverageItems) {
-      buffer.write('${item.product.menuName} x ${item.quantity}');
-      buffer.write(rightAlign);
-      buffer.write('Nu.${item.totalPrice}\n');
-      buffer.write(leftAlign);
+      buffer.writeln(formatItemLine(
+          item.product.menuName, item.quantity, item.totalPrice));
     }
-    buffer.write('--------------------------------\n\n');
 
-    // Cut the paper
+    buffer.write('-' * maxWidth + '\n');
+
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('\n\nOrder no: #$orderNumber\n\n');
+    buffer.write(normalHeight);
+    buffer.write(boldOff);
+
+    buffer.write(feed);
+    buffer.write(cut);
+
+    // === KOT Section ===
+    buffer.write(centerAlign);
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('Order Summary\n');
+    buffer.write(leftAlign);
+    buffer.write('LEGPHEL EATS\n');
+    buffer.write('Order no: #$orderNumber\n\n');
+    buffer.write(boldOff);
+    buffer.write(normalHeight);
+
+    buffer.write(leftAlign);
+    buffer.write('Date : $date  ');
+    buffer.write('Time : $time\n');
+    // buffer.write('User   : $user\n');
+    // buffer.write('Contact: $contact\n');
+    // buffer.write('Table  : $tableNumber\n\n');
+
+    buffer.write('-' * maxWidth + '\n');
+    buffer.write(boldOn);
+    buffer.write('Items Ordered\n');
+    buffer.write(boldOff);
+    buffer.write('-' * maxWidth + '\n');
+
+    for (var item in nonBeverageItems) {
+      buffer.writeln(formatItemLine(
+          item.product.menuName, item.quantity, item.totalPrice));
+    }
+
+    buffer.write('-' * maxWidth + '\n\n');
+
+    // === BOT Section ===
+    buffer.write(init);
+    buffer.write(centerAlign);
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('BOT\n');
+    buffer.write(normalHeight);
+    buffer.write(boldOff);
+
+    buffer.write(leftAlign);
+    buffer.write('-' * maxWidth + '\n');
+    buffer.write(boldOn);
+    buffer.write('Items Ordered\n');
+    buffer.write(boldOff);
+    buffer.write('-' * maxWidth + '\n');
+
+    for (var item in beverageItems) {
+      buffer.writeln(formatItemLine(
+          item.product.menuName, item.quantity, item.totalPrice));
+    }
+
+    buffer.write('-' * maxWidth + '\n');
+
+    buffer.write(boldOn);
+    buffer.write(doubleHeight);
+    buffer.write('\n\nOrder no: #$orderNumber\n\n');
+    buffer.write(normalHeight);
+    buffer.write(boldOff);
+
     buffer.write(feed);
     buffer.write(cut);
 
@@ -307,12 +473,12 @@ class HoldOrderTicket {
       );
       print("Data successfully sent to thermal printer");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Printing error: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text("Printing error: $e"),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
       print("Error printing to thermal printer: $e");
     }
   }

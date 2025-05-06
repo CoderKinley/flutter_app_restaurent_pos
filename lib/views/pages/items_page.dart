@@ -61,7 +61,7 @@ class ItemsPage extends StatelessWidget {
                                 onTap: () {
                                   return context
                                       .read<AddItemNavigationBloc>()
-                                      .add(SelectScreen(0));
+                                      .add(const SelectScreen(0));
                                 },
                               ),
                               const Divider(),
@@ -73,7 +73,7 @@ class ItemsPage extends StatelessWidget {
                                 onTap: () {
                                   return context
                                       .read<AddItemNavigationBloc>()
-                                      .add(SelectScreen(1));
+                                      .add(const SelectScreen(1));
                                 },
                               ),
                               const Divider(),
@@ -85,7 +85,7 @@ class ItemsPage extends StatelessWidget {
                                 onTap: () {
                                   return context
                                       .read<AddItemNavigationBloc>()
-                                      .add(SelectScreen(2));
+                                      .add(const SelectScreen(2));
                                 },
                               ),
                               const Divider(),
@@ -97,7 +97,7 @@ class ItemsPage extends StatelessWidget {
                                 onTap: () {
                                   return context
                                       .read<AddItemNavigationBloc>()
-                                      .add(SelectScreen(3));
+                                      .add(const SelectScreen(3));
                                 },
                               ),
                               const Divider(),

@@ -7,12 +7,14 @@ class HoldOrderModel extends Equatable {
   final String holdOrderId;
   final String tableNumber;
   final String customerName;
+  final String orderNumber;
   final String customerContact;
   final DateTime orderDateTime;
   final List<MenuBillModel> menuItems;
 
   const HoldOrderModel({
     required this.holdOrderId,
+    required this.orderNumber,
     required this.tableNumber,
     required this.customerContact,
     required this.customerName,
@@ -28,6 +30,7 @@ class HoldOrderModel extends Equatable {
     String? holdOrderId,
     String? tableNumber,
     String? customerName,
+    String? orderNumber,
     DateTime? orderDateTime,
     String? customerContact,
     List<MenuBillModel>? menuItems,
@@ -36,6 +39,7 @@ class HoldOrderModel extends Equatable {
       holdOrderId: holdOrderId ?? this.holdOrderId,
       tableNumber: tableNumber ?? this.tableNumber,
       customerName: customerName ?? this.customerName,
+      orderNumber: orderNumber ?? this.orderNumber,
       customerContact: customerContact ?? this.customerContact,
       orderDateTime: orderDateTime ?? this.orderDateTime,
       menuItems: menuItems ?? this.menuItems,
@@ -47,6 +51,7 @@ class HoldOrderModel extends Equatable {
     return {
       'holdOrderId': holdOrderId,
       'tableNumber': tableNumber,
+      'orderNumber': orderNumber,
       'customerName': customerName,
       'customerContact': customerContact,
       'orderDateTime': orderDateTime.toIso8601String(),
@@ -61,6 +66,7 @@ class HoldOrderModel extends Equatable {
     return HoldOrderModel(
       holdOrderId: map['holdOrderId'],
       tableNumber: map['tableNumber'],
+      orderNumber: map['orderNumber'],
       customerName: map['customerName'],
       customerContact: map['customerContact'],
       orderDateTime: DateTime.parse(map['orderDateTime']),
@@ -72,6 +78,12 @@ class HoldOrderModel extends Equatable {
 
   // Equatable props (ensure all fields are included for proper comparison)
   @override
-  List<Object?> get props =>
-      [holdOrderId, tableNumber, customerName, orderDateTime, menuItems];
+  List<Object?> get props => [
+        holdOrderId,
+        tableNumber,
+        orderNumber,
+        customerName,
+        orderDateTime,
+        menuItems,
+      ];
 }
