@@ -51,6 +51,8 @@ dependencies:
   device_info_plus: ^11.4.0
   image: ^4.1.7  # For image processing in thermal printing
   shared_preferences: ^2.5.3
+  excel: ^2.1.0
+  path: ^1.8.3
 
 
 dev_dependencies:
