@@ -1292,13 +1292,11 @@ class _SalesPageState extends State<SalesPage> {
                               customerName: nameController.text.toString(),
                               phoneNumber:
                                   "+975-${contactController.text.toString()}",
-                              restaurantBranchName:
-                                  "Branch ${Random().nextInt(10)}",
+                              restaurantBranchName: "Branch Kharpandi Goenpa",
                               orderDateTime: DateTime.now(),
                               menuItems: cartItems,
                             );
 
-                            // Only increment and save counter if we're creating a new order
                             if (customerInfoState is! CustomerInfoOrderLoaded) {
                               setState(() {
                                 _orderCounter = _orderCounter + 1;
@@ -1315,6 +1313,11 @@ class _SalesPageState extends State<SalesPage> {
                               reSelectTableNumber = '';
                               selectedTableNumber = 'Table';
                             });
+
+                            // Clear after pressng the proceed button
+                            context
+                                .read<CustomerInfoOrderBloc>()
+                                .add(RemoveCustomerInfoOrder());
 
                             // Add the processed order
                             context

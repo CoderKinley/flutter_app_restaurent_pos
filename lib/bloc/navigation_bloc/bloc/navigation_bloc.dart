@@ -20,7 +20,7 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     on<NavigateToItems>((event, emit) => emit(ItemsPageState()));
     on<NavigateToNotification>(
         (event, emit) => emit(const NotificationPageState()));
-    on<NavigateToShift>((event, emit) => emit(ShiftPageState()));
+    on<NavigateToShift>((event, emit) => emit(const ShiftPageState()));
     on<NavigateToSettings>((event, emit) => emit(const SettingsPageState()));
   }
 }

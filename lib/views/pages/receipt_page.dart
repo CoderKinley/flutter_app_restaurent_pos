@@ -21,7 +21,7 @@ class ReceiptPage extends StatefulWidget {
 
 class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
   ProceedOrderModel? selectedReceiptItem;
-  int _orderNumberCounter = 1;
+  final int _orderNumberCounter = 1;
   DateTime? startDate;
   DateTime? endDate;
   DateTime selectedDate = DateTime.now();
@@ -29,6 +29,13 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
   Timer? _autoReloadTimer;
   final FocusNode _focusNode = FocusNode();
   bool _isFirstLoad = true;
+  List<ProceedOrderModel> _allOrders = [];
+
+  // Add pagination variables
+  static const int _pageSize = 30;
+  int _currentPage = 0;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
 
   @override
   void initState() {
@@ -36,6 +43,9 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _setupAutoReload();
     _focusNode.addListener(_onFocusChange);
+
+    // Add scroll listener
+    scrollController.addListener(_scrollListener);
   }
 
   @override
@@ -43,6 +53,8 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
     super.didChangeDependencies();
     if (_isFirstLoad) {
       _isFirstLoad = false;
+      // Reset pagination before loading
+      _resetPagination();
       // Trigger initial load
       context.read<ProceedOrderBloc>().add(LoadProceedOrders());
     }
@@ -53,6 +65,7 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
     _autoReloadTimer?.cancel();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
+    scrollController.removeListener(_scrollListener);
     scrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -83,6 +96,69 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
       // Reload data when the page comes into focus
       context.read<ProceedOrderBloc>().add(LoadProceedOrders());
     }
+  }
+
+  void _scrollListener() {
+    if (scrollController.position.pixels >=
+        scrollController.position.maxScrollExtent * 0.8) {
+      if (!_isLoadingMore && _hasMoreData) {
+        _loadMoreData();
+      }
+    }
+  }
+
+  Future<void> _loadMoreData() async {
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Calculate next page
+    final nextPage = _currentPage + 1;
+    final startIndex = nextPage * _pageSize;
+
+    // Check if we have more data to load
+    if (startIndex >= _allOrders.length) {
+      setState(() {
+        _hasMoreData = false;
+        _isLoadingMore = false;
+      });
+      return;
+    }
+
+    // Simulate loading delay (remove this in production)
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    setState(() {
+      _currentPage = nextPage;
+      _isLoadingMore = false;
+    });
+  }
+
+  void _resetPagination() {
+    setState(() {
+      _currentPage = 0;
+      _isLoadingMore = false;
+      _hasMoreData = _allOrders.length > _pageSize;
+    });
+  }
+
+  void _processOrders(List<ProceedOrderModel> orders) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        // Store all orders in reverse chronological order
+        _allOrders = orders.reversed.toList();
+
+        // Reset pagination state
+        _resetPagination();
+
+        // Set the selectedReceiptItem to the most recent order if not already set
+        if (selectedReceiptItem == null && _allOrders.isNotEmpty) {
+          selectedReceiptItem = _allOrders.first;
+        }
+      });
+    });
   }
 
   Future<void> _selectDateRange(BuildContext context) async {
@@ -119,7 +195,8 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
   }
 
   Future<void> _exportToExcel(List<ProceedOrderModel> orders) async {
-    print('_exportToExcel called with ${orders.length} orders'); // Debug print
+    // Use _allOrders instead of orders parameter to ensure we export all data
+    print('_exportToExcel called with ${_allOrders.length} orders');
     print('startDate: $startDate, endDate: $endDate'); // Debug print
 
     if (startDate == null || endDate == null) {
@@ -139,7 +216,7 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
     }
 
     // Filter orders based on date range
-    final filteredOrders = orders.where((order) {
+    final filteredOrders = _allOrders.where((order) {
       final isAfterStart = order.orderDateTime.isAfter(startDate!);
       final isBeforeEnd =
           order.orderDateTime.isBefore(endDate!.add(const Duration(days: 1)));
@@ -283,7 +360,7 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                     padding:
                         const EdgeInsets.only(left: 0, right: 10, bottom: 0),
                     color: const Color.fromARGB(255, 3, 27, 48),
-                    child: _mainTopMenu(action: _search()),
+                    child: _mainTopMenu(action: Container()),
                   ),
                   Container(
                     padding:
@@ -320,7 +397,7 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                     'Current bloc state: $blocState'); // Debug print
 
                                 if (blocState is ProceedOrderLoaded) {
-                                  final state = blocState as ProceedOrderLoaded;
+                                  final state = blocState;
                                   print(
                                       'State loaded, orders count: ${state.proceedOrders.length}'); // Debug print
                                   if (state.proceedOrders.isEmpty) {
@@ -423,30 +500,43 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                         child: BlocProvider(
                           create: (context) {
                             final bloc = ProceedOrderBloc();
-                            // Trigger initial load
                             bloc.add(LoadProceedOrders());
                             return bloc;
                           },
                           child:
                               BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
                             builder: (context, state) {
-                              print(
-                                  'Current ProceedOrderState: $state'); // Debug print
-                              if (state is ProceedOrderLoading) {
+                              if (state is ProceedOrderLoading &&
+                                  _allOrders.isEmpty) {
                                 return const Center(
                                     child: CircularProgressIndicator());
                               }
                               if (state is ProceedOrderLoaded) {
-                                print(
-                                    'Orders loaded: ${state.proceedOrders.length}'); // Debug print
-                                // Group orders by date
+                                // Process orders only when they change
+                                if (_allOrders != state.proceedOrders) {
+                                  _processOrders(state.proceedOrders);
+                                }
+
+                                // Group displayed orders by date
                                 Map<String, List<ProceedOrderModel>>
                                     groupedOrders = {};
-                                for (var order in state.proceedOrders) {
+
+                                // Get paginated orders - Fix the pagination logic
+                                final endIndex = (_currentPage + 1) * _pageSize;
+                                final paginatedOrders =
+                                    _allOrders.take(endIndex).toList();
+
+                                // Debug print to check pagination
+                                print('Total orders: ${_allOrders.length}');
+                                print('Current page: $_currentPage');
+                                print(
+                                    'Showing orders: ${paginatedOrders.length}');
+
+                                for (var order in paginatedOrders) {
                                   String dateKey = order.orderDateTime
                                       .toLocal()
                                       .toString()
-                                      .split(' ')[0]; // Get the date part only
+                                      .split(' ')[0];
                                   if (!groupedOrders.containsKey(dateKey)) {
                                     groupedOrders[dateKey] = [];
                                   }
@@ -458,34 +548,16 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                     groupedOrders.entries.toList()
                                       ..sort((a, b) => b.key.compareTo(a.key)));
 
-                                // Sort each day's orders by orderDateTime (time) in descending order
+                                // Sort each day's orders by orderDateTime in descending order
                                 reversedGroupedOrders.updateAll((key, value) {
                                   value.sort((a, b) => b.orderDateTime
                                       .compareTo(a.orderDateTime));
                                   return value;
                                 });
 
-                                // Set the selectedReceiptItem to the most recent order if not already set
-                                if (selectedReceiptItem == null &&
-                                    reversedGroupedOrders.isNotEmpty) {
-                                  final firstDate =
-                                      reversedGroupedOrders.keys.first;
-                                  final firstOrders =
-                                      reversedGroupedOrders[firstDate]!;
-                                  if (firstOrders.isNotEmpty) {
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      setState(() {
-                                        selectedReceiptItem = firstOrders.first;
-                                      });
-                                    });
-                                  }
-                                }
-
                                 return CustomScrollView(
                                   controller: scrollController,
                                   slivers: [
-                                    // Updating the header with dynamic date based on the first group
                                     SliverPersistentHeader(
                                       pinned: true,
                                       delegate: _DateHeaderDelegate(
@@ -516,10 +588,9 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                                         child:
                                                             _buildReceiptItem(
                                                           DateFormat(
-                                                                  'yyyy-MM-dd HH:mm')
+                                                                  'MMMM d, y – h:mm a')
                                                               .format(proceedOrder
-                                                                  .orderDateTime)
-                                                              .toString(),
+                                                                  .orderDateTime),
                                                           'Order Number: ${proceedOrder.orderNumber}',
                                                           time: DateFormat(
                                                                   'HH:mm')
@@ -549,6 +620,33 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                             reversedGroupedOrders.length,
                                       ),
                                     ),
+                                    // Add loading indicator at the bottom
+                                    if (_isLoadingMore)
+                                      const SliverToBoxAdapter(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(16.0),
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                      ),
+                                    // Show message when no more data
+                                    if (!_hasMoreData &&
+                                        _allOrders.length > _pageSize)
+                                      const SliverToBoxAdapter(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(16.0),
+                                          child: Center(
+                                            child: Text(
+                                              'No more orders to load',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 );
                               }
@@ -579,14 +677,6 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              "All Items",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
                             BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
                               builder: (context, state) {
                                 if (state is ProceedOrderLoaded) {
@@ -810,11 +900,9 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                       ),
                                       const Divider(),
                                       Text(
-                                          'Customer Name: ${selectedReceiptItem?.customerName ?? 'N/A'}'),
-                                      Text(
-                                          'Contact Number: ${selectedReceiptItem?.phoneNumber ?? 'N/A'}'),
-                                      Text(
                                           'POS: ${selectedReceiptItem?.restaurantBranchName ?? 'N/A'}'),
+                                      Text(
+                                          'Order Number: ${selectedReceiptItem?.orderNumber ?? 'N/A'}'),
                                       const SizedBox(height: 8),
                                       const Text('Dine in',
                                           style: TextStyle(
@@ -845,7 +933,15 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                       ),
                                       const Divider(),
                                       Text(
-                                          '${selectedReceiptItem?.orderDateTime.toLocal() ?? 'N/A'}'),
+                                        selectedReceiptItem?.orderDateTime !=
+                                                null
+                                            ? DateFormat(
+                                                    'EEEE, dd MMM yyyy – hh:mm a')
+                                                .format(selectedReceiptItem!
+                                                    .orderDateTime
+                                                    .toLocal())
+                                            : 'N/A',
+                                      ),
                                     ],
                                   ),
                                 ),

@@ -212,16 +212,16 @@ class HoldOrderTicket {
     // ESC/POS commands for formatting
     const String esc = '\x1B';
     const String gs = '\x1D';
-    final String centerAlign = '$esc\x61\x01';
-    final String leftAlign = '$esc\x61\x00';
-    final String rightAlign = '$esc\x61\x02';
-    final String boldOn = '$esc\x45\x01';
-    final String boldOff = '$esc\x45\x00';
-    final String doubleHeight = '$gs\x21\x01';
-    final String normalHeight = '$gs\x21\x00';
-    final String cut = '$gs\x56\x00'; // Full cut
-    final String feed = '$esc\x64\x05'; // Feed 5 lines
-    final String init = '$esc\x40'; // Initialize printer
+    const String centerAlign = '$esc\x61\x01';
+    const String leftAlign = '$esc\x61\x00';
+    const String rightAlign = '$esc\x61\x02';
+    const String boldOn = '$esc\x45\x01';
+    const String boldOff = '$esc\x45\x00';
+    const String doubleHeight = '$gs\x21\x01';
+    const String normalHeight = '$gs\x21\x00';
+    const String cut = '$gs\x56\x00'; // Full cut
+    const String feed = '$esc\x64\x05'; // Feed 5 lines
+    const String init = '$esc\x40'; // Initialize printer
 
     // For 80mm printers, use max 48 characters
     const int maxWidth = 48;

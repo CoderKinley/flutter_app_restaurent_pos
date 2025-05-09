@@ -254,13 +254,13 @@ class ProceedPaymentBill extends StatelessWidget {
       // ESC/POS command constants
       const String esc = '\x1B';
       const String gs = '\x1D';
-      final String init = '$esc\x40';
-      final String centerAlign = '$esc\x61\x01';
-      final String leftAlign = '$esc\x61\x00';
-      final String boldOn = '$esc\x45\x01';
-      final String boldOff = '$esc\x45\x00';
-      final String feed = '$esc\x64\x03';
-      final String cut = '$gs\x56\x01';
+      const String init = '$esc\x40';
+      const String centerAlign = '$esc\x61\x01';
+      const String leftAlign = '$esc\x61\x00';
+      const String boldOn = '$esc\x45\x01';
+      const String boldOff = '$esc\x45\x00';
+      const String feed = '$esc\x64\x03';
+      const String cut = '$gs\x56\x01';
 
       const int lineLength = 48;
 
