@@ -12,12 +12,10 @@ class CustomerInfoOrderBloc
     on<RemoveCustomerInfoOrder>(_onRemoveCustomerInfoOrder);
   }
 
-  // Event handler for adding customer info order
   void _onAddCustomerInfoOrder(
     AddCustomerInfoOrder event,
     Emitter<CustomerInfoOrderState> emit,
   ) {
-    // Create a new CustomerInfoOrderModel instance with the values from the event
     final customerInfo = CustomerInfoOrderModel(
       name: event.name,
       contact: event.contact,
@@ -26,20 +24,13 @@ class CustomerInfoOrderBloc
       orderNumber: event.orderNumber,
     );
 
-    // Emit the loaded state with the new customer info
     emit(CustomerInfoOrderLoaded(customerInfo));
   }
 
   void _onRemoveCustomerInfoOrder(
-      RemoveCustomerInfoOrder event, Emitter<CustomerInfoOrderState> emit) {
-    final customerInfo = CustomerInfoOrderModel(
-      contact: "",
-      orderId: "",
-      name: "",
-      tableNo: "",
-      orderNumber: "",
-    );
-
-    emit(CustomerInfoOrderLoaded(customerInfo));
+    RemoveCustomerInfoOrder event,
+    Emitter<CustomerInfoOrderState> emit,
+  ) {
+    emit(CustomerInfoOrderRemoved());
   }
 }

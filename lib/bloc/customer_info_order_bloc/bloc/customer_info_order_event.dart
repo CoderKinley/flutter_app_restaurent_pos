@@ -1,8 +1,10 @@
 part of 'customer_info_order_bloc.dart';
 
 abstract class CustomerInfoOrderEvent extends Equatable {
+  const CustomerInfoOrderEvent();
+
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class AddCustomerInfoOrder extends CustomerInfoOrderEvent {
@@ -12,7 +14,7 @@ class AddCustomerInfoOrder extends CustomerInfoOrderEvent {
   final String tableNo;
   final String orderNumber;
 
-  AddCustomerInfoOrder({
+  const AddCustomerInfoOrder({
     required this.name,
     required this.contact,
     required this.orderId,
@@ -21,12 +23,7 @@ class AddCustomerInfoOrder extends CustomerInfoOrderEvent {
   });
 
   @override
-  List<Object> get props => [name, contact, orderId, tableNo, orderNumber];
+  List<Object?> get props => [name, contact, orderId, tableNo, orderNumber];
 }
 
-class RemoveCustomerInfoOrder extends CustomerInfoOrderEvent {
-  RemoveCustomerInfoOrder();
-
-  @override
-  List<Object> get props => [];
-}
+class RemoveCustomerInfoOrder extends CustomerInfoOrderEvent {}

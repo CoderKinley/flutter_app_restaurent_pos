@@ -58,9 +58,8 @@ class _SalesPageState extends State<SalesPage> {
   // Get existing customer info if present, else default to empty values
   String existingName = '';
   String existingContact = '';
-  static int _orderCounter = 1000;
-  int _orderCounterNew = 1000;
-  int _orderNumberCounter = 1000;
+  static const int INITIAL_COUNTER = 1000;
+  int _orderCounter = INITIAL_COUNTER;
 
   @override
   void initState() {
@@ -82,24 +81,19 @@ class _SalesPageState extends State<SalesPage> {
   Future<void> _loadOrderCounter() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedCounter = prefs.getInt('orderCounterNew');
-      final savedNumberCounter = prefs.getInt('orderNumberCounter');
+      final savedCounter = prefs.getInt('orderCounter');
 
       if (mounted) {
         setState(() {
-          _orderCounter = savedCounter ?? 1000;
-          _orderNumberCounter = savedNumberCounter ?? 1000;
+          _orderCounter = savedCounter ?? INITIAL_COUNTER;
         });
-        print('Loaded order counter: $_orderCounter'); // Debug print
-        print(
-            'Loaded order number counter: $_orderNumberCounter'); // Debug print
+        print('Loaded order counter: $_orderCounter');
       }
     } catch (e) {
       print('Error loading order counter: $e');
       if (mounted) {
         setState(() {
-          _orderCounter = 1000;
-          _orderNumberCounter = 1000;
+          _orderCounter = INITIAL_COUNTER;
         });
       }
     }
@@ -108,13 +102,18 @@ class _SalesPageState extends State<SalesPage> {
   Future<void> _saveOrderCounter() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('orderCounterNew', _orderCounter);
-      await prefs.setInt('orderNumberCounter', _orderNumberCounter);
-      print('Saved order counter: $_orderCounter'); // Debug print
-      print('Saved order number counter: $_orderNumberCounter'); // Debug print
+      await prefs.setInt('orderCounter', _orderCounter);
+      print('Saved order counter: $_orderCounter');
     } catch (e) {
       print('Error saving order counter: $e');
     }
+  }
+
+  Future<void> _incrementOrderCounter() async {
+    setState(() {
+      _orderCounter++;
+    });
+    await _saveOrderCounter();
   }
 
   // Used to see the change in dependencies automatically updating the UserInformation widget
@@ -146,7 +145,7 @@ class _SalesPageState extends State<SalesPage> {
           // Handle order number
           if (state.customerInfo.orderNumber.isNotEmpty) {
             // _orderCounter = int.parse(state.customerInfo.orderNumber);
-            _orderCounterNew = int.parse(state.customerInfo.orderNumber);
+            _orderCounter = int.parse(state.customerInfo.orderNumber);
           }
         });
       }
@@ -1153,11 +1152,10 @@ class _SalesPageState extends State<SalesPage> {
                             menuItems: state.cartItems,
                           );
 
-                          // Always increment the shared preference counter for new orders
-                          setState(() {
-                            _orderCounter = _orderCounter + 1;
-                          });
-                          await _saveOrderCounter();
+                          // increment only when there is not customerInfoOrderLoaded
+                          if (customerInfoState is! CustomerInfoOrderLoaded) {
+                            await _incrementOrderCounter();
+                          }
 
 // ########################################################################################
 // no need I guess
@@ -1265,7 +1263,7 @@ class _SalesPageState extends State<SalesPage> {
                             // totalCostWithTax:
                             //     (totalAmount + (totalAmount * 0.2)),
                             totalCostWithTax: totalAmount,
-                            orderNumber: _orderCounterNew.toString(),
+                            orderNumber: _orderCounter.toString(),
                           ),
                           () async {
                             const uuid = Uuid();
@@ -1276,6 +1274,7 @@ class _SalesPageState extends State<SalesPage> {
 
                             // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
                             int currentOrderNumber = _orderCounter;
+
                             if (customerInfoState is CustomerInfoOrderLoaded &&
                                 customerInfoState
                                     .customerInfo.orderNumber.isNotEmpty) {
@@ -1285,10 +1284,8 @@ class _SalesPageState extends State<SalesPage> {
 
                             final proceedOrderItems = ProceedOrderModel(
                               holdOrderId: uuid.v4().toString(),
-                              orderNumber: _orderCounterNew == 1000
-                                  ? _orderNumberCounter.toString()
-                                  : _orderCounterNew.toString(),
-                              tableNumber: currentOrderNumber.toString(),
+                              orderNumber: _orderCounter.toString(),
+                              tableNumber: _orderCounter.toString(),
                               customerName: nameController.text.toString(),
                               phoneNumber:
                                   "+975-${contactController.text.toString()}",
@@ -1297,12 +1294,8 @@ class _SalesPageState extends State<SalesPage> {
                               menuItems: cartItems,
                             );
 
-                            if (customerInfoState is! CustomerInfoOrderLoaded) {
-                              setState(() {
-                                _orderCounter = _orderCounter + 1;
-                              });
-                              await _saveOrderCounter();
-                            }
+                            // increment only when there is not customerInfoOrderLoaded
+                            await _incrementOrderCounter();
 
                             existingContact = '';
                             existingName = '';

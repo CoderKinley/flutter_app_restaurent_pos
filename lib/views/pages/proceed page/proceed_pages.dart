@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
+import 'package:pos_system_legphel/bloc/bill_bloc/bill_bloc.dart';
+import 'package:pos_system_legphel/models/Bill/bill_summary_model.dart';
+import 'package:pos_system_legphel/models/Bill/bill_details_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProceedPages extends StatefulWidget {
   final List<MenuBillModel> items;
@@ -341,6 +345,106 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       height: 50, // Fixed height for square
       child: ElevatedButton(
         onPressed: () async {
+          // Create bill summary
+          final billSummary = BillSummaryModel(
+            fnbBillNo: widget.orderNumber,
+            primaryCustomerName: widget.customername,
+            phoneNo: widget.phoneNumber,
+            tableNo: widget.tableNumber,
+            pax: 1, // You might want to add this as a parameter
+            outlet: widget.branchName,
+            orderType: selectedServiceType,
+            subTotal: calculateTotal(),
+            bst: calculateTotal() * 0.2, // 20% BST
+            serviceCharge: 0, // Add if needed
+            discount: 0, // Add if needed
+            totalAmount: widget.totalCostWithTax,
+            paymentStatus: 'PAID',
+            amountSettled: widget.totalCostWithTax,
+            amountRemaining: 0,
+            paymentMode: method,
+            date: DateTime.now(),
+            time: DateTime.now(),
+          );
+
+          // Create bill details
+          final billDetails = widget.items
+              .map((item) => BillDetailsModel(
+                    id: item.product.menuId,
+                    menuName: item.product.menuName,
+                    rate: double.parse(item.product.price),
+                    quantity: item.quantity,
+                    amount: item.totalPrice,
+                    fnbBillNo: widget.orderNumber,
+                    date: DateTime.now(),
+                    time: DateTime.now(),
+                  ))
+              .toList();
+
+          // Submit bill using bloc
+          context.read<BillBloc>().add(SubmitBill(
+                billSummary: billSummary,
+                billDetails: billDetails,
+              ));
+
+          // Listen to bloc state changes
+          context.read<BillBloc>().stream.listen((state) {
+            if (state is BillSubmitted) {
+              // Show success dialog
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green, size: 30),
+                        SizedBox(width: 10),
+                        Text('Success'),
+                      ],
+                    ),
+                    content:
+                        const Text('Bill has been successfully submitted!'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            } else if (state is BillError) {
+              // Show error dialog
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Row(
+                      children: [
+                        Icon(Icons.error, color: Colors.red, size: 30),
+                        SizedBox(width: 10),
+                        Text('Error'),
+                      ],
+                    ),
+                    content: Text('Failed to submit bill: ${state.message}'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+          });
+
+          // Navigate to payment bill page
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -365,7 +469,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                     widget.items.fold(0, (sum, item) => sum + item.quantity),
                 date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
                 time: DateFormat('hh:mm a').format(DateTime.now()),
-                // totalAmount: calculateTotal() * 1.2,
                 totalAmount: calculateTotal(),
                 payMode: method,
               ),
