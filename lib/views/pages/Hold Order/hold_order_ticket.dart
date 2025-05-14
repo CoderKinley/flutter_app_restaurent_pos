@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_print_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class HoldOrderTicket {
@@ -451,11 +451,30 @@ class HoldOrderTicket {
   /// Print directly to thermal printer using raw socket
   Future<void> printToThermalPrinter(BuildContext context) async {
     try {
+      // Get the saved server address from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final serverAddress = prefs.getString('server_ip_address');
+
+      if (serverAddress == null) {
+        throw Exception(
+            'Server address not configured. Please set up the printer IP address in Settings.');
+      }
+
+      // Split the address into IP and port
+      final parts = serverAddress.split(':');
+      if (parts.length != 2) {
+        throw Exception(
+            'Invalid server address format. Please check the IP address configuration.');
+      }
+
+      final ipAddress = parts[0];
+      final port = int.parse(parts[1]);
+
       // For direct printing, we'll use plain text with ESC/POS commands
       final String textToPrint = _generatePlainTextTicket();
 
-      // Connect to the printer via socket
-      final socket = await Socket.connect('192.168.1.251', 9100);
+      // Connect to the printer via socket using the saved IP and port
+      final socket = await Socket.connect(ipAddress, port);
 
       // Send the data to the printer
       socket.add(utf8.encode(textToPrint));
@@ -471,14 +490,14 @@ class HoldOrderTicket {
           content: Text("Successfully sent to printer"),
         ),
       );
-      print("Data successfully sent to thermal printer");
+      print("Data successfully sent to thermal printer at $serverAddress");
     } catch (e) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text("Printing error: $e"),
-      //     backgroundColor: Colors.red,
-      //   ),
-      // );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Printing error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
       print("Error printing to thermal printer: $e");
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
 import 'package:pos_system_legphel/bloc/bill_bloc/bill_bloc.dart';
@@ -350,7 +351,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             fnbBillNo: widget.orderNumber,
             primaryCustomerName: widget.customername,
             phoneNo: widget.phoneNumber,
-            tableNo: widget.tableNumber,
+            tableNo: "No Table",
             pax: 1, // You might want to add this as a parameter
             outlet: widget.branchName,
             orderType: selectedServiceType,
@@ -368,9 +369,11 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
           );
 
           // Create bill details
+          const uuid = Uuid();
+
           final billDetails = widget.items
               .map((item) => BillDetailsModel(
-                    id: item.product.menuId,
+                    id: uuid.v4(),
                     menuName: item.product.menuName,
                     rate: double.parse(item.product.price),
                     quantity: item.quantity,

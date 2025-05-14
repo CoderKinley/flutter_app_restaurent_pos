@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:pos_system_legphel/SQL/database_helper.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
@@ -26,9 +27,11 @@ import 'package:pos_system_legphel/bloc/tables%20and%20names/bloc/customer_info_
 import 'package:pos_system_legphel/data/menu_api_service.dart';
 import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
+import 'package:pos_system_legphel/bloc/ip_address_bloc/bloc/ip_address_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
 
   await _requestImageAndStoragePermissions();
 
@@ -36,7 +39,7 @@ void main() async {
     DeviceOrientation.landscapeLeft,
   ]);
 
-  runApp(const MyApp());
+  runApp(MyApp(prefs: prefs));
 }
 
 Future<void> _requestImageAndStoragePermissions() async {
@@ -57,7 +60,10 @@ Future<void> _requestImageAndStoragePermissions() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final SharedPreferences prefs;
+
+  const MyApp({super.key, required this.prefs});
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -79,15 +85,19 @@ class MyApp extends StatelessWidget {
         BlocProvider(
             create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
         BlocProvider(
-          create: (context) => MenuBlocApi(
+          create: (context) => MenuApiBloc(
             MenuRepository(
-              MenuApiService(),
+              // MenuApiService(),
+              // MenuLocalDb(),
               MenuLocalDb(),
             ),
           ),
         ),
         BlocProvider(
             create: (context) => CategoryBloc()..add(LoadCategories())),
+        BlocProvider(
+          create: (context) => IpAddressBloc(prefs),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

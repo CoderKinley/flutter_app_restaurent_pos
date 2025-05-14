@@ -1,36 +1,40 @@
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
-import 'package:pos_system_legphel/data/menu_api_service.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 class MenuRepository {
-  final MenuApiService apiService;
   final MenuLocalDb localDb;
 
-  MenuRepository(this.apiService, this.localDb);
-
-  Future<void> syncMenuItems() async {
-    List<MenuModel> apiData = await apiService.fetchMenuItems();
-    List<MenuModel> localData = await localDb.getMenuItems();
-
-    Set<String> localIds = localData.map((item) => item.menuId).toSet();
-
-    for (var item in apiData) {
-      if (!localIds.contains(item.menuId)) {
-        await localDb.insertMenuItem(item);
-      }
-    }
-  }
+  MenuRepository(this.localDb);
 
   Future<List<MenuModel>> getMenuItems() async {
     return await localDb.getMenuItems();
   }
 
   Future<bool> addMenuItem(MenuModel menuItem) async {
-    bool isAddedToApi = await apiService.addMenuItem(menuItem);
-    if (isAddedToApi) {
-      await localDb.insertMenuItem(menuItem);
+    try {
+      // Validate menu item
+      if (menuItem.menuId.isEmpty ||
+          menuItem.menuName.isEmpty ||
+          menuItem.price.isEmpty) {
+        print('Invalid menu item data: ${menuItem.toJson()}');
+        return false;
+      }
+
+      // Try to parse price to ensure it's valid
+      if (double.tryParse(menuItem.price) == null) {
+        print('Invalid price format: ${menuItem.price}');
+        return false;
+      }
+
+      print('Attempting to add menu item: ${menuItem.toJson()}');
+      final result = await localDb.insertMenuItem(menuItem);
+      print('Add menu item result: $result');
+      return result;
+    } catch (e, stackTrace) {
+      print('Error in repository while adding menu item: $e');
+      print('Stack trace: $stackTrace');
+      return false;
     }
-    return isAddedToApi;
   }
 
   Future<MenuModel?> getMenuItemById(String menuId) async {
@@ -38,18 +42,12 @@ class MenuRepository {
   }
 
   Future<bool> updateMenuItem(MenuModel menuItem) async {
-    bool isUpdatedInApi = await apiService.updateMenuItem(menuItem);
-    if (isUpdatedInApi) {
-      await localDb.updateMenuItem(menuItem);
-    }
-    return isUpdatedInApi;
+    await localDb.updateMenuItem(menuItem);
+    return true;
   }
 
   Future<bool> deleteMenuItem(String menuId) async {
-    bool isDeletedFromApi = await apiService.deleteMenuItem(menuId);
-    if (isDeletedFromApi) {
-      await localDb.deleteMenuItem(menuId);
-    }
-    return isDeletedFromApi;
+    await localDb.deleteMenuItem(menuId);
+    return true;
   }
 }

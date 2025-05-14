@@ -1,35 +1,27 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 
 part 'menu_from_api_event.dart';
 part 'menu_from_api_state.dart';
 
-class MenuBlocApi extends Bloc<MenuApiEvent, MenuApiState> {
+class MenuApiBloc extends Bloc<MenuApiEvent, MenuApiState> {
   final MenuRepository repository;
-  final MenuLocalDb menuLocalDB = MenuLocalDb.instance;
 
-  MenuBlocApi(this.repository) : super(MenuApiInitial()) {
+  MenuApiBloc(this.repository) : super(MenuApiInitial()) {
     on<FetchMenuApi>(_onFetchMenuApi);
     on<AddMenuApiItem>(_onAddMenuApiItem);
     on<RemoveMenuApiItem>(_onRemoveMenuApiItem);
     on<UpdateMenuApiItem>(_onUpdateMenuApiItem);
   }
+
   Future<void> _onFetchMenuApi(
       FetchMenuApi event, Emitter<MenuApiState> emit) async {
     emit(MenuApiLoading());
     try {
-      List<MenuModel> localMenuItems = await repository.getMenuItems();
-      if (localMenuItems.isNotEmpty) {
-        emit(MenuApiLoaded(localMenuItems));
-      }
-
-      // Sync with API
-      // await repository.syncMenuItems();
-      // List<MenuModel> menuItems = await repository.getMenuItems();
-      emit(MenuApiLoaded(localMenuItems));
+      List<MenuModel> menuItems = await repository.getMenuItems();
+      emit(MenuApiLoaded(menuItems));
     } catch (e) {
       emit(MenuApiError(e.toString()));
     }
@@ -37,9 +29,37 @@ class MenuBlocApi extends Bloc<MenuApiEvent, MenuApiState> {
 
   Future<void> _onAddMenuApiItem(
       AddMenuApiItem event, Emitter<MenuApiState> emit) async {
+    // Store current state to revert in case of error
+    final currentState = state;
+
     try {
-      await repository.localDb.insertMenuItem(event.menuItem);
-      List<MenuModel> updatedMenu = await repository.getMenuItems();
+      // Validate menu item
+      if (event.menuItem.menuId.isEmpty ||
+          event.menuItem.menuName.isEmpty ||
+          event.menuItem.price.isEmpty) {
+        emit(MenuApiError("Invalid menu item data"));
+        return;
+      }
+
+      // Try to parse price
+      if (double.tryParse(event.menuItem.price) == null) {
+        emit(MenuApiError("Invalid price format"));
+        return;
+      }
+
+      // Emit loading state
+      emit(MenuApiLoading());
+
+      // Actual repository operation
+      final success = await repository.addMenuItem(event.menuItem);
+
+      if (!success) {
+        emit(MenuApiError("Failed to add menu item"));
+        return;
+      }
+
+      // Fetch updated menu items
+      final updatedMenu = await repository.getMenuItems();
       emit(MenuApiLoaded(updatedMenu));
     } catch (e) {
       emit(MenuApiError(e.toString()));
@@ -48,31 +68,71 @@ class MenuBlocApi extends Bloc<MenuApiEvent, MenuApiState> {
 
   Future<void> _onRemoveMenuApiItem(
       RemoveMenuApiItem event, Emitter<MenuApiState> emit) async {
+    final currentState = state;
+
     try {
-      // bool isDeleted = await repository.deleteMenuItem(event.menuId);
-      menuLocalDB.deleteMenuItem(event.menuId);
-      List<MenuModel> updatedMenu = await repository.getMenuItems();
-      emit(MenuApiLoaded(updatedMenu));
-      // if (isDeleted) {
-      //   emit(MenuApiLoaded(updatedMenu));
-      // } else {
-      //   emit(const MenuApiError("Failed to delete menu item from API"));
-      // }
+      // Optimistic update
+      if (currentState is MenuApiLoaded) {
+        final updatedItems = List<MenuModel>.from(currentState.menuItems)
+          ..removeWhere((item) => item.menuId == event.menuId);
+        emit(MenuApiLoaded(updatedItems));
+      }
+
+      // Actual repository operation
+      final success = await repository.deleteMenuItem(event.menuId);
+
+      if (!success) {
+        // If operation failed, revert
+        emit(currentState);
+        emit(MenuApiError("Failed to delete menu item"));
+        return;
+      }
+
+      // If we weren't in loaded state before, fetch all data
+      if (currentState is! MenuApiLoaded) {
+        final updatedMenu = await repository.getMenuItems();
+        emit(MenuApiLoaded(updatedMenu));
+      }
     } catch (e) {
+      emit(currentState); // Revert to previous state
       emit(MenuApiError(e.toString()));
     }
   }
 
   Future<void> _onUpdateMenuApiItem(
       UpdateMenuApiItem event, Emitter<MenuApiState> emit) async {
-    try {
-      final db = await repository.localDb.database;
-      await db.update('menu', event.menuItem.toJson(),
-          where: 'menu_id = ?', whereArgs: [event.menuItem.menuId]);
+    final currentState = state;
 
-      List<MenuModel> updatedMenu = await repository.getMenuItems();
-      emit(MenuApiLoaded(updatedMenu));
+    try {
+      // Optimistic update
+      if (currentState is MenuApiLoaded) {
+        final updatedItems = List<MenuModel>.from(currentState.menuItems);
+        final index = updatedItems
+            .indexWhere((item) => item.menuId == event.menuItem.menuId);
+
+        if (index != -1) {
+          updatedItems[index] = event.menuItem;
+          emit(MenuApiLoaded(updatedItems));
+        }
+      }
+
+      // Actual repository operation
+      final success = await repository.updateMenuItem(event.menuItem);
+
+      if (!success) {
+        // If operation failed, revert
+        emit(currentState);
+        emit(MenuApiError("Failed to update menu item"));
+        return;
+      }
+
+      // If we weren't in loaded state before, fetch all data
+      if (currentState is! MenuApiLoaded) {
+        final updatedMenu = await repository.getMenuItems();
+        emit(MenuApiLoaded(updatedMenu));
+      }
     } catch (e) {
+      emit(currentState); // Revert to previous state
       emit(MenuApiError(e.toString()));
     }
   }

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -60,6 +59,9 @@ class _SalesPageState extends State<SalesPage> {
   String existingContact = '';
   static const int INITIAL_COUNTER = 1000;
   int _orderCounter = INITIAL_COUNTER;
+  static const int PERMANENT_COUNTER_KEY =
+      1000; // Initial value for permanent counter
+  int _permanentOrderCounter = PERMANENT_COUNTER_KEY;
 
   @override
   void initState() {
@@ -69,12 +71,13 @@ class _SalesPageState extends State<SalesPage> {
 
   Future<void> _initializeData() async {
     await _loadOrderCounter();
+    await _loadPermanentOrderCounter();
     if (mounted) {
       context.read<MenuBloc>().add(LoadMenuItems());
       context.read<MenuPrintBloc>().add(const LoadMenuPrintItems());
       context.read<TableBloc>().add(LoadTables());
       context.read<CategoryBloc>().add(LoadCategories());
-      context.read<MenuBlocApi>().add(FetchMenuApi());
+      context.read<MenuApiBloc>().add(FetchMenuApi());
     }
   }
 
@@ -114,6 +117,44 @@ class _SalesPageState extends State<SalesPage> {
       _orderCounter++;
     });
     await _saveOrderCounter();
+  }
+
+  Future<void> _loadPermanentOrderCounter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCounter = prefs.getInt('permanentOrderCounter');
+
+      if (mounted) {
+        setState(() {
+          _permanentOrderCounter = savedCounter ?? PERMANENT_COUNTER_KEY;
+        });
+        print('Loaded permanent order counter: $_permanentOrderCounter');
+      }
+    } catch (e) {
+      print('Error loading permanent order counter: $e');
+      if (mounted) {
+        setState(() {
+          _permanentOrderCounter = PERMANENT_COUNTER_KEY;
+        });
+      }
+    }
+  }
+
+  Future<void> _savePermanentOrderCounter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('permanentOrderCounter', _permanentOrderCounter);
+      print('Saved permanent order counter: $_permanentOrderCounter');
+    } catch (e) {
+      print('Error saving permanent order counter: $e');
+    }
+  }
+
+  Future<void> _incrementPermanentOrderCounter() async {
+    setState(() {
+      _permanentOrderCounter++;
+    });
+    await _savePermanentOrderCounter();
   }
 
   // Used to see the change in dependencies automatically updating the UserInformation widget
@@ -485,7 +526,7 @@ class _SalesPageState extends State<SalesPage> {
                     child: Expanded(flex: 5, child: Container()),
                   ),
                   Expanded(
-                    child: BlocBuilder<MenuBlocApi, MenuApiState>(
+                    child: BlocBuilder<MenuApiBloc, MenuApiState>(
                       builder: (context, state) {
                         if (state is MenuApiLoading) {
                           return const Center(
@@ -521,6 +562,8 @@ class _SalesPageState extends State<SalesPage> {
                               );
                             },
                           );
+                        } else if (state is MenuApiError) {
+                          return Center(child: Text("Error: ${state.message}"));
                         } else {
                           return const Center(
                               child: Text("Something went wrong!"));
@@ -553,70 +596,6 @@ class _SalesPageState extends State<SalesPage> {
                         // const DropdownButtonExample(),
                         Row(
                           children: [
-                            // BlocBuilder<TableBloc, TableState>(
-                            //   builder: (context, state) {
-                            //     if (state is TableLoading) {
-                            //       return const CircularProgressIndicator();
-                            //     } else if (state is TableError) {
-                            //       return Text('Error: ${state.errorMessage}');
-                            //     } else if (state is TableLoaded) {
-                            //       // Use BlocBuilder for CustomerInfoOrderBloc to ensure the dropdown updates
-                            //       return BlocBuilder<CustomerInfoOrderBloc,
-                            //           CustomerInfoOrderState>(
-                            //         builder: (context, customerState) {
-                            //           // Determine the current table value
-                            //           String? currentTable = 'Table';
-
-                            //           if (customerState
-                            //                   is CustomerInfoOrderLoaded &&
-                            //               customerState.customerInfo.tableNo
-                            //                   .isNotEmpty) {
-                            //             currentTable =
-                            //                 customerState.customerInfo.tableNo;
-                            //           } else if (reSelectTableNumber!
-                            //               .isNotEmpty) {
-                            //             currentTable = reSelectTableNumber;
-                            //           } else if (selectedTableNumber !=
-                            //               'Table') {
-                            //             currentTable = selectedTableNumber!;
-                            //           }
-
-                            //           return DropdownButton<String>(
-                            //             value: currentTable,
-                            //             onChanged: (String? newValue) {
-                            //               if (newValue != null &&
-                            //                   newValue != 'Table') {
-                            //                 setState(() {
-                            //                   selectedTableNumber = newValue;
-                            //                   reSelectTableNumber = newValue;
-                            //                 });
-                            //               }
-                            //             },
-                            //             items: [
-                            //               const DropdownMenuItem<String>(
-                            //                 value: 'Table',
-                            //                 child: Text('Table'),
-                            //               ),
-                            //               ...state.tables
-                            //                   .map<DropdownMenuItem<String>>(
-                            //                       (table) {
-                            //                 return DropdownMenuItem<String>(
-                            //                   value:
-                            //                       table.tableNumber.toString(),
-                            //                   child: Text(
-                            //                     'Table ${table.tableNumber}',
-                            //                   ),
-                            //                 );
-                            //               }),
-                            //             ],
-                            //             underline: Container(),
-                            //           );
-                            //         },
-                            //       );
-                            //     }
-                            //     return Container();
-                            //   },
-                            // ),
                             IconButton(
                               onPressed: () {
                                 return _showAddPersonDialog(context);
@@ -1142,10 +1121,14 @@ class _SalesPageState extends State<SalesPage> {
                                 customerInfoState.customerInfo.orderNumber);
                           }
 
+                          if (customerInfoState is CustomerInfoOrderRemoved) {
+                            _orderCounter = _permanentOrderCounter;
+                          }
+
                           final holdItems = HoldOrderModel(
                             holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
-                            orderNumber: currentOrderNumber.toString(),
+                            orderNumber: _orderCounter.toString(),
                             customerName: nameController.text,
                             customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
@@ -1155,6 +1138,7 @@ class _SalesPageState extends State<SalesPage> {
                           // increment only when there is not customerInfoOrderLoaded
                           if (customerInfoState is! CustomerInfoOrderLoaded) {
                             await _incrementOrderCounter();
+                            await _incrementPermanentOrderCounter();
                           }
 
 // ########################################################################################
@@ -1210,10 +1194,7 @@ class _SalesPageState extends State<SalesPage> {
                               .read<MenuPrintBloc>()
                               .add(const RemoveAllFromPrint());
 
-                          // await ticket.savePdfTicketLocally(context);
-                          // await ticket.printToThermalPrinter(context);
                           await ticket.printToThermalPrinter(context);
-                          // await barTicket.savePdfTicketLocally(context);
                         },
                       ),
                     );
@@ -1257,7 +1238,7 @@ class _SalesPageState extends State<SalesPage> {
                             customername: nameController.text,
                             // for later reference
                             // tableNumber: tableNumber,
-                            tableNumber: _orderCounter.toString(),
+                            tableNumber: _permanentOrderCounter.toString(),
                             phoneNumber: "+975-${contactController.text}",
                             orderID: const Uuid().v4(),
                             // totalCostWithTax:
@@ -1285,7 +1266,7 @@ class _SalesPageState extends State<SalesPage> {
                             final proceedOrderItems = ProceedOrderModel(
                               holdOrderId: uuid.v4().toString(),
                               orderNumber: _orderCounter.toString(),
-                              tableNumber: _orderCounter.toString(),
+                              tableNumber: _permanentOrderCounter.toString(),
                               customerName: nameController.text.toString(),
                               phoneNumber:
                                   "+975-${contactController.text.toString()}",
@@ -1294,8 +1275,8 @@ class _SalesPageState extends State<SalesPage> {
                               menuItems: cartItems,
                             );
 
-                            // increment only when there is not customerInfoOrderLoaded
                             await _incrementOrderCounter();
+                            await _incrementPermanentOrderCounter();
 
                             existingContact = '';
                             existingName = '';

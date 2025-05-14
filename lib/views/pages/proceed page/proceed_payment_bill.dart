@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProceedPaymentBill extends StatelessWidget {
   final String id;
@@ -249,7 +250,26 @@ class ProceedPaymentBill extends StatelessWidget {
   /// Print directly to thermal printer using ESC/POS commands
   Future<void> printWithEscPos(BuildContext context) async {
     try {
-      final socket = await Socket.connect('192.168.1.251', 9100);
+      // Get the saved server address from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final serverAddress = prefs.getString('server_ip_address');
+
+      if (serverAddress == null) {
+        throw Exception(
+            'Server address not configured. Please set up the printer IP address in Settings.');
+      }
+
+      // Split the address into IP and port
+      final parts = serverAddress.split(':');
+      if (parts.length != 2) {
+        throw Exception(
+            'Invalid server address format. Please check the IP address configuration.');
+      }
+
+      final ipAddress = parts[0];
+      final port = int.parse(parts[1]);
+
+      final socket = await Socket.connect(ipAddress, port);
 
       // ESC/POS command constants
       const String esc = '\x1B';
@@ -342,7 +362,10 @@ class ProceedPaymentBill extends StatelessWidget {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to print: $e')),
+        SnackBar(
+          content: Text('Failed to print: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

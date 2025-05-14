@@ -3,15 +3,19 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class MenuLocalDb {
-  static final MenuLocalDb instance = MenuLocalDb._internal();
-  // static final MenuLocalDb instance = MenuLocalDb._init();
-  factory MenuLocalDb() => instance;
-  MenuLocalDb._internal();
+  // Proper singleton implementation
+  static final MenuLocalDb instance = MenuLocalDb._init();
 
-  static Database? _database;
-
+  // Private constructor
   MenuLocalDb._init();
 
+  // Factory constructor redirects to singleton instance
+  factory MenuLocalDb() => instance;
+
+  // Database instance
+  static Database? _database;
+
+  // Database getter with lazy initialization
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -19,7 +23,7 @@ class MenuLocalDb {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'menu.db');
+    String path = join(await getDatabasesPath(), 'newMenu.db');
     return await openDatabase(
       path,
       version: 3,
@@ -58,13 +62,45 @@ class MenuLocalDb {
     );
   }
 
-  Future<void> insertMenuItem(MenuModel item) async {
-    final db = await database;
-    await db.insert(
-      'menu',
-      item.toJson(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<bool> insertMenuItem(MenuModel item) async {
+    try {
+      final db = await database;
+
+      // Validate required fields
+      if (item.menuId.isEmpty ||
+          item.menuName.isEmpty ||
+          item.price.isEmpty ||
+          double.tryParse(item.price) == null ||
+          double.parse(item.price) <= 0) {
+        print('Validation failed for menu item:');
+        print('- menuId: ${item.menuId}');
+        print('- menuName: ${item.menuName}');
+        print('- price: ${item.price}');
+        return false;
+      }
+
+      // Check if item already exists
+      final existingItem = await getMenuItemById(item.menuId);
+      if (existingItem != null) {
+        print('Item with ID ${item.menuId} already exists, updating instead');
+        await updateMenuItem(item);
+        return true;
+      }
+
+      print('Inserting new menu item into database: ${item.toJson()}');
+      // Insert new item
+      await db.insert(
+        'menu',
+        item.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('Successfully inserted menu item');
+      return true;
+    } catch (e, stackTrace) {
+      print('Error inserting menu item: $e');
+      print('Stack trace: $stackTrace');
+      return false;
+    }
   }
 
   Future<List<MenuModel>> getMenuItems() async {

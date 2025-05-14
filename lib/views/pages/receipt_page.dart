@@ -6,9 +6,7 @@ import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:excel/excel.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 

@@ -15,14 +15,14 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void initState() {
     super.initState();
-    context.read<MenuBlocApi>().add(FetchMenuApi());
+    context.read<MenuApiBloc>().add(FetchMenuApi());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Menu Settings")),
-      body: BlocBuilder<MenuBlocApi, MenuApiState>(
+      body: BlocBuilder<MenuApiBloc, MenuApiState>(
         builder: (context, state) {
           if (state is MenuApiLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -38,7 +38,7 @@ class _SettingPageState extends State<SettingPage> {
                     icon: const Icon(Icons.delete),
                     onPressed: () {
                       context
-                          .read<MenuBlocApi>()
+                          .read<MenuApiBloc>()
                           .add(RemoveMenuApiItem(item.menuId));
                     },
                   ),

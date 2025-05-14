@@ -13,15 +13,50 @@ class AllItemsList extends StatefulWidget {
 }
 
 class _AllItemsListState extends State<AllItemsList> {
+  void _showDeleteConfirmation(
+      BuildContext context, String menuId, String menuName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Item'),
+          content: Text('Are you sure you want to delete "$menuName"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<MenuApiBloc>().add(RemoveMenuApiItem(menuId));
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('$menuName deleted successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       child: Stack(
         children: [
-          BlocBuilder<MenuBlocApi, MenuApiState>(
+          BlocBuilder<MenuApiBloc, MenuApiState>(
             builder: (context, state) {
               if (state is MenuApiLoading) {
-                return const CircularProgressIndicator();
+                return const Center(child: CircularProgressIndicator());
               } else if (state is MenuApiLoaded) {
                 return ListView.builder(
                   itemCount: state.menuItems.length,
@@ -71,7 +106,7 @@ class _AllItemsListState extends State<AllItemsList> {
                                         borderRadius: BorderRadius.circular(50),
                                         image: const DecorationImage(
                                           image: AssetImage(
-                                              'assets/icons/logo.png'), // Default image
+                                              'assets/icons/logo.png'),
                                           fit: BoxFit.cover,
                                         ),
                                       ),
@@ -81,6 +116,15 @@ class _AllItemsListState extends State<AllItemsList> {
                                 'Nu. ${items.price}',
                                 style: const TextStyle(
                                   color: Colors.green,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _showDeleteConfirmation(
+                                  context,
+                                  items.menuId,
+                                  items.menuName,
                                 ),
                               ),
                             ),
@@ -95,7 +139,7 @@ class _AllItemsListState extends State<AllItemsList> {
               return Container();
             },
           ),
-          // Custom Floating Action Button ------------------------------->
+          // Custom Floating Action Button
           Positioned(
             bottom: 20,
             right: 20,

@@ -54,7 +54,7 @@ class DrawerWidget extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.add_card),
                   title: const Text(
-                    "Items",
+                    "Edit Items",
                   ),
                   onTap: () {
                     context.read<NavigationBloc>().add(NavigateToItems());

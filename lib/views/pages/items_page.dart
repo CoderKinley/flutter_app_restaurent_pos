@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_table.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/all_items_list.dart';
+import 'package:pos_system_legphel/views/pages/Add%20Items/ip_address_page.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/items_category_list.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/sub_category_list.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
@@ -13,6 +14,7 @@ class ItemsPage extends StatelessWidget {
     const ItemsCategoryList(),
     const AddNewTable(),
     const SubCategoryList(),
+    const IpAddressPage(),
   ];
 
   ItemsPage({super.key});
@@ -98,6 +100,18 @@ class ItemsPage extends StatelessWidget {
                                   return context
                                       .read<AddItemNavigationBloc>()
                                       .add(const SelectScreen(3));
+                                },
+                              ),
+                              const Divider(),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.computer,
+                                ),
+                                title: const Text("Server IP"),
+                                onTap: () {
+                                  return context
+                                      .read<AddItemNavigationBloc>()
+                                      .add(const SelectScreen(4));
                                 },
                               ),
                               const Divider(),
