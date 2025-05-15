@@ -23,10 +23,12 @@ class ProceedPaymentBill extends StatelessWidget {
   final double totalAmount;
   final String payMode;
   final String orderNumber;
+  final String branchName;
 
   const ProceedPaymentBill({
     super.key,
     required this.orderNumber,
+    required this.branchName,
     required this.id,
     required this.user,
     required this.phoneNo,
@@ -290,6 +292,8 @@ class ProceedPaymentBill extends StatelessWidget {
       buffer.write(boldOn);
       buffer.writeln('LEGPHEL EATS');
       buffer.write(boldOff);
+      buffer.write("Branch Name: ");
+      buffer.writeln(branchName);
       buffer.writeln('Rinchending, Phuentsholing');
       buffer.writeln('Mobile: +975-17872219');
       // buffer.writeln('TPN: LAC00091');
@@ -298,7 +302,6 @@ class ProceedPaymentBill extends StatelessWidget {
       buffer.writeln('-' * lineLength);
       buffer.write(leftAlign);
 
-      buffer.writeln('Bill ID: $id');
       buffer.writeln('Order No: $orderNumber');
       buffer.write('Date: $date  ');
       buffer.writeln('Time: $time');
@@ -349,7 +352,8 @@ class ProceedPaymentBill extends StatelessWidget {
       buffer.writeln('Thank You! Visit Again!');
       buffer.write(boldOff);
       buffer.writeln('Have a great day!');
-
+      buffer.writeln();
+      buffer.writeln();
       buffer.write(feed);
       buffer.write(cut);
 
@@ -414,7 +418,7 @@ class ProceedPaymentBill extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Bill #$id",
+                        Text("Bill #$orderNumber",
                             style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -422,7 +426,7 @@ class ProceedPaymentBill extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(user, style: const TextStyle(fontSize: 16)),
                         Text(phoneNo, style: const TextStyle(fontSize: 16)),
-                        Text("Table: $tableNo",
+                        Text("Branch Name: $branchName",
                             style: const TextStyle(fontSize: 16)),
                         Text("$date at $time",
                             style: TextStyle(color: Colors.grey.shade600)),

@@ -28,6 +28,7 @@ import 'package:pos_system_legphel/data/menu_api_service.dart';
 import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
 import 'package:pos_system_legphel/bloc/ip_address_bloc/bloc/ip_address_bloc.dart';
+import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,6 +98,9 @@ class MyApp extends StatelessWidget {
             create: (context) => CategoryBloc()..add(LoadCategories())),
         BlocProvider(
           create: (context) => IpAddressBloc(prefs),
+        ),
+        BlocProvider(
+          create: (context) => BranchBloc(prefs),
         ),
       ],
       child: MaterialApp(

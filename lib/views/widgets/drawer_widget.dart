@@ -54,7 +54,7 @@ class DrawerWidget extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.add_card),
                   title: const Text(
-                    "Edit Items",
+                    "Settings",
                   ),
                   onTap: () {
                     context.read<NavigationBloc>().add(NavigateToItems());
@@ -87,7 +87,7 @@ class DrawerWidget extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.settings),
                   title: const Text(
-                    "Settings",
+                    "Items Delete",
                   ),
                   onTap: () {
                     context.read<NavigationBloc>().add(NavigateToSettings());

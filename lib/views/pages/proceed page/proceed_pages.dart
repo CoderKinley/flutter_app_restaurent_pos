@@ -474,6 +474,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                 time: DateFormat('hh:mm a').format(DateTime.now()),
                 totalAmount: calculateTotal(),
                 payMode: method,
+                branchName: widget.branchName,
               ),
             ),
           );

@@ -8,6 +8,7 @@ class CustomerInfoModel extends Equatable {
   final String customerName;
   final String customerContact;
   final DateTime orderDateTime;
+  final String orderNumber;
   final List<MenuBillModel> orderedItems;
 
   const CustomerInfoModel({
@@ -16,12 +17,14 @@ class CustomerInfoModel extends Equatable {
     required this.customerName,
     required this.customerContact,
     required this.orderDateTime,
+    required this.orderNumber,
     required this.orderedItems,
   });
 
   CustomerInfoModel copyWith({
     String? orderId,
     String? tableNumber,
+    String? orderNumber,
     String? customerName,
     String? customerContact,
     DateTime? orderDateTime,
@@ -29,6 +32,7 @@ class CustomerInfoModel extends Equatable {
   }) {
     return CustomerInfoModel(
       orderId: orderId ?? this.orderId,
+      orderNumber: orderNumber ?? this.orderNumber,
       tableNumber: tableNumber ?? this.tableNumber,
       customerName: customerName ?? this.customerName,
       customerContact: customerContact ?? this.customerContact,
@@ -44,6 +48,7 @@ class CustomerInfoModel extends Equatable {
       'tableNumber': tableNumber,
       'customerName': customerName,
       'customerContact': customerContact,
+      'orderNumber': orderNumber,
       'orderDateTime': orderDateTime.toIso8601String(),
       'orderedItems': jsonEncode(
         orderedItems.map((item) => item.toMap()).toList(),
@@ -55,6 +60,7 @@ class CustomerInfoModel extends Equatable {
   factory CustomerInfoModel.fromMap(Map<String, dynamic> map) {
     return CustomerInfoModel(
       orderId: map['orderId'],
+      orderNumber: map['orderNumber'],
       tableNumber: map['tableNumber'],
       customerName: map['customerName'],
       customerContact: map['customerContact'],
@@ -69,6 +75,7 @@ class CustomerInfoModel extends Equatable {
   @override
   List<Object?> get props => [
         orderId,
+        orderNumber,
         tableNumber,
         customerName,
         customerContact,

@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pos_system_legphel/bloc/ip_address_bloc/bloc/ip_address_bloc.dart';
+import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
 
-class IpAddressPage extends StatefulWidget {
-  const IpAddressPage({super.key});
+class BranchSettingsPage extends StatefulWidget {
+  const BranchSettingsPage({super.key});
 
   @override
-  State<IpAddressPage> createState() => _IpAddressPageState();
+  State<BranchSettingsPage> createState() => _BranchSettingsPageState();
 }
 
-class _IpAddressPageState extends State<IpAddressPage> {
+class _BranchSettingsPageState extends State<BranchSettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  final _ipController = TextEditingController();
-  final _portController = TextEditingController();
+  final _branchNameController = TextEditingController();
+  final _branchCodeController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    context.read<IpAddressBloc>().add(const LoadIpAddress());
+    context.read<BranchBloc>().add(const LoadBranch());
   }
 
   @override
   void dispose() {
-    _ipController.dispose();
-    _portController.dispose();
+    _branchNameController.dispose();
+    _branchCodeController.dispose();
     super.dispose();
   }
 
@@ -51,40 +50,26 @@ class _IpAddressPageState extends State<IpAddressPage> {
     );
   }
 
-  bool _isValidIpAddress(String ip) {
-    final ipv4Regex = RegExp(r'^' // Start of string
-        r'((25[0-5]|' // Match 250-255
-        r'2[0-4][0-9]|' // Match 200-249
-        r'[01]?[0-9][0-9]?)\.){3}' // Match 0-199, followed by '.'
-        r'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' // Final segment
-        r'$' // End of string
-        );
-    return ipv4Regex.hasMatch(ip);
-  }
-
-  bool _isValidPort(String port) {
-    if (port.isEmpty) return false;
-    final portNum = int.tryParse(port);
-    return portNum != null && portNum > 0 && portNum <= 65535;
-  }
-
-  void _saveIpAddress() {
+  void _saveBranch() {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isSubmitting = true;
     });
 
-    final fullAddress =
-        '${_ipController.text.trim()}:${_portController.text.trim()}';
-    context.read<IpAddressBloc>().add(SaveIpAddress(fullAddress));
+    context.read<BranchBloc>().add(
+          SaveBranch(
+            branchName: _branchNameController.text.trim(),
+            branchCode: _branchCodeController.text.trim(),
+          ),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<IpAddressBloc, IpAddressState>(
+    return BlocListener<BranchBloc, BranchState>(
       listener: (context, state) {
-        if (state is IpAddressLoading) {
+        if (state is BranchLoading) {
           setState(() {
             _isSubmitting = true;
           });
@@ -93,17 +78,14 @@ class _IpAddressPageState extends State<IpAddressPage> {
             _isSubmitting = false;
           });
 
-          if (state is IpAddressError) {
+          if (state is BranchError) {
             _showSnackBar(state.message, isError: true);
-          } else if (state is IpAddressLoaded) {
-            if (_ipController.text.isNotEmpty) {
-              _showSnackBar('Server address saved successfully!');
+          } else if (state is BranchLoaded) {
+            if (_branchNameController.text.isNotEmpty) {
+              _showSnackBar('Branch information saved successfully!');
             }
-            final parts = state.ipAddress.split(':');
-            if (parts.length == 2) {
-              _ipController.text = parts[0];
-              _portController.text = parts[1];
-            }
+            _branchNameController.text = state.branchName;
+            _branchCodeController.text = state.branchCode;
           }
         }
       },
@@ -125,7 +107,7 @@ class _IpAddressPageState extends State<IpAddressPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Server Address',
+                        'Branch Settings',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -134,49 +116,36 @@ class _IpAddressPageState extends State<IpAddressPage> {
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
-                        controller: _ipController,
+                        controller: _branchNameController,
                         decoration: InputDecoration(
-                          labelText: 'IP Address',
-                          hintText:
-                              'Enter server IP address (e.g., 192.168.1.100)',
-                          prefixIcon: const Icon(Icons.computer),
+                          labelText: 'Branch Name',
+                          hintText: 'Enter branch name',
+                          prefixIcon: const Icon(Icons.business),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        keyboardType: TextInputType.number,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter an IP address';
-                          }
-                          if (!_isValidIpAddress(value)) {
-                            return 'Please enter a valid IP address';
+                            return 'Please enter branch name';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
-                        controller: _portController,
+                        controller: _branchCodeController,
                         decoration: InputDecoration(
-                          labelText: 'Port',
-                          hintText: 'Enter port number (e.g., 8080)',
+                          labelText: 'Branch Code',
+                          hintText: 'Enter branch code',
                           prefixIcon: const Icon(Icons.numbers),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                          LengthLimitingTextInputFormatter(15),
-                        ],
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a port number';
-                          }
-                          if (!_isValidPort(value)) {
-                            return 'Please enter a valid port number (1-65535)';
+                            return 'Please enter branch code';
                           }
                           return null;
                         },
@@ -185,7 +154,7 @@ class _IpAddressPageState extends State<IpAddressPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : _saveIpAddress,
+                          onPressed: _isSubmitting ? null : _saveBranch,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 15),
                             shape: RoundedRectangleBorder(
@@ -202,7 +171,7 @@ class _IpAddressPageState extends State<IpAddressPage> {
                                   ),
                                 )
                               : const Text(
-                                  'Save Server Address',
+                                  'Save Branch Settings',
                                   style: TextStyle(fontSize: 16),
                                 ),
                         ),
@@ -215,30 +184,6 @@ class _IpAddressPageState extends State<IpAddressPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _IpAddressInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue;
-    }
-
-    final text = newValue.text.replaceAll('.', '');
-    final buffer = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && i % 3 == 0) {
-        buffer.write('.');
-      }
-      buffer.write(text[i]);
-    }
-
-    return TextEditingValue(
-      text: buffer.toString(),
-      selection: TextSelection.collapsed(offset: buffer.length),
     );
   }
 }

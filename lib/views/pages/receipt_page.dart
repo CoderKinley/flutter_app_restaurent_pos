@@ -504,31 +504,59 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                           child:
                               BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
                             builder: (context, state) {
-                              if (state is ProceedOrderLoading &&
-                                  _allOrders.isEmpty) {
+                              if (state is ProceedOrderLoading) {
                                 return const Center(
-                                    child: CircularProgressIndicator());
+                                  child: CircularProgressIndicator(),
+                                );
                               }
+
+                              if (state is ProceedOrderError) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Error: ${state.message}',
+                                        style:
+                                            const TextStyle(color: Colors.red),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          context
+                                              .read<ProceedOrderBloc>()
+                                              .add(LoadProceedOrders());
+                                        },
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
                               if (state is ProceedOrderLoaded) {
                                 // Process orders only when they change
                                 if (_allOrders != state.proceedOrders) {
                                   _processOrders(state.proceedOrders);
                                 }
 
+                                if (_allOrders.isEmpty) {
+                                  return const Center(
+                                    child: Text(
+                                      'No orders found',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  );
+                                }
+
                                 // Group displayed orders by date
                                 Map<String, List<ProceedOrderModel>>
                                     groupedOrders = {};
 
-                                // Get paginated orders - Fix the pagination logic
+                                // Get paginated orders
                                 final endIndex = (_currentPage + 1) * _pageSize;
                                 final paginatedOrders =
                                     _allOrders.take(endIndex).toList();
-
-                                // Debug print to check pagination
-                                print('Total orders: ${_allOrders.length}');
-                                print('Current page: $_currentPage');
-                                print(
-                                    'Showing orders: ${paginatedOrders.length}');
 
                                 for (var order in paginatedOrders) {
                                   String dateKey = order.orderDateTime
@@ -556,11 +584,22 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                 return CustomScrollView(
                                   controller: scrollController,
                                   slivers: [
-                                    SliverPersistentHeader(
-                                      pinned: true,
-                                      delegate: _DateHeaderDelegate(
-                                        reversedGroupedOrders,
-                                        scrollController,
+                                    SliverToBoxAdapter(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8.0, horizontal: 16.0),
+                                        color: Colors.green,
+                                        child: Text(
+                                          groupedOrders.isEmpty
+                                              ? 'No Orders'
+                                              : reversedGroupedOrders
+                                                  .keys.first,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16.0,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     SliverList(
@@ -571,6 +610,24 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                               .toList()[index];
                                           return Column(
                                             children: [
+                                              if (index >
+                                                  0) // Add date header for each group except the first one
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      vertical: 8.0,
+                                                      horizontal: 16.0),
+                                                  color: Colors.green,
+                                                  child: Text(
+                                                    entry.key,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16.0,
+                                                    ),
+                                                  ),
+                                                ),
                                               Column(
                                                 children: entry.value
                                                     .map((proceedOrder) {
@@ -647,9 +704,6 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                       ),
                                   ],
                                 );
-                              }
-                              if (state is ProceedOrderError) {
-                                return Center(child: Text(state.message));
                               }
                               return Container();
                             },
@@ -1076,59 +1130,5 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
         );
       },
     );
-  }
-}
-
-class _DateHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Map<String, List<ProceedOrderModel>> groupedOrders;
-  final ScrollController scrollController;
-
-  _DateHeaderDelegate(this.groupedOrders, this.scrollController);
-
-  @override
-  double get minExtent => 49.0;
-
-  @override
-  double get maxExtent => 49.0;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    if (groupedOrders.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        color: Colors.green,
-        child: const Text(
-          'No Orders',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18.0,
-          ),
-        ),
-      );
-    }
-
-    int currentIndex = (scrollController.offset / 50).floor();
-    currentIndex = currentIndex.clamp(0, groupedOrders.keys.length - 1);
-    String currentDate = groupedOrders.keys.elementAt(currentIndex);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      color: Colors.green,
-      child: Text(
-        currentDate,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 18.0,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
   }
 }

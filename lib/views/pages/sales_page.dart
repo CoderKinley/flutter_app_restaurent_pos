@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/customer_info_order_bloc/bloc/customer_info_order_bloc.dart';
 import 'package:pos_system_legphel/bloc/hold_order_bloc/bloc/hold_order_bloc.dart';
@@ -62,6 +63,7 @@ class _SalesPageState extends State<SalesPage> {
   static const int PERMANENT_COUNTER_KEY =
       1000; // Initial value for permanent counter
   int _permanentOrderCounter = PERMANENT_COUNTER_KEY;
+  String savedOrderNumber = '';
 
   @override
   void initState() {
@@ -78,6 +80,7 @@ class _SalesPageState extends State<SalesPage> {
       context.read<TableBloc>().add(LoadTables());
       context.read<CategoryBloc>().add(LoadCategories());
       context.read<MenuApiBloc>().add(FetchMenuApi());
+      context.read<BranchBloc>().add(LoadBranch());
     }
   }
 
@@ -85,7 +88,7 @@ class _SalesPageState extends State<SalesPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedCounter = prefs.getInt('orderCounter');
-
+      final savedOrderNumber = prefs.getString('orderNumberFinal');
       if (mounted) {
         setState(() {
           _orderCounter = savedCounter ?? INITIAL_COUNTER;
@@ -106,7 +109,9 @@ class _SalesPageState extends State<SalesPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('orderCounter', _orderCounter);
+      await prefs.setString('orderNumberFinal', savedOrderNumber);
       print('Saved order counter: $_orderCounter');
+      print('Saved order counter: $savedOrderNumber');
     } catch (e) {
       print('Error saving order counter: $e');
     }
@@ -186,7 +191,9 @@ class _SalesPageState extends State<SalesPage> {
           // Handle order number
           if (state.customerInfo.orderNumber.isNotEmpty) {
             // _orderCounter = int.parse(state.customerInfo.orderNumber);
-            _orderCounter = int.parse(state.customerInfo.orderNumber);
+            List<String> parts = state.customerInfo.orderNumber.split('-');
+            _orderCounter = int.parse(parts.last);
+            savedOrderNumber = state.customerInfo.orderNumber;
           }
         });
       }
@@ -1114,21 +1121,36 @@ class _SalesPageState extends State<SalesPage> {
 
                           // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
                           int currentOrderNumber = _orderCounter;
-                          if (customerInfoState is CustomerInfoOrderLoaded &&
-                              customerInfoState
-                                  .customerInfo.orderNumber.isNotEmpty) {
-                            currentOrderNumber = int.parse(
-                                customerInfoState.customerInfo.orderNumber);
-                          }
+
+// Inside your widget or function
+                          final now = DateTime.now();
+                          final formattedDateTime =
+                              DateFormat('yyyyMMddHHmmss').format(now);
+                          final branchState = context.read<BranchBloc>().state;
+                          final branchCode = branchState is BranchLoaded
+                              ? branchState.branchCode
+                              : '';
 
                           if (customerInfoState is CustomerInfoOrderRemoved) {
                             _orderCounter = _permanentOrderCounter;
                           }
 
+                          if (customerInfoState is CustomerInfoOrderLoaded &&
+                              customerInfoState
+                                  .customerInfo.orderNumber.isNotEmpty) {
+                            currentOrderNumber = int.parse(customerInfoState
+                                .customerInfo.orderNumber
+                                .split('-')
+                                .last);
+                          }
+
+                          final formatedOrderNumber =
+                              '$formattedDateTime-$branchCode-$_orderCounter';
+
                           final holdItems = HoldOrderModel(
                             holdOrderId: holdOrderId,
                             tableNumber: tableNumber,
-                            orderNumber: _orderCounter.toString(),
+                            orderNumber: formatedOrderNumber,
                             customerName: nameController.text,
                             customerContact: contactController.text,
                             orderDateTime: DateTime.now(),
@@ -1145,6 +1167,7 @@ class _SalesPageState extends State<SalesPage> {
 // no need I guess
                           final customerInfo = CustomerInfoModel(
                             orderId: holdOrderId,
+                            orderNumber: formatedOrderNumber,
                             tableNumber: tableNumber,
                             customerName: (state.cartItems.isNotEmpty &&
                                     state.cartItems[0].customerName != null)
@@ -1175,7 +1198,7 @@ class _SalesPageState extends State<SalesPage> {
                                 .format(holdItems.orderDateTime),
                             user: holdItems.customerName,
                             tableNumber: holdItems.tableNumber,
-                            orderNumber: holdItems.orderNumber,
+                            orderNumber: formatedOrderNumber,
                             items:
                                 (menuPrintState as MenuPrintLoaded).printItems,
                             contact: holdItems.customerContact,
@@ -1194,7 +1217,7 @@ class _SalesPageState extends State<SalesPage> {
                               .read<MenuPrintBloc>()
                               .add(const RemoveAllFromPrint());
 
-                          await ticket.printToThermalPrinter(context);
+                          // await ticket.printToThermalPrinter(context);
                         },
                       ),
                     );
@@ -1222,57 +1245,78 @@ class _SalesPageState extends State<SalesPage> {
                     bool isEnabled =
                         state is MenuLoaded && state.cartItems.isNotEmpty;
 
+                    // All logic inside Expanded
+                    final branchState = context.read<BranchBloc>().state;
+                    final now = DateTime.now();
+                    final formattedDateTime =
+                        DateFormat('yyyyMMddHHmmss').format(now);
+                    final branchCode = branchState is BranchLoaded
+                        ? branchState.branchCode
+                        : '';
+                    final branchName = branchState is BranchLoaded
+                        ? branchState.branchName
+                        : '';
+                    final generatedOrderNumber =
+                        '$formattedDateTime-$branchCode-$_orderCounter';
+
                     return Opacity(
                       opacity: isEnabled ? 1.0 : 0.4,
                       child: AbsorbPointer(
-                        absorbing:
-                            !isEnabled, // Disable button clicks if no items
+                        absorbing: !isEnabled,
                         child: orderButton(
                           "Proceed",
-                          const Color.fromARGB(
-                              255, 101, 221, 159), // Seafoam Green
-
+                          const Color.fromARGB(255, 101, 221, 159),
                           ProceedPages(
                             items: isEnabled ? state.cartItems : [],
-                            branchName: "Legphel Hotel",
+                            branchName: branchName,
                             customername: nameController.text,
-                            // for later reference
-                            // tableNumber: tableNumber,
                             tableNumber: _permanentOrderCounter.toString(),
                             phoneNumber: "+975-${contactController.text}",
                             orderID: const Uuid().v4(),
-                            // totalCostWithTax:
-                            //     (totalAmount + (totalAmount * 0.2)),
                             totalCostWithTax: totalAmount,
-                            orderNumber: _orderCounter.toString(),
+                            orderNumber: generatedOrderNumber,
                           ),
                           () async {
                             const uuid = Uuid();
 
-                            // Get customer info from CustomerInfoOrderBloc
+                            // Get customer info from bloc
                             final customerInfoState =
                                 context.read<CustomerInfoOrderBloc>().state;
 
-                            // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
                             int currentOrderNumber = _orderCounter;
 
                             if (customerInfoState is CustomerInfoOrderLoaded &&
                                 customerInfoState
                                     .customerInfo.orderNumber.isNotEmpty) {
-                              currentOrderNumber = int.parse(
-                                  customerInfoState.customerInfo.orderNumber);
+                              currentOrderNumber = int.tryParse(
+                                      customerInfoState.customerInfo.orderNumber
+                                          .split('-')
+                                          .last) ??
+                                  _orderCounter;
                             }
+
+                            // Regenerate order number here for model
+                            final nowForModel = DateTime.now();
+                            final formattedDateTimeModel =
+                                DateFormat('yyyyMMddHHmmss')
+                                    .format(nowForModel);
+                            final branchCodeModel = branchState is BranchLoaded
+                                ? branchState.branchCode
+                                : '';
+                            final generatedOrderNumberForModel =
+                                '$formattedDateTimeModel-$branchCodeModel-$currentOrderNumber';
 
                             final proceedOrderItems = ProceedOrderModel(
                               holdOrderId: uuid.v4().toString(),
-                              orderNumber: _orderCounter.toString(),
+                              orderNumber: generatedOrderNumberForModel,
                               tableNumber: _permanentOrderCounter.toString(),
                               customerName: nameController.text.toString(),
                               phoneNumber:
                                   "+975-${contactController.text.toString()}",
                               restaurantBranchName: "Branch Kharpandi Goenpa",
                               orderDateTime: DateTime.now(),
-                              menuItems: cartItems,
+                              menuItems:
+                                  state is MenuLoaded ? state.cartItems : [],
                             );
 
                             await _incrementOrderCounter();
@@ -1288,17 +1332,14 @@ class _SalesPageState extends State<SalesPage> {
                               selectedTableNumber = 'Table';
                             });
 
-                            // Clear after pressng the proceed button
                             context
                                 .read<CustomerInfoOrderBloc>()
                                 .add(RemoveCustomerInfoOrder());
 
-                            // Add the processed order
                             context
                                 .read<ProceedOrderBloc>()
                                 .add(AddProceedOrder(proceedOrderItems));
 
-                            // Remove the menu items from the previous page
                             context.read<MenuBloc>().add(RemoveAllFromCart());
                             context
                                 .read<MenuPrintBloc>()
