@@ -6,6 +6,7 @@ import 'package:pos_system_legphel/views/pages/Add Items/ip_address_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/items_category_list.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/sub_category_list.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/branch_settings_page.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/tax_settings_page.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 
 class ItemsPage extends StatelessWidget {
@@ -14,6 +15,7 @@ class ItemsPage extends StatelessWidget {
     const ItemsCategoryList(),
     const SubCategoryList(),
     const IpAddressPage(),
+    const TaxSettingsPage(),
     const BranchSettingsPage(),
   ];
 
@@ -95,13 +97,13 @@ class ItemsPage extends StatelessWidget {
                                 const Divider(),
                                 ListTile(
                                   leading: const Icon(
-                                    Icons.computer,
+                                    Icons.request_quote,
                                   ),
-                                  title: const Text("Printer IP"),
+                                  title: const Text("Tax Settings"),
                                   onTap: () {
                                     return context
                                         .read<AddItemNavigationBloc>()
-                                        .add(const SelectScreen(3));
+                                        .add(const SelectScreen(4));
                                   },
                                 ),
                                 const Divider(),
@@ -113,7 +115,19 @@ class ItemsPage extends StatelessWidget {
                                   onTap: () {
                                     return context
                                         .read<AddItemNavigationBloc>()
-                                        .add(const SelectScreen(4));
+                                        .add(const SelectScreen(5));
+                                  },
+                                ),
+                                const Divider(),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.computer,
+                                  ),
+                                  title: const Text("Printer IP"),
+                                  onTap: () {
+                                    return context
+                                        .read<AddItemNavigationBloc>()
+                                        .add(const SelectScreen(3));
                                   },
                                 ),
                                 const Divider(),

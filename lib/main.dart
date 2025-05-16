@@ -31,6 +31,7 @@ import 'package:pos_system_legphel/bloc/ip_address_bloc/bloc/ip_address_bloc.dar
 import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
 import 'package:pos_system_legphel/services/network_service.dart';
 import 'package:pos_system_legphel/services/sync_service.dart';
+import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -112,6 +113,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => BranchBloc(prefs),
+        ),
+        BlocProvider(
+          create: (context) => TaxSettingsBloc(prefs)..add(LoadTaxSettings()),
         ),
       ],
       child: MaterialApp(
