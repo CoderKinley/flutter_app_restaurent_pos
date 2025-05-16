@@ -11,6 +11,7 @@ class ProceedOrderModel extends Equatable {
   final DateTime orderDateTime;
   final String orderNumber;
   final List<MenuBillModel> menuItems;
+  final double totalAmount;
 
   const ProceedOrderModel({
     required this.orderNumber,
@@ -21,10 +22,16 @@ class ProceedOrderModel extends Equatable {
     required this.restaurantBranchName,
     required this.orderDateTime,
     required this.menuItems,
+    required this.totalAmount,
   });
 
+  /// Computes total from menuItems if needed elsewhere
   double get totalPrice {
-    return menuItems.fold(0, (sum, item) => sum + item.totalPrice);
+    return double.parse(
+      menuItems
+          .fold(0.0, (sum, item) => sum + item.totalPrice)
+          .toStringAsFixed(2),
+    );
   }
 
   ProceedOrderModel copyWith({
@@ -36,6 +43,7 @@ class ProceedOrderModel extends Equatable {
     String? restaurantBranchName,
     DateTime? orderDateTime,
     List<MenuBillModel>? menuItems,
+    double? totalAmount,
   }) {
     return ProceedOrderModel(
       holdOrderId: holdOrderId ?? this.holdOrderId,
@@ -46,6 +54,7 @@ class ProceedOrderModel extends Equatable {
       restaurantBranchName: restaurantBranchName ?? this.restaurantBranchName,
       orderDateTime: orderDateTime ?? this.orderDateTime,
       menuItems: menuItems ?? this.menuItems,
+      totalAmount: totalAmount ?? this.totalAmount,
     );
   }
 
@@ -59,10 +68,21 @@ class ProceedOrderModel extends Equatable {
       'restaurantBranchName': restaurantBranchName,
       'orderDateTime': orderDateTime.toIso8601String(),
       'menuItems': jsonEncode(menuItems.map((item) => item.toMap()).toList()),
+      'totalAmount': totalAmount,
     };
   }
 
   factory ProceedOrderModel.fromMap(Map<String, dynamic> map) {
+    List<MenuBillModel> menuItems = List<MenuBillModel>.from(
+      jsonDecode(map['menuItems']).map((item) => MenuBillModel.fromMap(item)),
+    );
+
+    double calculatedTotal = double.parse(
+      menuItems
+          .fold(0.0, (sum, item) => sum + item.totalPrice)
+          .toStringAsFixed(2),
+    );
+
     return ProceedOrderModel(
       holdOrderId: map['holdOrderId'],
       tableNumber: map['tableNumber'],
@@ -71,9 +91,10 @@ class ProceedOrderModel extends Equatable {
       orderNumber: map['orderNumber'],
       restaurantBranchName: map['restaurantBranchName'],
       orderDateTime: DateTime.parse(map['orderDateTime']),
-      menuItems: List<MenuBillModel>.from(
-        jsonDecode(map['menuItems']).map((item) => MenuBillModel.fromMap(item)),
-      ),
+      menuItems: menuItems,
+      totalAmount: map['totalAmount'] != null
+          ? double.parse(map['totalAmount'].toString())
+          : calculatedTotal,
     );
   }
 
@@ -87,5 +108,6 @@ class ProceedOrderModel extends Equatable {
         restaurantBranchName,
         orderDateTime,
         menuItems,
+        totalAmount,
       ];
 }

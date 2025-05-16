@@ -9,7 +9,8 @@ class ProceedPaymentBill extends StatelessWidget {
   final String tableNo;
   final List<Map<String, dynamic>> items;
   final double subTotal;
-  final double gst;
+  final double bst;
+  final double serviceTax;
   final int totalQuantity;
   final String date;
   final String time;
@@ -28,7 +29,8 @@ class ProceedPaymentBill extends StatelessWidget {
     required this.tableNo,
     required this.items,
     required this.subTotal,
-    required this.gst,
+    required this.bst,
+    required this.serviceTax,
     required this.totalQuantity,
     required this.date,
     required this.time,
@@ -45,7 +47,8 @@ class ProceedPaymentBill extends StatelessWidget {
       tableNo: tableNo,
       items: items,
       subTotal: subTotal,
-      gst: gst,
+      bst: bst,
+      serviceTax: serviceTax,
       totalQuantity: totalQuantity,
       date: date,
       time: time,
@@ -155,12 +158,12 @@ class ProceedPaymentBill extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildInfoRow(Icons.person, user),
-                          _buildInfoRow(Icons.phone, phoneNo),
+                          // _buildInfoRow(Icons.person, user),
+                          // _buildInfoRow(Icons.phone, phoneNo),
                           _buildInfoRow(Icons.store, "Branch: $branchName"),
                           _buildInfoRow(
                             Icons.table_bar,
-                            "Table: $tableNo",
+                            "Count: $tableNo",
                           ),
                           const SizedBox(height: 6),
                           Row(
@@ -314,6 +317,21 @@ class ProceedPaymentBill extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
+                          _buildSummaryRow("Sub Total", subTotal.toString()),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(thickness: 1.5),
+                          ),
+                          _buildSummaryRow(
+                              "BST", (bst / 100 * subTotal).toStringAsFixed(2)),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          _buildSummaryRow("Service Charge",
+                              (serviceTax / 100 * subTotal).toStringAsFixed(2)),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
                           _buildSummaryRow(
                               "Total Quantity", totalQuantity.toString()),
                           const Padding(
@@ -386,7 +404,10 @@ class ProceedPaymentBill extends StatelessWidget {
                               tableNo: tableNo,
                               items: items,
                               subTotal: subTotal,
-                              gst: gst,
+                              bst: bst,
+                              bstAmt: bst / 100 * subTotal,
+                              serviceAmt: serviceTax / 100 * subTotal,
+                              serviceTax: serviceTax,
                               totalQuantity: totalQuantity,
                               date: date,
                               time: time,

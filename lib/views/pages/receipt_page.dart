@@ -467,27 +467,6 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
-                  // Container(
-                  //   padding:
-                  //       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  //   color: Colors.grey[100],
-                  //   child: Row(
-                  //     children: [
-                  //       const Icon(Icons.calendar_today,
-                  //           size: 16, color: Colors.grey),
-                  //       const SizedBox(width: 8),
-                  //       Text(
-                  //         startDate != null && endDate != null
-                  //             ? '${DateFormat('MMM d, yyyy').format(startDate!)} - ${DateFormat('MMM d, yyyy').format(endDate!)}'
-                  //             : 'Select date range to export',
-                  //         style: const TextStyle(
-                  //           color: Colors.grey,
-                  //           fontSize: 14,
-                  //         ),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
                   Expanded(
                     child: Container(
                       padding:
@@ -931,7 +910,7 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
                                                 MainAxisAlignment.center,
                                             children: [
                                               Text(
-                                                '${selectedReceiptItem?.totalPrice ?? 0}Nu',
+                                                '${selectedReceiptItem?.totalAmount ?? 0}Nu',
                                                 style: const TextStyle(
                                                   fontSize: 24,
                                                   fontWeight: FontWeight.bold,

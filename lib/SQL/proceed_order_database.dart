@@ -11,7 +11,11 @@ class ProceedOrderDatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('ProceedOrdersFromAPINew.db');
+
+    // to retriever the old data from the data you can use this
+    // but might need to change the model as it has lesser data
+    // _database = await _initDB('ProceedOrdersFromAPINew.db');
+    _database = await _initDB('ProceedOrderDataBase01.db');
     return _database!;
   }
 
@@ -33,7 +37,8 @@ class ProceedOrderDatabaseHelper {
         orderNumber TEXT, 
         restaurantBranchName TEXT,
         orderDateTime TEXT,
-        menuItems TEXT
+        menuItems TEXT,
+        totalAmount REAL
       )
     ''');
   }

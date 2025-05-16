@@ -20,7 +20,8 @@ class BillService {
     required String tableNo,
     required List<Map<String, dynamic>> items,
     required double subTotal,
-    required double gst,
+    required double bst,
+    required double serviceTax,
     required int totalQuantity,
     required String date,
     required String time,
@@ -130,7 +131,7 @@ class BillService {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text("Service 10%:", style: const pw.TextStyle(fontSize: 8)),
-                pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
+                pw.Text("Nu.${(bst).toStringAsFixed(2)}",
                     style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
@@ -139,7 +140,7 @@ class BillService {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text("B.S.T 10%:", style: const pw.TextStyle(fontSize: 8)),
-                pw.Text("Nu.${(gst / 2).toStringAsFixed(2)}",
+                pw.Text("Nu.${(serviceTax).toStringAsFixed(2)}",
                     style: const pw.TextStyle(fontSize: 8)),
               ],
             ),
@@ -243,13 +244,16 @@ class BillService {
     required BuildContext context,
     required String orderNumber,
     required String branchName,
+    required double bstAmt,
+    required double serviceAmt,
     required String id,
     required String user,
     required String phoneNo,
     required String tableNo,
     required List<Map<String, dynamic>> items,
     required double subTotal,
-    required double gst,
+    required double bst,
+    required double serviceTax,
     required int totalQuantity,
     required String date,
     required String time,
@@ -340,12 +344,15 @@ class BillService {
         if (bold) buffer.write(boldOff);
       }
 
-      // addSummaryLine('Subtotal:', 'Nu.${subTotal.toStringAsFixed(2)}');
-      // addSummaryLine('Service 10%:', 'Nu.${(gst / 2).toStringAsFixed(2)}');
-      // addSummaryLine('B.S.T 10%:', 'Nu.${(gst / 2).toStringAsFixed(2)}');
+      addSummaryLine('Subtotal:', 'Nu.${subTotal.toStringAsFixed(2)}');
+      addSummaryLine('Service ${bst}%:', 'Nu.${(bstAmt).toStringAsFixed(2)}');
+      addSummaryLine(
+          'B.S.T ${serviceTax}%:', 'Nu.${(serviceAmt).toStringAsFixed(2)}');
       // addSummaryLine('Discount:', 'Nu. 0.00');
 
       addSummaryLine('Total Quantity:', '$totalQuantity');
+
+      buffer.writeln('-' * lineLength);
       addSummaryLine('Total Amount:', 'Nu.${totalAmount.toStringAsFixed(2)}',
           bold: true);
       addSummaryLine('Payment Mode:', payMode);

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -15,19 +17,25 @@ class ProceedPages extends StatefulWidget {
   final String tableNumber;
   final String orderID;
   final String branchName;
-  final double totalCostWithTax;
+  final double subTotal;
+  final double totalCost;
   final String orderNumber;
+  final double bst;
+  final double serviceTax;
 
   const ProceedPages({
     super.key,
     required this.items,
+    required this.bst,
+    required this.subTotal,
+    required this.serviceTax,
     required this.branchName,
     required this.orderNumber,
     required this.customername,
     required this.orderID,
     required this.phoneNumber,
     required this.tableNumber,
-    required this.totalCostWithTax,
+    required this.totalCost,
   });
 
   @override
@@ -273,8 +281,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                         },
                                         child: TextFormField(
                                           controller: TextEditingController(
-                                            text: widget.totalCostWithTax
-                                                .toString(),
+                                            text: widget.totalCost.toString(),
                                           ),
                                           decoration: const InputDecoration(
                                             border: InputBorder.none,
@@ -385,17 +392,17 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             fnbBillNo: widget.orderNumber,
             primaryCustomerName: widget.customername,
             phoneNo: widget.phoneNumber,
-            tableNo: "No Table",
+            tableNo: widget.tableNumber,
             pax: 1,
             outlet: widget.branchName,
             orderType: selectedServiceType,
-            subTotal: calculateTotal(),
-            bst: calculateTotal() * 0.2,
-            serviceCharge: 0,
+            subTotal: widget.subTotal,
+            bst: widget.bst,
+            serviceCharge: widget.serviceTax,
             discount: 0,
-            totalAmount: widget.totalCostWithTax,
-            paymentStatus: 'PAID',
-            amountSettled: widget.totalCostWithTax,
+            totalAmount: widget.totalCost,
+            paymentStatus: "PAID",
+            amountSettled: widget.totalCost,
             amountRemaining: 0,
             paymentMode: method,
             date: DateTime.now(),
@@ -442,13 +449,14 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                   .toStringAsFixed(2),
                         })
                     .toList(),
-                subTotal: calculateTotal(),
-                gst: calculateTotal() * 0.2,
+                subTotal: widget.subTotal,
+                bst: widget.bst,
+                serviceTax: widget.serviceTax,
                 totalQuantity:
                     widget.items.fold(0, (sum, item) => sum + item.quantity),
                 date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
                 time: DateFormat('hh:mm a').format(DateTime.now()),
-                totalAmount: calculateTotal(),
+                totalAmount: widget.totalCost,
                 payMode: method,
                 branchName: widget.branchName,
               ),

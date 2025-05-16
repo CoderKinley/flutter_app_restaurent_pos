@@ -28,6 +28,7 @@ import 'package:pos_system_legphel/views/widgets/cart_item_widget.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
 
 // https://mobipos.com.au/resources/guide/cash-register/ordering-menu/
 
@@ -80,6 +81,7 @@ class _SalesPageState extends State<SalesPage> {
       context.read<TableBloc>().add(LoadTables());
       context.read<CategoryBloc>().add(LoadCategories());
       context.read<MenuApiBloc>().add(FetchMenuApi());
+      context.read<TaxSettingsBloc>().add(LoadTaxSettings());
       context.read<BranchBloc>().add(LoadBranch());
     }
   }
@@ -1035,326 +1037,360 @@ class _SalesPageState extends State<SalesPage> {
     String tableNumber, {
     num? tax = 0.2,
   }) {
-    // double payableAmount =
-    //     totalAmount + ((totalAmount * tax!)); // Add tax to total amount
-    double payableAmount = totalAmount;
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      padding: const EdgeInsets.only(top: 15, bottom: 15),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Subtotal Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Subtotal"),
-              Text("Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
-            ],
-          ),
-          // Tax Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("B.S.T 10%"),
-              Text(
-                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Service 10%"),
-              Text(
-                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-            ],
-          ),
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          const Divider(),
-          // Payable Amount Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Payable Amount",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        final prefs = snapshot.data!;
+        final bst = prefs.getDouble(TaxSettingsBloc.bstKey) ?? 0.0;
+        final serviceCharge =
+            prefs.getDouble(TaxSettingsBloc.serviceChargeKey) ?? 0.0;
+
+        // Calculate tax amounts
+        final bstAmount = totalAmount * (bst / 100);
+        final serviceChargeAmount = totalAmount * (serviceCharge / 100);
+        final payableAmount = totalAmount + bstAmount + serviceChargeAmount;
+
+        return Container(
+          margin: const EdgeInsets.only(right: 10),
+          padding: const EdgeInsets.only(top: 15, bottom: 15),
+          decoration: const BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Colors.grey,
+                width: 0.5,
               ),
-              Text(
-                "Nu. ${payableAmount.toStringAsFixed(2)}",
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 10),
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BlocBuilder<MenuBloc, MenuState>(
-                builder: (context, state) {
-                  if (state is MenuLoaded && state.cartItems.isNotEmpty) {
-                    return Expanded(
-                      child: orderButton(
-                        "Save",
-                        const Color(0xFFFFDAB9),
-                        // Peach,
-                        HoldOrderPage(menuItems: state.cartItems),
-                        () async {
-                          setState(() {
-                            reSelectTableNumber = '';
-                            selectedTableNumber = 'Table';
-                          });
-
-                          const uuid = Uuid();
-                          final holdOrderId = uuid.v4();
-
-                          // Get customer info from CustomerInfoOrderBloc
-                          final customerInfoState =
-                              context.read<CustomerInfoOrderBloc>().state;
-
-                          // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
-                          int currentOrderNumber = _orderCounter;
-
-// Inside your widget or function
-                          final now = DateTime.now();
-                          final formattedDateTime =
-                              DateFormat('yyyyMMddHHmmss').format(now);
-                          final branchState = context.read<BranchBloc>().state;
-                          final branchCode = branchState is BranchLoaded
-                              ? branchState.branchCode
-                              : '';
-
-                          if (customerInfoState is CustomerInfoOrderRemoved) {
-                            _orderCounter = _permanentOrderCounter;
-                          }
-
-                          if (customerInfoState is CustomerInfoOrderLoaded &&
-                              customerInfoState
-                                  .customerInfo.orderNumber.isNotEmpty) {
-                            currentOrderNumber = int.parse(customerInfoState
-                                .customerInfo.orderNumber
-                                .split('-')
-                                .last);
-                          }
-
-                          final formatedOrderNumber =
-                              '$formattedDateTime-$branchCode-$_orderCounter';
-
-                          final holdItems = HoldOrderModel(
-                            holdOrderId: holdOrderId,
-                            tableNumber: tableNumber,
-                            orderNumber: formatedOrderNumber,
-                            customerName: nameController.text,
-                            customerContact: contactController.text,
-                            orderDateTime: DateTime.now(),
-                            menuItems: state.cartItems,
-                          );
-
-                          // increment only when there is not customerInfoOrderLoaded
-                          if (customerInfoState is! CustomerInfoOrderLoaded) {
-                            await _incrementOrderCounter();
-                            await _incrementPermanentOrderCounter();
-                          }
-
-// ########################################################################################
-// no need I guess
-                          final customerInfo = CustomerInfoModel(
-                            orderId: holdOrderId,
-                            orderNumber: formatedOrderNumber,
-                            tableNumber: tableNumber,
-                            customerName: (state.cartItems.isNotEmpty &&
-                                    state.cartItems[0].customerName != null)
-                                ? state.cartItems[0].customerName!
-                                : nameController.text,
-                            customerContact: contactController.text,
-                            orderDateTime: DateTime.now(),
-                            orderedItems: state.cartItems,
-                          );
-// ########################################################################################
-
-                          context
-                              .read<HoldOrderBloc>()
-                              .add(AddHoldOrder(holdItems));
-                          context.read<MenuBloc>().add(RemoveAllFromCart());
-                          context
-                              .read<CustomerInfoBloc>()
-                              .add(AddCustomerOrder(customerInfo));
-
-                          final menuPrintState =
-                              context.read<MenuPrintBloc>().state;
-
-                          final ticket = HoldOrderTicket(
-                            id: holdOrderId,
-                            date: DateFormat('yyyy-MM-dd')
-                                .format(holdItems.orderDateTime),
-                            time: DateFormat('hh:mm a')
-                                .format(holdItems.orderDateTime),
-                            user: holdItems.customerName,
-                            tableNumber: holdItems.tableNumber,
-                            orderNumber: formatedOrderNumber,
-                            items:
-                                (menuPrintState as MenuPrintLoaded).printItems,
-                            contact: holdItems.customerContact,
-                          );
-
-                          existingContact = '';
-                          existingName = '';
-                          nameController.text = '';
-                          contactController.text = '';
-
-                          context
-                              .read<CustomerInfoOrderBloc>()
-                              .add(RemoveCustomerInfoOrder());
-
-                          context
-                              .read<MenuPrintBloc>()
-                              .add(const RemoveAllFromPrint());
-
-                          await ticket.printToThermalPrinter(context);
-                        },
-                      ),
-                    );
-                  } else {
-                    return Expanded(
-                      child: orderButton(
-                        "View Orders",
-                        const Color.fromARGB(255, 3, 27, 48),
-                        const HoldOrderPage(menuItems: []), // Empty cart
-                        () {
-                          setState(() {
-                            selectedTableNumber = 'Table';
-                            reSelectTableNumber = '';
-                          });
-                        },
-                      ),
-                    );
-                  }
-                },
+              // Subtotal Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Subtotal"),
+                  Text(
+                      "Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: BlocBuilder<MenuBloc, MenuState>(
-                  builder: (context, state) {
-                    bool isEnabled =
-                        state is MenuLoaded && state.cartItems.isNotEmpty;
+              // BST Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("B.S.T ${bst.toStringAsFixed(1)}%"),
+                  Text("Nu. ${bstAmount.toStringAsFixed(2)}"), // Dynamic BST
+                ],
+              ),
+              // Service Charge Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Service ${serviceCharge.toStringAsFixed(1)}%"),
+                  Text(
+                      "Nu. ${serviceChargeAmount.toStringAsFixed(2)}"), // Dynamic Service Charge
+                ],
+              ),
+              const Divider(),
+              // Payable Amount Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Payable Amount",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "Nu. ${payableAmount.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  BlocBuilder<MenuBloc, MenuState>(
+                    builder: (context, state) {
+                      if (state is MenuLoaded && state.cartItems.isNotEmpty) {
+                        return Expanded(
+                          child: orderButton(
+                            "Save",
+                            const Color(0xFFFFDAB9),
+                            HoldOrderPage(menuItems: state.cartItems),
+                            () async {
+                              setState(() {
+                                reSelectTableNumber = '';
+                                selectedTableNumber = 'Table';
+                              });
 
-                    // All logic inside Expanded
-                    final branchState = context.read<BranchBloc>().state;
-                    final now = DateTime.now();
-                    final formattedDateTime =
-                        DateFormat('yyyyMMddHHmmss').format(now);
-                    final branchCode = branchState is BranchLoaded
-                        ? branchState.branchCode
-                        : '';
-                    final branchName = branchState is BranchLoaded
-                        ? branchState.branchName
-                        : '';
-                    final generatedOrderNumber =
-                        '$formattedDateTime-$branchCode-$_orderCounter';
+                              const uuid = Uuid();
+                              final holdOrderId = uuid.v4();
 
-                    return Opacity(
-                      opacity: isEnabled ? 1.0 : 0.4,
-                      child: AbsorbPointer(
-                        absorbing: !isEnabled,
-                        child: orderButton(
-                          "Proceed",
-                          const Color.fromARGB(255, 101, 221, 159),
-                          ProceedPages(
-                            items: isEnabled ? state.cartItems : [],
-                            branchName: branchName,
-                            customername: nameController.text,
-                            tableNumber: _permanentOrderCounter.toString(),
-                            phoneNumber: "+975-${contactController.text}",
-                            orderID: const Uuid().v4(),
-                            totalCostWithTax: totalAmount,
-                            orderNumber: generatedOrderNumber,
+                              // Get customer info from CustomerInfoOrderBloc
+                              final customerInfoState =
+                                  context.read<CustomerInfoOrderBloc>().state;
+
+                              // Use CustomerInfoOrderBloc's order number if present, otherwise use _orderCounter
+                              int currentOrderNumber = _orderCounter;
+
+                              // Inside your widget or function
+                              final now = DateTime.now();
+                              final formattedDateTime =
+                                  DateFormat('yyyyMMddHHmmss').format(now);
+                              final branchState =
+                                  context.read<BranchBloc>().state;
+                              final branchCode = branchState is BranchLoaded
+                                  ? branchState.branchCode
+                                  : '';
+
+                              if (customerInfoState
+                                  is CustomerInfoOrderRemoved) {
+                                _orderCounter = _permanentOrderCounter;
+                              }
+
+                              if (customerInfoState
+                                      is CustomerInfoOrderLoaded &&
+                                  customerInfoState
+                                      .customerInfo.orderNumber.isNotEmpty) {
+                                currentOrderNumber = int.parse(customerInfoState
+                                    .customerInfo.orderNumber
+                                    .split('-')
+                                    .last);
+                              }
+
+                              final formatedOrderNumber =
+                                  '$formattedDateTime-$branchCode-$_orderCounter';
+
+                              final holdItems = HoldOrderModel(
+                                holdOrderId: holdOrderId,
+                                tableNumber: tableNumber,
+                                orderNumber: formatedOrderNumber,
+                                customerName: nameController.text,
+                                customerContact: contactController.text,
+                                orderDateTime: DateTime.now(),
+                                menuItems: state.cartItems,
+                              );
+
+                              // increment only when there is not customerInfoOrderLoaded
+                              if (customerInfoState
+                                  is! CustomerInfoOrderLoaded) {
+                                await _incrementOrderCounter();
+                                await _incrementPermanentOrderCounter();
+                              }
+
+                              final customerInfo = CustomerInfoModel(
+                                orderId: holdOrderId,
+                                orderNumber: formatedOrderNumber,
+                                tableNumber: tableNumber,
+                                customerName: (state.cartItems.isNotEmpty &&
+                                        state.cartItems[0].customerName != null)
+                                    ? state.cartItems[0].customerName!
+                                    : nameController.text,
+                                customerContact: contactController.text,
+                                orderDateTime: DateTime.now(),
+                                orderedItems: state.cartItems,
+                              );
+
+                              context
+                                  .read<HoldOrderBloc>()
+                                  .add(AddHoldOrder(holdItems));
+                              context.read<MenuBloc>().add(RemoveAllFromCart());
+                              context
+                                  .read<CustomerInfoBloc>()
+                                  .add(AddCustomerOrder(customerInfo));
+
+                              final menuPrintState =
+                                  context.read<MenuPrintBloc>().state;
+
+                              final ticket = HoldOrderTicket(
+                                id: holdOrderId,
+                                date: DateFormat('yyyy-MM-dd')
+                                    .format(holdItems.orderDateTime),
+                                time: DateFormat('hh:mm a')
+                                    .format(holdItems.orderDateTime),
+                                user: holdItems.customerName,
+                                tableNumber: holdItems.tableNumber,
+                                orderNumber: formatedOrderNumber,
+                                items: (menuPrintState as MenuPrintLoaded)
+                                    .printItems,
+                                contact: holdItems.customerContact,
+                              );
+
+                              existingContact = '';
+                              existingName = '';
+                              nameController.text = '';
+                              contactController.text = '';
+
+                              context
+                                  .read<CustomerInfoOrderBloc>()
+                                  .add(RemoveCustomerInfoOrder());
+
+                              context
+                                  .read<MenuPrintBloc>()
+                                  .add(const RemoveAllFromPrint());
+
+                              await ticket.printToThermalPrinter(context);
+                            },
                           ),
-                          () async {
-                            const uuid = Uuid();
+                        );
+                      } else {
+                        return Expanded(
+                          child: orderButton(
+                            "View Orders",
+                            const Color.fromARGB(255, 3, 27, 48),
+                            const HoldOrderPage(menuItems: []), // Empty cart
+                            () {
+                              setState(() {
+                                selectedTableNumber = 'Table';
+                                reSelectTableNumber = '';
+                              });
+                            },
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: BlocBuilder<MenuBloc, MenuState>(
+                      builder: (context, state) {
+                        bool isEnabled =
+                            state is MenuLoaded && state.cartItems.isNotEmpty;
 
-                            // Get customer info from bloc
-                            final customerInfoState =
-                                context.read<CustomerInfoOrderBloc>().state;
+                        // All logic inside Expanded
+                        final branchState = context.read<BranchBloc>().state;
+                        final now = DateTime.now();
+                        final formattedDateTime =
+                            DateFormat('yyyyMMddHHmmss').format(now);
+                        final branchCode = branchState is BranchLoaded
+                            ? branchState.branchCode
+                            : '';
+                        final branchName = branchState is BranchLoaded
+                            ? branchState.branchName
+                            : '';
+                        final generatedOrderNumber =
+                            '$formattedDateTime-$branchCode-$_orderCounter';
 
-                            int currentOrderNumber = _orderCounter;
+                        return Opacity(
+                          opacity: isEnabled ? 1.0 : 0.4,
+                          child: AbsorbPointer(
+                            absorbing: !isEnabled,
+                            child: orderButton(
+                              "Proceed",
+                              const Color.fromARGB(255, 101, 221, 159),
 
-                            if (customerInfoState is CustomerInfoOrderLoaded &&
-                                customerInfoState
-                                    .customerInfo.orderNumber.isNotEmpty) {
-                              currentOrderNumber = int.tryParse(
-                                      customerInfoState.customerInfo.orderNumber
-                                          .split('-')
-                                          .last) ??
-                                  _orderCounter;
-                            }
+                              // Goes to the Proceed page with the following input in the mind
+                              ProceedPages(
+                                items: isEnabled ? state.cartItems : [],
+                                branchName: branchName,
+                                customername: nameController.text,
+                                bst: bst,
+                                serviceTax: serviceCharge,
+                                tableNumber: _permanentOrderCounter.toString(),
+                                phoneNumber: "+975-${contactController.text}",
+                                orderID: const Uuid().v4(),
+                                subTotal: totalAmount,
+                                //must include the tax you know what and what ever is who
+                                totalCost: double.parse(
+                                    payableAmount.toStringAsFixed(2)),
+                                orderNumber: generatedOrderNumber,
+                              ),
 
-                            // Regenerate order number here for model
-                            final nowForModel = DateTime.now();
-                            final formattedDateTimeModel =
-                                DateFormat('yyyyMMddHHmmss')
-                                    .format(nowForModel);
-                            final branchCodeModel = branchState is BranchLoaded
-                                ? branchState.branchCode
-                                : '';
-                            final generatedOrderNumberForModel =
-                                '$formattedDateTimeModel-$branchCodeModel-$currentOrderNumber';
+                              () async {
+                                const uuid = Uuid();
 
-                            final proceedOrderItems = ProceedOrderModel(
-                              holdOrderId: uuid.v4().toString(),
-                              orderNumber: generatedOrderNumberForModel,
-                              tableNumber: _permanentOrderCounter.toString(),
-                              customerName: nameController.text.toString(),
-                              phoneNumber:
-                                  "+975-${contactController.text.toString()}",
-                              restaurantBranchName: "Branch Kharpandi Goenpa",
-                              orderDateTime: DateTime.now(),
-                              menuItems:
-                                  state is MenuLoaded ? state.cartItems : [],
-                            );
+                                // Get customer info from bloc
+                                final customerInfoState =
+                                    context.read<CustomerInfoOrderBloc>().state;
 
-                            await _incrementOrderCounter();
-                            await _incrementPermanentOrderCounter();
+                                int currentOrderNumber = _orderCounter;
 
-                            existingContact = '';
-                            existingName = '';
-                            nameController.text = '';
-                            contactController.text = '';
+                                if (customerInfoState
+                                        is CustomerInfoOrderLoaded &&
+                                    customerInfoState
+                                        .customerInfo.orderNumber.isNotEmpty) {
+                                  currentOrderNumber = int.tryParse(
+                                          customerInfoState
+                                              .customerInfo.orderNumber
+                                              .split('-')
+                                              .last) ??
+                                      _orderCounter;
+                                }
 
-                            setState(() {
-                              reSelectTableNumber = '';
-                              selectedTableNumber = 'Table';
-                            });
+                                // Regenerate order number here for model
+                                final nowForModel = DateTime.now();
+                                final formattedDateTimeModel =
+                                    DateFormat('yyyyMMddHHmmss')
+                                        .format(nowForModel);
+                                final branchCodeModel =
+                                    branchState is BranchLoaded
+                                        ? branchState.branchCode
+                                        : '';
+                                final generatedOrderNumberForModel =
+                                    '$formattedDateTimeModel-$branchCodeModel-$currentOrderNumber';
 
-                            context
-                                .read<CustomerInfoOrderBloc>()
-                                .add(RemoveCustomerInfoOrder());
+                                // This is what it gets proceeded at the End the model on whic the bill is printerd the data here is used later for the receipt page only you know
+                                final proceedOrderItems = ProceedOrderModel(
+                                  holdOrderId: uuid.v4().toString(),
+                                  orderNumber: generatedOrderNumberForModel,
+                                  tableNumber:
+                                      _permanentOrderCounter.toString(),
+                                  customerName: nameController.text.toString(),
+                                  phoneNumber:
+                                      "+975-${contactController.text.toString()}",
+                                  restaurantBranchName: branchName,
+                                  orderDateTime: DateTime.now(),
+                                  menuItems: state is MenuLoaded
+                                      ? state.cartItems
+                                      : [],
+                                  totalAmount: double.parse(
+                                      payableAmount.toStringAsFixed(2)),
+                                );
 
-                            context
-                                .read<ProceedOrderBloc>()
-                                .add(AddProceedOrder(proceedOrderItems));
+                                await _incrementOrderCounter();
+                                await _incrementPermanentOrderCounter();
 
-                            context.read<MenuBloc>().add(RemoveAllFromCart());
-                            context
-                                .read<MenuPrintBloc>()
-                                .add(const RemoveAllFromPrint());
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                                existingContact = '';
+                                existingName = '';
+                                nameController.text = '';
+                                contactController.text = '';
+
+                                setState(() {
+                                  reSelectTableNumber = '';
+                                  selectedTableNumber = 'Table';
+                                });
+
+                                context
+                                    .read<CustomerInfoOrderBloc>()
+                                    .add(RemoveCustomerInfoOrder());
+
+                                context
+                                    .read<ProceedOrderBloc>()
+                                    .add(AddProceedOrder(proceedOrderItems));
+
+                                context
+                                    .read<MenuBloc>()
+                                    .add(RemoveAllFromCart());
+                                context
+                                    .read<MenuPrintBloc>()
+                                    .add(const RemoveAllFromPrint());
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
