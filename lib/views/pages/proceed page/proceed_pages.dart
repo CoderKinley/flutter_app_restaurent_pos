@@ -343,31 +343,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                           ),
                         ),
                         _buildPaymentButtons(),
-
-                        // Fixed Bottom Buttons
-                        // Padding(
-                        //   padding: const EdgeInsets.only(top: 16),
-                        //   child: Column(
-                        //     children: [
-                        //       // First Row for CASH and SCAN
-                        //       Row(
-                        //         children: [
-                        //           Expanded(child: _paymentButton('CASH')),
-                        //           const SizedBox(width: 10),
-                        //           Expanded(child: _paymentButton('SCAN')),
-                        //         ],
-                        //       ),
-                        //       const SizedBox(height: 10),
-                        //       Row(
-                        //         children: [
-                        //           Expanded(child: _paymentButton('CARD')),
-                        //           const SizedBox(width: 10),
-                        //           Expanded(child: _paymentButton('CREDIT')),
-                        //         ],
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
                       ],
                     );
                   },

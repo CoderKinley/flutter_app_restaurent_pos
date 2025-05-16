@@ -23,7 +23,7 @@ class MenuLocalDb {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'newMenu.db');
+    String path = join(await getDatabasesPath(), 'menu.db');
     return await openDatabase(
       path,
       version: 3,

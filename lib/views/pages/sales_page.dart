@@ -1041,42 +1041,42 @@ class _SalesPageState extends State<SalesPage> {
     return Container(
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.only(top: 15, bottom: 15),
-      // decoration: const BoxDecoration(
-      //   border: Border(
-      //     top: BorderSide(
-      //       color: Colors.grey,
-      //       width: 0.5,
-      //     ),
-      //   ),
-      // ),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey,
+            width: 0.5,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Subtotal Row
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //   children: [
-          //     const Text("Subtotal"),
-          //     Text("Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
-          //   ],
-          // ),
-          // // Tax Row
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //   children: [
-          //     const Text("B.S.T 10%"),
-          //     Text(
-          //         "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-          //   ],
-          // ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //   children: [
-          //     const Text("Service 10%"),
-          //     Text(
-          //         "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
-          //   ],
-          // ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Subtotal"),
+              Text("Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
+            ],
+          ),
+          // Tax Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("B.S.T 10%"),
+              Text(
+                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Service 10%"),
+              Text(
+                  "Nu. ${(totalAmount * 0.1).toStringAsFixed(2)}"), // Dynamic tax
+            ],
+          ),
 
           const Divider(),
           // Payable Amount Row
@@ -1217,7 +1217,7 @@ class _SalesPageState extends State<SalesPage> {
                               .read<MenuPrintBloc>()
                               .add(const RemoveAllFromPrint());
 
-                          // await ticket.printToThermalPrinter(context);
+                          await ticket.printToThermalPrinter(context);
                         },
                       ),
                     );

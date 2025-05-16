@@ -29,6 +29,8 @@ import 'package:pos_system_legphel/data/repositories/menu_repository.dart';
 import 'package:pos_system_legphel/views/pages/home_page.dart';
 import 'package:pos_system_legphel/bloc/ip_address_bloc/bloc/ip_address_bloc.dart';
 import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
+import 'package:pos_system_legphel/services/network_service.dart';
+import 'package:pos_system_legphel/services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +69,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize services
+    final networkService = NetworkService();
+    final syncService = SyncService(
+      networkService,
+      baseUrl: 'http://119.2.105.142:3800',
+    );
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => NavigationBloc()),
@@ -82,7 +91,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => CustomerInfoBloc()),
         BlocProvider(create: (context) => CustomerInfoOrderBloc()),
         BlocProvider(create: (context) => MenuPrintBloc()),
-        BlocProvider(create: (context) => BillBloc()),
+        BlocProvider(
+          create: (context) => BillBloc(networkService, syncService),
+        ),
         BlocProvider(
             create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
         BlocProvider(

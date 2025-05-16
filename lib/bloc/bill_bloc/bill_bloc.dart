@@ -4,14 +4,21 @@ import 'package:pos_system_legphel/models/Bill/bill_summary_model.dart';
 import 'package:pos_system_legphel/models/Bill/bill_details_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pos_system_legphel/SQL/pending_bill_database.dart';
+import 'package:pos_system_legphel/services/network_service.dart';
+import 'package:pos_system_legphel/services/sync_service.dart';
 
 part 'bill_event.dart';
 part 'bill_state.dart';
 
 class BillBloc extends Bloc<BillEvent, BillState> {
-  final String baseUrl = 'http://119.2.105.142:3800'; // Your API base URL
+  final String baseUrl = 'http://119.2.105.142:3800';
+  final PendingBillDatabaseHelper _dbHelper =
+      PendingBillDatabaseHelper.instance;
+  final NetworkService _networkService;
+  final SyncService _syncService;
 
-  BillBloc() : super(BillInitial()) {
+  BillBloc(this._networkService, this._syncService) : super(BillInitial()) {
     on<SubmitBill>(_onSubmitBill);
     on<LoadBill>(_onLoadBill);
     on<UpdateBill>(_onUpdateBill);
@@ -22,35 +29,51 @@ class BillBloc extends Bloc<BillEvent, BillState> {
     try {
       emit(BillLoading());
 
-      // Submit bill summary
-      final summaryResponse = await http.post(
-        Uri.parse('$baseUrl/api/fnb_bill_summary_legphel_eats'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(event.billSummary.toJson()),
-      );
+      final isConnected = await _networkService.isConnected();
 
-      if (summaryResponse.statusCode != 200 &&
-          summaryResponse.statusCode != 201) {
-        throw Exception(
-            'Failed to submit bill summary: ${summaryResponse.body}');
+      if (!isConnected) {
+        // Store locally if offline
+        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+        return;
       }
 
-      // Submit bill details
-      for (var detail in event.billDetails) {
-        final detailResponse = await http.post(
-          Uri.parse('$baseUrl/api/fnb_bill_details_legphel_eats'),
+      // Try to submit online
+      try {
+        // Submit bill summary
+        final summaryResponse = await http.post(
+          Uri.parse('$baseUrl/api/fnb_bill_summary_legphel_eats'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(detail.toJson()),
+          body: jsonEncode(event.billSummary.toJson()),
         );
 
-        if (detailResponse.statusCode != 200 &&
-            detailResponse.statusCode != 201) {
+        if (summaryResponse.statusCode != 200 &&
+            summaryResponse.statusCode != 201) {
           throw Exception(
-              'Failed to submit bill detail: ${detailResponse.body}');
+              'Failed to submit bill summary: ${summaryResponse.body}');
         }
-      }
 
-      emit(BillSubmitted(event.billSummary.fnbBillNo));
+        // Submit bill details
+        for (var detail in event.billDetails) {
+          final detailResponse = await http.post(
+            Uri.parse('$baseUrl/api/fnb_bill_details_legphel_eats'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(detail.toJson()),
+          );
+
+          if (detailResponse.statusCode != 200 &&
+              detailResponse.statusCode != 201) {
+            throw Exception(
+                'Failed to submit bill detail: ${detailResponse.body}');
+          }
+        }
+
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+      } catch (e) {
+        // If online submission fails, store locally
+        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+      }
     } catch (e) {
       emit(BillError(e.toString()));
     }
@@ -60,7 +83,31 @@ class BillBloc extends Bloc<BillEvent, BillState> {
     try {
       emit(BillLoading());
 
-      // Load bill summary
+      final isConnected = await _networkService.isConnected();
+
+      if (!isConnected) {
+        // Try to load from local storage
+        final pendingBills = await _dbHelper.getPendingBills();
+        final bill = pendingBills.firstWhere(
+          (b) => b['fnb_bill_no'] == event.fnbBillNo,
+          orElse: () => throw Exception('Bill not found'),
+        );
+
+        final summary = BillSummaryModel.fromJson(
+          jsonDecode(bill['data'] as String),
+        );
+
+        final details = await _dbHelper.getPendingBillDetails(event.fnbBillNo);
+        final billDetails = details
+            .map((detail) =>
+                BillDetailsModel.fromJson(jsonDecode(detail['data'] as String)))
+            .toList();
+
+        emit(BillLoaded(billSummary: summary, billDetails: billDetails));
+        return;
+      }
+
+      // Load from server
       final summaryResponse = await http.get(
         Uri.parse(
             '$baseUrl/api/fnb_bill_summary_legphel_eats/${event.fnbBillNo}'),
@@ -73,7 +120,6 @@ class BillBloc extends Bloc<BillEvent, BillState> {
       final summary =
           BillSummaryModel.fromJson(jsonDecode(summaryResponse.body));
 
-      // Load bill details
       final detailsResponse = await http.get(
         Uri.parse(
             '$baseUrl/api/fnb_bill_details_legphel_eats?fnb_bill_no=${event.fnbBillNo}'),
@@ -97,41 +143,57 @@ class BillBloc extends Bloc<BillEvent, BillState> {
     try {
       emit(BillLoading());
 
-      // Update bill summary
-      final summaryResponse = await http.put(
-        Uri.parse(
-            '$baseUrl/api/fnb_bill_summary_legphel_eats/${event.billSummary.fnbBillNo}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(event.billSummary.toJson()),
-      );
+      final isConnected = await _networkService.isConnected();
 
-      if (summaryResponse.statusCode != 200) {
-        throw Exception(
-            'Failed to update bill summary: ${summaryResponse.body}');
+      if (!isConnected) {
+        // Store update locally
+        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+        return;
       }
 
-      // Delete existing bill details
-      await http.delete(
-        Uri.parse(
-            '$baseUrl/api/fnb_bill_details_legphel_eats/${event.billSummary.fnbBillNo}'),
-      );
-
-      // Submit new bill details
-      for (var detail in event.billDetails) {
-        final detailResponse = await http.post(
-          Uri.parse('$baseUrl/api/fnb_bill_details_legphel_eats'),
+      // Try to update online
+      try {
+        // Update bill summary
+        final summaryResponse = await http.put(
+          Uri.parse(
+              '$baseUrl/api/fnb_bill_summary_legphel_eats/${event.billSummary.fnbBillNo}'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(detail.toJson()),
+          body: jsonEncode(event.billSummary.toJson()),
         );
 
-        if (detailResponse.statusCode != 200 &&
-            detailResponse.statusCode != 201) {
+        if (summaryResponse.statusCode != 200) {
           throw Exception(
-              'Failed to update bill detail: ${detailResponse.body}');
+              'Failed to update bill summary: ${summaryResponse.body}');
         }
-      }
 
-      emit(BillSubmitted(event.billSummary.fnbBillNo));
+        // Delete existing bill details
+        await http.delete(
+          Uri.parse(
+              '$baseUrl/api/fnb_bill_details_legphel_eats/${event.billSummary.fnbBillNo}'),
+        );
+
+        // Submit new bill details
+        for (var detail in event.billDetails) {
+          final detailResponse = await http.post(
+            Uri.parse('$baseUrl/api/fnb_bill_details_legphel_eats'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(detail.toJson()),
+          );
+
+          if (detailResponse.statusCode != 200 &&
+              detailResponse.statusCode != 201) {
+            throw Exception(
+                'Failed to update bill detail: ${detailResponse.body}');
+          }
+        }
+
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+      } catch (e) {
+        // If online update fails, store locally
+        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+        emit(BillSubmitted(event.billSummary.fnbBillNo));
+      }
     } catch (e) {
       emit(BillError(e.toString()));
     }
@@ -141,23 +203,39 @@ class BillBloc extends Bloc<BillEvent, BillState> {
     try {
       emit(BillLoading());
 
-      // Delete bill details first
-      await http.delete(
-        Uri.parse(
-            '$baseUrl/api/fnb_bill_details_legphel_eats/${event.fnbBillNo}'),
-      );
+      final isConnected = await _networkService.isConnected();
 
-      // Delete bill summary
-      final response = await http.delete(
-        Uri.parse(
-            '$baseUrl/api/fnb_bill_summary_legphel_eats/${event.fnbBillNo}'),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to delete bill: ${response.body}');
+      if (!isConnected) {
+        // Mark as deleted locally
+        await _dbHelper.updateSyncStatus(event.fnbBillNo, 'deleted');
+        emit(BillInitial());
+        return;
       }
 
-      emit(BillInitial());
+      // Try to delete online
+      try {
+        // Delete bill details first
+        await http.delete(
+          Uri.parse(
+              '$baseUrl/api/fnb_bill_details_legphel_eats/${event.fnbBillNo}'),
+        );
+
+        // Delete bill summary
+        final response = await http.delete(
+          Uri.parse(
+              '$baseUrl/api/fnb_bill_summary_legphel_eats/${event.fnbBillNo}'),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to delete bill: ${response.body}');
+        }
+
+        emit(BillInitial());
+      } catch (e) {
+        // If online delete fails, mark as deleted locally
+        await _dbHelper.updateSyncStatus(event.fnbBillNo, 'deleted');
+        emit(BillInitial());
+      }
     } catch (e) {
       emit(BillError(e.toString()));
     }
