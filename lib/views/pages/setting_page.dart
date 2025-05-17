@@ -4,6 +4,8 @@ import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.da
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:pos_system_legphel/models/settings/app_settings.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_widget.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/branch_settings_page.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/ip_address_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -151,6 +153,38 @@ class _SettingPageState extends State<SettingPage> {
                   });
                 },
               ),
+            ),
+
+            _buildSectionHeader('System Settings'),
+            _buildSettingTile(
+              icon: Icons.business_rounded,
+              title: 'Branch Settings',
+              subtitle: 'Configure branch information and settings',
+              color: const Color(0xFFFF3B30), // Apple red
+              onTap: () {
+                // Navigate to Branch Settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BranchSettingsPage(),
+                  ),
+                );
+              },
+            ),
+            _buildSettingTile(
+              icon: Icons.print_rounded,
+              title: 'Printer IP',
+              subtitle: 'Configure printer network settings',
+              color: const Color(0xFF34C759), // Apple green
+              onTap: () {
+                // Navigate to Printer IP Settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const IpAddressPage(),
+                  ),
+                );
+              },
             ),
 
             _buildSectionHeader('About'),

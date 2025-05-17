@@ -29,6 +29,7 @@ import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
+import 'package:pos_system_legphel/views/widgets/menu_search_widget.dart';
 
 // https://mobipos.com.au/resources/guide/cash-register/ordering-menu/
 
@@ -66,10 +67,20 @@ class _SalesPageState extends State<SalesPage> {
   int _permanentOrderCounter = PERMANENT_COUNTER_KEY;
   String savedOrderNumber = '';
 
+  // Add state variables for tax checkboxes
+  bool _applyBst = true;
+  bool _applyServiceCharge = true;
+  static const String _applyBstKey = 'apply_bst';
+  static const String _applyServiceChargeKey = 'apply_service_charge';
+
+  // Add state for filtered menu items
+  List<MenuModel> _filteredMenuItems = [];
+
   @override
   void initState() {
     super.initState();
     _initializeData();
+    _loadTaxCheckboxStates();
   }
 
   Future<void> _initializeData() async {
@@ -162,6 +173,20 @@ class _SalesPageState extends State<SalesPage> {
       _permanentOrderCounter++;
     });
     await _savePermanentOrderCounter();
+  }
+
+  Future<void> _loadTaxCheckboxStates() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _applyBst = prefs.getBool(_applyBstKey) ?? true;
+      _applyServiceCharge = prefs.getBool(_applyServiceChargeKey) ?? true;
+    });
+  }
+
+  Future<void> _saveTaxCheckboxStates() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_applyBstKey, _applyBst);
+    await prefs.setBool(_applyServiceChargeKey, _applyServiceCharge);
   }
 
   // Used to see the change in dependencies automatically updating the UserInformation widget
@@ -532,7 +557,27 @@ class _SalesPageState extends State<SalesPage> {
                         right: 10, left: 10, top: 5, bottom: 5),
                     height: 60,
                     color: const Color.fromARGB(255, 3, 27, 48),
-                    child: Expanded(flex: 5, child: Container()),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: BlocBuilder<MenuApiBloc, MenuApiState>(
+                            builder: (context, state) {
+                              if (state is MenuApiLoaded) {
+                                return MenuSearchWidget(
+                                  menuItems: state.menuItems,
+                                  onSearchResults: (filteredItems) {
+                                    setState(() {
+                                      _filteredMenuItems = filteredItems;
+                                    });
+                                  },
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Expanded(
                     child: BlocBuilder<MenuApiBloc, MenuApiState>(
@@ -541,7 +586,11 @@ class _SalesPageState extends State<SalesPage> {
                           return const Center(
                               child: CircularProgressIndicator());
                         } else if (state is MenuApiLoaded) {
-                          final filteredMenuItems = state.menuItems
+                          final itemsToDisplay = _filteredMenuItems.isEmpty
+                              ? state.menuItems
+                              : _filteredMenuItems;
+
+                          final filteredMenuItems = itemsToDisplay
                               .where((menuItem) =>
                                   _selectedCategory == null ||
                                   menuItem.menuType == _selectedCategory)
@@ -602,7 +651,6 @@ class _SalesPageState extends State<SalesPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        // const DropdownButtonExample(),
                         Row(
                           children: [
                             IconButton(
@@ -678,12 +726,17 @@ class _SalesPageState extends State<SalesPage> {
                                           },
                                         ),
                                       ),
-                                      const SizedBox(height: 10),
-                                      summarySection(
-                                        context,
-                                        menuState.totalAmount,
-                                        menuState.cartItems,
-                                        selectedTableNumber!,
+                                      // Summary section with keyboard handling
+                                      SafeArea(
+                                        child: Container(
+                                          color: Colors.grey[200],
+                                          child: summarySection(
+                                            context,
+                                            menuState.totalAmount,
+                                            menuState.cartItems,
+                                            selectedTableNumber!,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -876,31 +929,21 @@ class _SalesPageState extends State<SalesPage> {
           ),
           Expanded(
             flex: 5,
-            child: Container(),
+            child: Center(
+              child: Container(
+                child: Text(
+                  "Sales Page",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ),
           Expanded(flex: 5, child: action),
         ],
-      ),
-    );
-  }
-
-  // widget for the Search bar at the top
-  Widget _search() {
-    return TextField(
-      style: const TextStyle(),
-      decoration: InputDecoration(
-        filled: true,
-        prefixIcon: const Icon(
-          Icons.search,
-        ),
-        hintText: 'Search menu here...',
-        hintStyle: const TextStyle(fontSize: 11),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
-        ),
       ),
     );
   }
@@ -1048,14 +1091,15 @@ class _SalesPageState extends State<SalesPage> {
         final serviceCharge =
             prefs.getDouble(TaxSettingsBloc.serviceChargeKey) ?? 0.0;
 
-        // Calculate tax amounts
-        final bstAmount = totalAmount * (bst / 100);
-        final serviceChargeAmount = totalAmount * (serviceCharge / 100);
+        // Calculate tax amounts based on checkbox states
+        final bstAmount = _applyBst ? totalAmount * (bst / 100) : 0.0;
+        final serviceChargeAmount =
+            _applyServiceCharge ? totalAmount * (serviceCharge / 100) : 0.0;
         final payableAmount = totalAmount + bstAmount + serviceChargeAmount;
 
         return Container(
           margin: const EdgeInsets.only(right: 10),
-          padding: const EdgeInsets.only(top: 15, bottom: 15),
+          padding: const EdgeInsets.only(top: 2, bottom: 2),
           decoration: const BoxDecoration(
             border: Border(
               top: BorderSide(
@@ -1076,21 +1120,122 @@ class _SalesPageState extends State<SalesPage> {
                       "Nu. ${totalAmount.toStringAsFixed(2)}"), // Dynamic subtotal
                 ],
               ),
-              // BST Row
+              // BST Row with refined checkbox
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("B.S.T ${bst.toStringAsFixed(1)}%"),
-                  Text("Nu. ${bstAmount.toStringAsFixed(2)}"), // Dynamic BST
+                  Row(
+                    children: [
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          unselectedWidgetColor: Colors.grey[400],
+                        ),
+                        child: Checkbox(
+                          value: _applyBst,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _applyBst = value ?? true;
+                              _saveTaxCheckboxStates();
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          fillColor: MaterialStateProperty.resolveWith<Color>(
+                              (states) {
+                            return states.contains(MaterialState.selected)
+                                ? const Color(0xFF4CAF50) // Apple green
+                                : Colors.transparent;
+                          }),
+                          side: BorderSide(
+                            color: _applyBst
+                                ? const Color(0xFF4CAF50)
+                                : Colors.grey[400]!,
+                            width: 1.5,
+                          ),
+                          checkColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "B.S.T ${bst.toStringAsFixed(1)}%",
+                        style: TextStyle(
+                          color: _applyBst
+                              ? const Color(0xFF2E7D32)
+                              : Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "Nu. ${bstAmount.toStringAsFixed(2)}",
+                    style: TextStyle(
+                      color: _applyBst
+                          ? const Color(0xFF2E7D32)
+                          : Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
-              // Service Charge Row
+              // Service Charge Row with refined checkbox
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Service ${serviceCharge.toStringAsFixed(1)}%"),
+                  Row(
+                    children: [
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          unselectedWidgetColor: Colors.grey[400],
+                        ),
+                        child: Checkbox(
+                          value: _applyServiceCharge,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _applyServiceCharge = value ?? true;
+                              _saveTaxCheckboxStates();
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          fillColor: MaterialStateProperty.resolveWith<Color>(
+                              (states) {
+                            return states.contains(MaterialState.selected)
+                                ? const Color(0xFF8BC34A) // Light apple green
+                                : Colors.transparent;
+                          }),
+                          side: BorderSide(
+                            color: _applyServiceCharge
+                                ? const Color(0xFF8BC34A)
+                                : Colors.grey[400]!,
+                            width: 1.5,
+                          ),
+                          checkColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Service ${serviceCharge.toStringAsFixed(1)}%",
+                        style: TextStyle(
+                          color: _applyServiceCharge
+                              ? const Color(0xFF2E7D32)
+                              : Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                   Text(
-                      "Nu. ${serviceChargeAmount.toStringAsFixed(2)}"), // Dynamic Service Charge
+                    "Nu. ${serviceChargeAmount.toStringAsFixed(2)}",
+                    style: TextStyle(
+                      color: _applyServiceCharge
+                          ? const Color(0xFF2E7D32)
+                          : Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
               const Divider(),

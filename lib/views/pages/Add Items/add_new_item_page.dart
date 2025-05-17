@@ -34,6 +34,15 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   String? _selectedSubMenuType;
   bool _isSubmitting = false;
 
+  // Apple-themed color palette
+  final Color _primaryColor = const Color(0xFF4CAF50); // Apple green
+  final Color _secondaryColor = const Color(0xFF8BC34A); // Light apple green
+  final Color _accentColor = const Color(0xFFCDDC39); // Lime accent
+  final Color _backgroundColor = const Color(0xFFF1F8E9); // Very light green
+  final Color _cardColor = Colors.white;
+  final Color _textColor = const Color(0xFF2E7D32); // Dark green
+  final Color _errorColor = const Color(0xFFC62828); // Red for errors
+
   @override
   void initState() {
     super.initState();
@@ -52,14 +61,12 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       _selectedMenuType = widget.product!.menuType;
       _selectedSubMenuType = widget.product!.subMenuType;
 
-      // If subMenuType is empty string, set it to null to avoid dropdown error
       if (_selectedSubMenuType != null && _selectedSubMenuType!.isEmpty) {
         _selectedSubMenuType = null;
       }
     }
   }
 
-  // for picking up the image from the gallery for the purpose of adding the image file to the data base
   Future<void> _pickImage() async {
     var status = await Permission.photos.request();
     if (status.isGranted) {
@@ -84,12 +91,11 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     }
   }
 
-  // Shows a snackbar with custom message and color
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? _errorColor : _primaryColor,
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(10),
@@ -107,7 +113,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
     );
   }
 
-  // save the product to the local database that i have created earlier
   void _saveProduct(BuildContext context) {
     if (!_formKey.currentState!.validate() || _selectedMenuType == null) {
       _showSnackBar("Please fill all fields and select a menu type.",
@@ -115,7 +120,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       return;
     }
 
-    // Additional validation
     if (_menuIdController.text.isEmpty) {
       _showSnackBar("Please enter a product ID", isError: true);
       return;
@@ -131,7 +135,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       return;
     }
 
-    // Validate price format
     if (double.tryParse(_priceController.text) == null) {
       _showSnackBar("Please enter a valid price", isError: true);
       return;
@@ -157,7 +160,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       description: _descriptionController.text.trim(),
       menuType: _selectedMenuType!,
       dishImage: _imagePath!,
-      subMenuType: _selectedSubMenuType ?? '', // Provide a default empty string
+      subMenuType: _selectedSubMenuType ?? '',
       menuId: _menuIdController.text.trim(),
     );
 
@@ -173,6 +176,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
         title: Text(
           widget.product == null ? "Add New Item" : "Edit Item",
@@ -181,7 +185,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 3, 27, 48),
+        backgroundColor:
+            const Color.fromARGB(255, 3, 27, 48), // Kept original nav bar color
         foregroundColor: Colors.white,
       ),
       body: BlocListener<MenuApiBloc, MenuApiState>(
@@ -205,7 +210,6 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                 isError: false,
               );
 
-              // Add a slight delay before popping to allow the user to see the success message
               Future.delayed(const Duration(seconds: 1), () {
                 if (mounted) {
                   Navigator.pop(context);
@@ -219,10 +223,11 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
             padding: const EdgeInsets.all(16.0),
             child: Center(
               child: Card(
-                elevation: 5, // Adds shadow
+                elevation: 5,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
+                color: _cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Form(
@@ -234,10 +239,10 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                           widget.product == null
                               ? "Product Details"
                               : "Edit Product Details",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 3, 27, 48),
+                            color: _textColor,
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -246,37 +251,60 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                           controller: _menuIdController,
                           decoration: InputDecoration(
                             labelText: 'Product ID',
-                            prefixIcon: const Icon(Icons.tag),
+                            labelStyle: TextStyle(color: _textColor),
+                            prefixIcon: Icon(Icons.tag, color: _primaryColor),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: _primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: _primaryColor, width: 2),
+                            ),
                           ),
                           validator: (value) =>
                               value!.isEmpty ? 'Enter product ID' : null,
                         ),
                         const SizedBox(height: 15),
 
-                        /// Product Name
                         TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
                             labelText: 'Product Name',
-                            prefixIcon: const Icon(Icons.shopping_cart),
+                            labelStyle: TextStyle(color: _textColor),
+                            prefixIcon:
+                                Icon(Icons.shopping_cart, color: _primaryColor),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: _primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: _primaryColor, width: 2),
+                            ),
                           ),
                           validator: (value) =>
                               value!.isEmpty ? 'Enter product name' : null,
                         ),
                         const SizedBox(height: 15),
 
-                        /// Price
                         TextFormField(
                           controller: _priceController,
                           decoration: InputDecoration(
                             labelText: 'Price',
-                            prefixIcon: const Icon(Icons.money),
+                            labelStyle: TextStyle(color: _textColor),
+                            prefixIcon: Icon(Icons.money, color: _primaryColor),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: _primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: _primaryColor, width: 2),
+                            ),
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) =>
@@ -284,13 +312,21 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                         ),
                         const SizedBox(height: 15),
 
-                        /// Availability
                         DropdownButtonFormField<bool>(
                           decoration: InputDecoration(
                             labelText: 'Availability (1 = Yes, 0 = No)',
-                            prefixIcon: const Icon(Icons.check_circle),
+                            labelStyle: TextStyle(color: _textColor),
+                            prefixIcon:
+                                Icon(Icons.check_circle, color: _primaryColor),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: _primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: _primaryColor, width: 2),
+                            ),
                           ),
                           value: _selectedAvailability,
                           onChanged: (bool? newValue) {
@@ -302,20 +338,29 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                               .map((value) => DropdownMenuItem(
                                     value: value,
                                     child: Text(
-                                        value ? "Available" : "Not Available"),
+                                        value ? "Available" : "Not Available",
+                                        style: TextStyle(color: _textColor)),
                                   ))
                               .toList(),
                         ),
                         const SizedBox(height: 15),
 
-                        /// Description
                         TextFormField(
                           controller: _descriptionController,
                           decoration: InputDecoration(
                             labelText: 'Product Description',
-                            prefixIcon: const Icon(Icons.description),
+                            labelStyle: TextStyle(color: _textColor),
+                            prefixIcon:
+                                Icon(Icons.description, color: _primaryColor),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: _primaryColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: _primaryColor, width: 2),
+                            ),
                           ),
                           maxLines: 3,
                           validator: (value) =>
@@ -331,15 +376,24 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             } else if (state is CategoryError) {
                               return Center(child: Text(state.errorMessage));
                             } else if (state is CategoryLoaded) {
-                              // Use the fetched categories to populate the dropdown
                               final categories = state.categories;
 
                               return DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
                                   labelText: 'Menu Type',
-                                  prefixIcon: const Icon(Icons.restaurant_menu),
+                                  labelStyle: TextStyle(color: _textColor),
+                                  prefixIcon: Icon(Icons.restaurant_menu,
+                                      color: _primaryColor),
                                   border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide:
+                                        BorderSide(color: _primaryColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide(
+                                        color: _primaryColor, width: 2),
+                                  ),
                                 ),
                                 value: _selectedMenuType,
                                 onChanged: (String? newValue) {
@@ -350,7 +404,9 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                 items: categories
                                     .map((category) => DropdownMenuItem(
                                           value: category.categoryName,
-                                          child: Text(category.categoryName),
+                                          child: Text(category.categoryName,
+                                              style:
+                                                  TextStyle(color: _textColor)),
                                         ))
                                     .toList(),
                                 validator: (value) =>
@@ -374,14 +430,12 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             } else if (state is SubcategoryLoaded) {
                               final subcategories = state.subcategories;
 
-                              // Check if selected subMenuType exists in the list
                               bool valueExists = false;
                               if (_selectedSubMenuType != null) {
                                 valueExists = subcategories.any((category) =>
                                     category.subcategoryName ==
                                     _selectedSubMenuType);
                                 if (!valueExists) {
-                                  // If not found in list, set to null to avoid dropdown error
                                   _selectedSubMenuType = null;
                                 }
                               }
@@ -389,13 +443,24 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                               return DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
                                   labelText: 'Sub Menu Type',
-                                  prefixIcon: const Icon(Icons.restaurant_menu),
+                                  labelStyle: TextStyle(color: _textColor),
+                                  prefixIcon: Icon(Icons.restaurant_menu,
+                                      color: _primaryColor),
                                   border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide:
+                                        BorderSide(color: _primaryColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide(
+                                        color: _primaryColor, width: 2),
+                                  ),
                                 ),
                                 value: _selectedSubMenuType,
-                                hint: const Text(
-                                    'Select a sub menu type (optional)'),
+                                hint: Text('Select a sub menu type (optional)',
+                                    style: TextStyle(
+                                        color: _textColor.withOpacity(0.6))),
                                 onChanged: (String? newValue) {
                                   setState(() {
                                     _selectedSubMenuType = newValue;
@@ -404,7 +469,9 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                 items: subcategories
                                     .map((category) => DropdownMenuItem(
                                           value: category.subcategoryName,
-                                          child: Text(category.subcategoryName),
+                                          child: Text(category.subcategoryName,
+                                              style:
+                                                  TextStyle(color: _textColor)),
                                         ))
                                     .toList(),
                               );
@@ -435,35 +502,37 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                               : FileImage(File(_imagePath!)),
                                           fit: BoxFit.cover,
                                         ),
+                                        border: Border.all(
+                                          color: _primaryColor,
+                                          width: 2,
+                                        ),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(height: 10),
                                   TextButton.icon(
-                                    icon: const Icon(Icons.cancel,
-                                        color: Colors.red),
-                                    label: const Text("Remove Image",
-                                        style: TextStyle(color: Colors.red)),
+                                    icon:
+                                        Icon(Icons.cancel, color: _errorColor),
+                                    label: Text("Remove Image",
+                                        style: TextStyle(color: _errorColor)),
                                     onPressed: () {
                                       setState(() {
-                                        _imagePath =
-                                            null; // Clear the selected image
+                                        _imagePath = null;
                                       });
                                     },
                                   ),
                                 ],
                               )
-                            : const Text('No image selected',
-                                style: TextStyle(color: Colors.grey)),
+                            : Text('No image selected',
+                                style: TextStyle(
+                                    color: _textColor.withOpacity(0.6))),
 
                         const SizedBox(height: 10),
 
                         TextButton.icon(
-                          icon: const Icon(Icons.image,
-                              color: Color.fromARGB(255, 3, 27, 48)),
-                          label: const Text("Pick Image",
-                              style: TextStyle(
-                                  color: Color.fromARGB(255, 3, 27, 48))),
+                          icon: Icon(Icons.image, color: _primaryColor),
+                          label: Text("Pick Image",
+                              style: TextStyle(color: _primaryColor)),
                           onPressed: _pickImage,
                         ),
 
@@ -475,6 +544,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                 ? null
                                 : () => _saveProduct(context),
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: _primaryColor,
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10)),
@@ -492,7 +562,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                                     widget.product == null
                                         ? "Add Product"
                                         : "Save Changes",
-                                    style: const TextStyle(fontSize: 16),
+                                    style: const TextStyle(
+                                        fontSize: 16, color: Colors.white),
                                   ),
                           ),
                         ),

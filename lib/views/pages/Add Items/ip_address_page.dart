@@ -16,6 +16,13 @@ class _IpAddressPageState extends State<IpAddressPage> {
   final _portController = TextEditingController();
   bool _isSubmitting = false;
 
+  // Apple Fruit Color Palette 🍎
+  final Color appleRed = const Color(0xFFE74C3C);
+  final Color appleGreen = const Color(0xFF2ECC71);
+  final Color appleLeaf = const Color(0xFF27AE60);
+  final Color appleStem = const Color(0xFF8B4513);
+  final Color appleCream = const Color(0xFFFDF2E9);
+
   @override
   void initState() {
     super.initState();
@@ -32,183 +39,155 @@ class _IpAddressPageState extends State<IpAddressPage> {
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 3),
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: isError ? appleRed : appleGreen,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
   bool _isValidIpAddress(String ip) {
-    final ipv4Regex = RegExp(r'^' // Start of string
-        r'((25[0-5]|' // Match 250-255
-        r'2[0-4][0-9]|' // Match 200-249
-        r'[01]?[0-9][0-9]?)\.){3}' // Match 0-199, followed by '.'
-        r'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' // Final segment
-        r'$' // End of string
-        );
+    final ipv4Regex = RegExp(
+        r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
     return ipv4Regex.hasMatch(ip);
   }
 
   bool _isValidPort(String port) {
-    if (port.isEmpty) return false;
     final portNum = int.tryParse(port);
     return portNum != null && portNum > 0 && portNum <= 65535;
   }
 
-  void _saveIpAddress() {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    final fullAddress =
-        '${_ipController.text.trim()}:${_portController.text.trim()}';
-    context.read<IpAddressBloc>().add(SaveIpAddress(fullAddress));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<IpAddressBloc, IpAddressState>(
-      listener: (context, state) {
-        if (state is IpAddressLoading) {
-          setState(() {
-            _isSubmitting = true;
-          });
-        } else {
-          setState(() {
-            _isSubmitting = false;
-          });
-
-          if (state is IpAddressError) {
-            _showSnackBar(state.message, isError: true);
-          } else if (state is IpAddressLoaded) {
-            if (_ipController.text.isNotEmpty) {
-              _showSnackBar('Server address saved successfully!');
+    return Scaffold(
+      backgroundColor: appleCream,
+      appBar: AppBar(
+        title: const Text('Server Connection',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: appleLeaf,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: BlocListener<IpAddressBloc, IpAddressState>(
+          listener: (context, state) {
+            if (state is IpAddressLoading) {
+              setState(() => _isSubmitting = true);
+            } else if (state is IpAddressError) {
+              _showSnackBar(state.message, isError: true);
+              setState(() => _isSubmitting = false);
+            } else if (state is IpAddressLoaded) {
+              if (_ipController.text.isNotEmpty) {
+                _showSnackBar('Connection saved successfully!');
+              }
+              final parts = state.ipAddress.split(':');
+              if (parts.length == 2) {
+                _ipController.text = parts[0];
+                _portController.text = parts[1];
+              }
+              setState(() => _isSubmitting = false);
             }
-            final parts = state.ipAddress.split(':');
-            if (parts.length == 2) {
-              _ipController.text = parts[0];
-              _portController.text = parts[1];
-            }
-          }
-        }
-      },
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          },
           child: Center(
-            child: Card(
-              elevation: 5,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Server Address',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 3, 27, 48),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _ipController,
-                        decoration: InputDecoration(
-                          labelText: 'IP Address',
-                          hintText:
-                              'Enter server IP address (e.g., 192.168.1.100)',
-                          prefixIcon: const Icon(Icons.computer),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an IP address';
-                          }
-                          if (!_isValidIpAddress(value)) {
-                            return 'Please enter a valid IP address';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _portController,
-                        decoration: InputDecoration(
-                          labelText: 'Port',
-                          hintText: 'Enter port number (e.g., 8080)',
-                          prefixIcon: const Icon(Icons.numbers),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                          LengthLimitingTextInputFormatter(15),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a port number';
-                          }
-                          if (!_isValidPort(value)) {
-                            return 'Please enter a valid port number (1-65535)';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : _saveIpAddress,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Save Server Address',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                        ),
-                      ),
-                    ],
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: appleStem.withOpacity(0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
+                ],
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // IP Address Field
+                    TextFormField(
+                      controller: _ipController,
+                      decoration: InputDecoration(
+                        labelText: 'IP Address',
+                        hintText: '192.168.1.100',
+                        prefixIcon: Icon(Icons.computer, color: appleLeaf),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              BorderSide(color: appleStem.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: appleGreen, width: 2),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Required';
+                        if (!_isValidIpAddress(value)) return 'Invalid IP';
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Port Field
+                    TextFormField(
+                      controller: _portController,
+                      decoration: InputDecoration(
+                        labelText: 'Port',
+                        hintText: '8080',
+                        prefixIcon: Icon(Icons.numbers, color: appleLeaf),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              BorderSide(color: appleStem.withOpacity(0.3)),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Required';
+                        if (!_isValidPort(value))
+                          return 'Invalid Port (1-65535)';
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _saveIpAddress,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: appleRed,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 3,
+                          shadowColor: appleRed.withOpacity(0.4),
+                        ),
+                        child: _isSubmitting
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text('SAVE CONNECTION',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -217,28 +196,12 @@ class _IpAddressPageState extends State<IpAddressPage> {
       ),
     );
   }
-}
 
-class _IpAddressInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) {
-      return newValue;
+  void _saveIpAddress() {
+    if (_formKey.currentState!.validate()) {
+      final fullAddress =
+          '${_ipController.text.trim()}:${_portController.text.trim()}';
+      context.read<IpAddressBloc>().add(SaveIpAddress(fullAddress));
     }
-
-    final text = newValue.text.replaceAll('.', '');
-    final buffer = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && i % 3 == 0) {
-        buffer.write('.');
-      }
-      buffer.write(text[i]);
-    }
-
-    return TextEditingValue(
-      text: buffer.toString(),
-      selection: TextSelection.collapsed(offset: buffer.length),
-    );
   }
 }

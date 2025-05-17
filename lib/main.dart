@@ -40,6 +40,10 @@ void main() async {
 
   await _requestImageAndStoragePermissions();
 
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+  ]);
+
   await ImmersiveModeHelper.enterFullImmersiveMode();
   ImmersiveModeHelper.setupImmersiveModeListener();
 
