@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
+import 'package:pos_system_legphel/models/settings/app_settings.dart';
 import 'package:pos_system_legphel/views/pages/Add%20Items/add_new_item_page.dart';
 
 class AllItemsList extends StatefulWidget {
@@ -13,6 +14,21 @@ class AllItemsList extends StatefulWidget {
 }
 
 class _AllItemsListState extends State<AllItemsList> {
+  bool _showFetchButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final showFetchButton = await AppSettings.getShowFetchButton();
+    setState(() {
+      _showFetchButton = showFetchButton;
+    });
+  }
+
   void _showDeleteConfirmation(
       BuildContext context, String menuId, String menuName) {
     showDialog(
@@ -139,33 +155,69 @@ class _AllItemsListState extends State<AllItemsList> {
               return Container();
             },
           ),
-          // Custom Floating Action Button
+          // Custom Floating Action Buttons
           Positioned(
             bottom: 20,
             right: 20,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) {
-                    return const AddNewItemPage();
-                  },
-                ));
-              },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 3, 27, 48),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 8,
-                      spreadRadius: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_showFetchButton)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        context.read<MenuApiBloc>().add(FetchMenuFromApi());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Fetching menu from API...'),
+                            backgroundColor: Colors.blue,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.sync,
+                            color: Colors.white, size: 32),
+                      ),
                     ),
-                  ],
+                  ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const AddNewItemPage();
+                      },
+                    ));
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(255, 3, 27, 48),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 32),
+                  ),
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 32),
-              ),
+              ],
             ),
           ),
         ],

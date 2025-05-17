@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -345,353 +347,146 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
     return Scaffold(
       drawer: const DrawerMenuWidget(),
       body: Padding(
-        padding: const EdgeInsets.only(right: 0, left: 0),
+        padding: const EdgeInsets.all(0),
         child: Row(
           children: [
             // Left side (List of receipts)
             Expanded(
               flex: 3,
-              child: Column(
-                children: [
-                  Container(
-                    height: 60,
-                    padding:
-                        const EdgeInsets.only(left: 0, right: 10, bottom: 0),
-                    color: const Color.fromARGB(255, 3, 27, 48),
-                    child: _mainTopMenu(action: Container()),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: Colors.grey[100],
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _selectDateRange(context),
-                            icon: const Icon(Icons.date_range, size: 18),
-                            label: Text(
-                              startDate != null && endDate != null
-                                  ? '${DateFormat('MMM d').format(startDate!)} - ${DateFormat('MMM d').format(endDate!)}'
-                                  : 'Select Date',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black87,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(2, 0),
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Top menu
+                    Container(
+                      height: 60,
+                      decoration: const BoxDecoration(
+                        color: Color.fromARGB(255, 3, 27, 48),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          )
+                        ],
+                      ),
+                      child: _buildTopNavigationBar(),
+                    ),
+                    // Date range and export buttons
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color: Colors.grey[100],
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateRangeButton(),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Builder(
+                              builder: (context) => _buildExportButton(context),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Builder(
-                            builder: (context) => ElevatedButton.icon(
-                              onPressed: () {
-                                print('Export button pressed'); // Debug print
-                                final blocState =
-                                    context.read<ProceedOrderBloc>().state;
-                                print(
-                                    'Current bloc state: $blocState'); // Debug print
+                        ],
+                      ),
+                    ),
+                    // Receipt list
+                    Expanded(
+                      child: Container(
+                        padding:
+                            const EdgeInsets.only(left: 5, right: 5, top: 10),
+                        child: Focus(
+                          focusNode: _focusNode,
+                          autofocus: true,
+                          child: BlocProvider(
+                            create: (context) {
+                              final bloc = ProceedOrderBloc();
+                              bloc.add(LoadProceedOrders());
+                              return bloc;
+                            },
+                            child: BlocBuilder<ProceedOrderBloc,
+                                ProceedOrderState>(
+                              builder: (context, state) {
+                                if (state is ProceedOrderLoading) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
 
-                                if (blocState is ProceedOrderLoaded) {
-                                  final state = blocState;
-                                  print(
-                                      'State loaded, orders count: ${state.proceedOrders.length}'); // Debug print
-                                  if (state.proceedOrders.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'No orders available to export'),
-                                        backgroundColor: Colors.orange,
-                                        duration: Duration(seconds: 3),
-                                        behavior: SnackBarBehavior.floating,
-                                        margin: EdgeInsets.all(8),
+                                if (state is ProceedOrderError) {
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Error: ${state.message}',
+                                          style: const TextStyle(
+                                              color: Colors.red),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        _buildRetryButton(context),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                if (state is ProceedOrderLoaded) {
+                                  if (_allOrders != state.proceedOrders) {
+                                    _processOrders(state.proceedOrders);
+                                  }
+
+                                  if (_allOrders.isEmpty) {
+                                    return Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.receipt_long,
+                                              size: 48,
+                                              color: Colors.grey[400]),
+                                          const SizedBox(height: 16),
+                                          const Text(
+                                            'No orders found',
+                                            style: TextStyle(fontSize: 16),
+                                          ),
+                                        ],
                                       ),
                                     );
-                                    return;
                                   }
-                                  _exportToExcel(state.proceedOrders);
-                                } else if (blocState is ProceedOrderLoading) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Loading orders, please wait...'),
-                                      backgroundColor: Colors.blue,
-                                      duration: Duration(seconds: 3),
-                                      behavior: SnackBarBehavior.floating,
-                                      margin: EdgeInsets.all(8),
-                                    ),
-                                  );
-                                } else if (blocState is ProceedOrderError) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content:
-                                          Text('Error: ${blocState.message}'),
-                                      backgroundColor: Colors.red,
-                                      duration: const Duration(seconds: 3),
-                                      behavior: SnackBarBehavior.floating,
-                                      margin: const EdgeInsets.all(8),
-                                    ),
-                                  );
-                                } else {
-                                  // Reload orders if state is not loaded
-                                  context
-                                      .read<ProceedOrderBloc>()
-                                      .add(LoadProceedOrders());
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Reloading orders...'),
-                                      backgroundColor: Colors.blue,
-                                      duration: Duration(seconds: 3),
-                                      behavior: SnackBarBehavior.floating,
-                                      margin: EdgeInsets.all(8),
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.file_download, size: 18),
-                              label: const Text(
-                                'Export to Excel',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding:
-                          const EdgeInsets.only(left: 5, right: 5, top: 10),
-                      child: Focus(
-                        focusNode: _focusNode,
-                        autofocus: true,
-                        child: BlocProvider(
-                          create: (context) {
-                            final bloc = ProceedOrderBloc();
-                            bloc.add(LoadProceedOrders());
-                            return bloc;
-                          },
-                          child:
-                              BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
-                            builder: (context, state) {
-                              if (state is ProceedOrderLoading) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
 
-                              if (state is ProceedOrderError) {
-                                return Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Error: ${state.message}',
-                                        style:
-                                            const TextStyle(color: Colors.red),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          context
-                                              .read<ProceedOrderBloc>()
-                                              .add(LoadProceedOrders());
-                                        },
-                                        child: const Text('Retry'),
-                                      ),
+                                  final groupedOrders = _groupOrdersByDate();
+
+                                  return CustomScrollView(
+                                    controller: scrollController,
+                                    slivers: [
+                                      _buildDateHeader(groupedOrders),
+                                      _buildOrderList(groupedOrders),
+                                      _buildLoadingIndicator(),
+                                      _buildNoMoreDataIndicator(),
                                     ],
-                                  ),
-                                );
-                              }
-
-                              if (state is ProceedOrderLoaded) {
-                                // Process orders only when they change
-                                if (_allOrders != state.proceedOrders) {
-                                  _processOrders(state.proceedOrders);
-                                }
-
-                                if (_allOrders.isEmpty) {
-                                  return const Center(
-                                    child: Text(
-                                      'No orders found',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
                                   );
                                 }
-
-                                // Group displayed orders by date
-                                Map<String, List<ProceedOrderModel>>
-                                    groupedOrders = {};
-
-                                // Get paginated orders
-                                final endIndex = (_currentPage + 1) * _pageSize;
-                                final paginatedOrders =
-                                    _allOrders.take(endIndex).toList();
-
-                                for (var order in paginatedOrders) {
-                                  String dateKey = order.orderDateTime
-                                      .toLocal()
-                                      .toString()
-                                      .split(' ')[0];
-                                  if (!groupedOrders.containsKey(dateKey)) {
-                                    groupedOrders[dateKey] = [];
-                                  }
-                                  groupedOrders[dateKey]!.add(order);
-                                }
-
-                                // Sort grouped orders by date in descending order
-                                var reversedGroupedOrders = Map.fromEntries(
-                                    groupedOrders.entries.toList()
-                                      ..sort((a, b) => b.key.compareTo(a.key)));
-
-                                // Sort each day's orders by orderDateTime in descending order
-                                reversedGroupedOrders.updateAll((key, value) {
-                                  value.sort((a, b) => b.orderDateTime
-                                      .compareTo(a.orderDateTime));
-                                  return value;
-                                });
-
-                                return CustomScrollView(
-                                  controller: scrollController,
-                                  slivers: [
-                                    SliverToBoxAdapter(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0, horizontal: 16.0),
-                                        color: Colors.green,
-                                        child: Text(
-                                          groupedOrders.isEmpty
-                                              ? 'No Orders'
-                                              : reversedGroupedOrders
-                                                  .keys.first,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (BuildContext context, int index) {
-                                          final entry = reversedGroupedOrders
-                                              .entries
-                                              .toList()[index];
-                                          return Column(
-                                            children: [
-                                              if (index >
-                                                  0) // Add date header for each group except the first one
-                                                Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      vertical: 8.0,
-                                                      horizontal: 16.0),
-                                                  color: Colors.green,
-                                                  child: Text(
-                                                    entry.key,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16.0,
-                                                    ),
-                                                  ),
-                                                ),
-                                              Column(
-                                                children: entry.value
-                                                    .map((proceedOrder) {
-                                                  return Column(
-                                                    children: [
-                                                      InkWell(
-                                                        onTap: () {
-                                                          setState(() {
-                                                            selectedReceiptItem =
-                                                                proceedOrder;
-                                                          });
-                                                        },
-                                                        child:
-                                                            _buildReceiptItem(
-                                                          DateFormat(
-                                                                  'MMMM d, y – h:mm a')
-                                                              .format(proceedOrder
-                                                                  .orderDateTime),
-                                                          'Order Number: ${proceedOrder.orderNumber}',
-                                                          time: DateFormat(
-                                                                  'HH:mm')
-                                                              .format(proceedOrder
-                                                                  .orderDateTime),
-                                                          onDelete: () {
-                                                            context
-                                                                .read<
-                                                                    ProceedOrderBloc>()
-                                                                .add(
-                                                                  DeleteProceedOrder(
-                                                                      proceedOrder
-                                                                          .holdOrderId),
-                                                                );
-                                                          },
-                                                        ),
-                                                      ),
-                                                      const Divider(),
-                                                    ],
-                                                  );
-                                                }).toList(),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                        childCount:
-                                            reversedGroupedOrders.length,
-                                      ),
-                                    ),
-                                    // Add loading indicator at the bottom
-                                    if (_isLoadingMore)
-                                      const SliverToBoxAdapter(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        ),
-                                      ),
-                                    // Show message when no more data
-                                    if (!_hasMoreData &&
-                                        _allOrders.length > _pageSize)
-                                      const SliverToBoxAdapter(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: Center(
-                                            child: Text(
-                                              'No more orders to load',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              }
-                              return Container();
-                            },
+                                return Container();
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             // Right side (Detailed view)
@@ -699,285 +494,13 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
               flex: 6,
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    height: 60,
-                    color: Colors.grey,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
-                              builder: (context, state) {
-                                if (state is ProceedOrderLoaded) {
-                                  // Calculate selected day's total
-                                  final selectedDayOrders =
-                                      state.proceedOrders.where((order) {
-                                    final orderDate = order.orderDateTime;
-                                    return orderDate.year ==
-                                            selectedDate.year &&
-                                        orderDate.month == selectedDate.month &&
-                                        orderDate.day == selectedDate.day;
-                                  }).toList();
-
-                                  final dayTotal =
-                                      selectedDayOrders.fold<double>(
-                                    0,
-                                    (sum, order) => sum + order.totalPrice,
-                                  );
-
-                                  return Row(
-                                    children: [
-                                      // Date Selector
-                                      InkWell(
-                                        onTap: () => _selectDate(context),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.calendar_today,
-                                                  size: 16,
-                                                  color: Colors.white),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                DateFormat('MMM d, yyyy')
-                                                    .format(selectedDate),
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Daily Total
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.2),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              '${dayTotal.toStringAsFixed(2)} Nu',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '(${selectedDayOrders.length})',
-                                              style: const TextStyle(
-                                                fontSize: 11,
-                                                color: Colors.white70,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Total Orders
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.withOpacity(0.2),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.receipt_long,
-                                                size: 14, color: Colors.white),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${state.proceedOrders.length}',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      // Auto-reload indicator
-                                      if (state is ProceedOrderLoading)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              SizedBox(
-                                                width: 12,
-                                                height: 12,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                          Color>(Colors.white),
-                                                ),
-                                              ),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                'Updating...',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.white70,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.person_add,
-                                  color: Colors.white),
-                            ),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.more_vert,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildDetailHeader(),
                   Expanded(
                     child: Container(
                       color: Colors.grey[200],
                       child: selectedReceiptItem == null
-                          ? const Center(
-                              child: Text(
-                                'Select an item to view details',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            )
-                          : SingleChildScrollView(
-                              child: Card(
-                                elevation: 2,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                '${selectedReceiptItem?.totalAmount ?? 0}Nu',
-                                                style: const TextStyle(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green,
-                                                ),
-                                              ),
-                                              const Text(
-                                                'Total',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const Divider(),
-                                      Text(
-                                          'POS: ${selectedReceiptItem?.restaurantBranchName ?? 'N/A'}'),
-                                      Text(
-                                          'Order Number: ${selectedReceiptItem?.orderNumber ?? 'N/A'}'),
-                                      const SizedBox(height: 8),
-                                      const Text('Dine in',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      if (selectedReceiptItem?.menuItems !=
-                                          null)
-                                        for (var item
-                                            in selectedReceiptItem!.menuItems)
-                                          ListTile(
-                                            title: Text(item.product.menuName),
-                                            trailing:
-                                                Text('${item.totalPrice}Nu'),
-                                            subtitle: Text(
-                                                '${item.quantity} x ${item.product.price}Nu'),
-                                          ),
-                                      const Divider(),
-                                      const Text('Total',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text('Cash'),
-                                          Text(
-                                              '${selectedReceiptItem?.totalPrice ?? 0}Nu'),
-                                        ],
-                                      ),
-                                      const Divider(),
-                                      Text(
-                                        selectedReceiptItem?.orderDateTime !=
-                                                null
-                                            ? DateFormat(
-                                                    'EEEE, dd MMM yyyy – hh:mm a')
-                                                .format(selectedReceiptItem!
-                                                    .orderDateTime
-                                                    .toLocal())
-                                            : 'N/A',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                          ? _buildEmptyDetailView()
+                          : _buildReceiptDetailView(),
                     ),
                   ),
                 ],
@@ -987,6 +510,649 @@ class _ReceiptPageState extends State<ReceiptPage> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  // Widget building methods
+  Widget _buildTopNavigationBar() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+          const Spacer(),
+          const Text(
+            'Order History',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          const SizedBox(width: 48), // Balance the row
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateRangeButton() {
+    return ElevatedButton.icon(
+      onPressed: () => _selectDateRange(context),
+      icon: const Icon(Icons.date_range, size: 18),
+      label: Text(
+        startDate != null && endDate != null
+            ? '${DateFormat('MMM d').format(startDate!)} - ${DateFormat('MMM d').format(endDate!)}'
+            : 'Select Date',
+        style: const TextStyle(fontSize: 12),
+      ),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExportButton(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () => _handleExport(context),
+      icon: const Icon(Icons.file_download, size: 18),
+      label: const Text(
+        'Export to Excel',
+        style: TextStyle(fontSize: 12),
+      ),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRetryButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        context.read<ProceedOrderBloc>().add(LoadProceedOrders());
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: const Text('Retry'),
+    );
+  }
+
+  Map<String, List<ProceedOrderModel>> _groupOrdersByDate() {
+    Map<String, List<ProceedOrderModel>> groupedOrders = {};
+    final paginatedOrders =
+        _allOrders.take((_currentPage + 1) * _pageSize).toList();
+
+    for (var order in paginatedOrders) {
+      String dateKey = order.orderDateTime.toLocal().toString().split(' ')[0];
+      if (!groupedOrders.containsKey(dateKey)) {
+        groupedOrders[dateKey] = [];
+      }
+      groupedOrders[dateKey]!.add(order);
+    }
+
+    var reversedGroupedOrders = Map.fromEntries(
+        groupedOrders.entries.toList()..sort((a, b) => b.key.compareTo(a.key)));
+
+    reversedGroupedOrders.updateAll((key, value) {
+      value.sort((a, b) => b.orderDateTime.compareTo(a.orderDateTime));
+      return value;
+    });
+
+    return reversedGroupedOrders;
+  }
+
+  Widget _buildDateHeader(Map<String, List<ProceedOrderModel>> groupedOrders) {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 3, 27, 48),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+        ),
+        child: Text(
+          groupedOrders.isEmpty ? 'No Orders' : groupedOrders.keys.first,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderList(Map<String, List<ProceedOrderModel>> groupedOrders) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (BuildContext context, int index) {
+          final entry = groupedOrders.entries.toList()[index];
+          return Column(
+            children: [
+              if (index > 0)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
+                  decoration: BoxDecoration(
+                    // heading in each start of new dataed items
+                    color: const Color.fromARGB(255, 3, 27, 48),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(8)),
+                  ),
+                  child: Text(
+                    entry.key,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+              Column(
+                children: entry.value.map((proceedOrder) {
+                  return Column(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedReceiptItem = proceedOrder;
+                          });
+                        },
+                        child: _buildReceiptListItem(proceedOrder),
+                      ),
+                      const Divider(height: 1, color: Colors.black12),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
+          );
+        },
+        childCount: groupedOrders.length,
+      ),
+    );
+  }
+
+  Widget _buildReceiptListItem(ProceedOrderModel proceedOrder) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: selectedReceiptItem?.holdOrderId == proceedOrder.holdOrderId
+            ? Colors.blue.shade50
+            : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade100,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.receipt, color: Colors.blue),
+        ),
+        title: Text(
+          'Order #${proceedOrder.orderNumber.split('-')[2]}',
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          DateFormat('MMMM d, y – h:mm a').format(proceedOrder.orderDateTime),
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.grey),
+          onSelected: (String value) {
+            if (value == 'delete') {
+              _showDeleteConfirmationDialog(context, () {
+                context.read<ProceedOrderBloc>().add(
+                      DeleteProceedOrder(proceedOrder.holdOrderId),
+                    );
+              });
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            const PopupMenuItem<String>(
+              value: 'delete',
+              child: Text('Delete Order'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return _isLoadingMore
+        ? const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          )
+        : const SliverToBoxAdapter(child: SizedBox.shrink());
+  }
+
+  Widget _buildNoMoreDataIndicator() {
+    return !_hasMoreData && _allOrders.length > _pageSize
+        ? const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'No more orders to load',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          )
+        : const SliverToBoxAdapter(child: SizedBox.shrink());
+  }
+
+  Widget _buildDetailHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 60,
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 3, 27, 48),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          BlocBuilder<ProceedOrderBloc, ProceedOrderState>(
+            builder: (context, state) {
+              if (state is ProceedOrderLoaded) {
+                final selectedDayOrders = state.proceedOrders.where((order) {
+                  final orderDate = order.orderDateTime;
+                  return orderDate.year == selectedDate.year &&
+                      orderDate.month == selectedDate.month &&
+                      orderDate.day == selectedDate.day;
+                }).toList();
+
+                final dayTotal = selectedDayOrders.fold<double>(
+                  0,
+                  (sum, order) => sum + order.totalPrice,
+                );
+
+                return Row(
+                  children: [
+                    _buildDateSelector(),
+                    const SizedBox(width: 12),
+                    _buildDayTotal(dayTotal, selectedDayOrders.length),
+                    const SizedBox(width: 12),
+                    _buildTotalOrders(state.proceedOrders.length),
+                    if (state is ProceedOrderLoading) _buildLoadingIndicator(),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.person_add, color: Colors.white),
+                tooltip: 'Add Customer',
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                tooltip: 'More Options',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return InkWell(
+      onTap: () => _selectDate(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.calendar_today, size: 16, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              DateFormat('MMM d, yyyy').format(selectedDate),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayTotal(double total, int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '${total.toStringAsFixed(2)} Nu',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '($count)',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalOrders(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.receipt_long, size: 16, color: Colors.white),
+          const SizedBox(width: 8),
+          Text(
+            '$count',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyDetailView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_outlined, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          const Text(
+            'Select an order to view details',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiptDetailView() {
+    return SingleChildScrollView(
+      child: Card(
+        margin: const EdgeInsets.all(16),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Order summary header
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      '${selectedReceiptItem?.totalAmount ?? 0} Nu',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const Text(
+                      'TOTAL AMOUNT',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Divider(),
+
+              // Order details
+              _buildDetailRow(
+                  'POS:', selectedReceiptItem?.restaurantBranchName ?? 'N/A'),
+              _buildDetailRow(
+                  'Order Number:', selectedReceiptItem?.orderNumber ?? 'N/A'),
+              const SizedBox(height: 16),
+
+              // Order type
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'DINE IN',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Order items
+              if (selectedReceiptItem?.menuItems != null)
+                ...selectedReceiptItem!.menuItems
+                    .map((item) => _buildOrderItem(item))
+                    .toList(),
+
+              const Divider(),
+              const SizedBox(height: 8),
+
+              // Payment summary
+              _buildPaymentSummary(),
+              const Divider(),
+
+              // Order timestamp
+              Text(
+                selectedReceiptItem?.orderDateTime != null
+                    ? DateFormat('EEEE, MMMM d yyyy – h:mm a')
+                        .format(selectedReceiptItem!.orderDateTime.toLocal())
+                    : 'N/A',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 8),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderItem(item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.product.menuName,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              Text(
+                '${item.quantity} x ${item.product.price} Nu',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+            ],
+          ),
+          Text(
+            '${item.totalPrice} Nu',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentSummary() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Subtotal', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('100 Nu', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Tax', style: TextStyle(color: Colors.grey.shade600)),
+            Text('10 Nu', style: TextStyle(color: Colors.grey.shade600)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('TOTAL',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                )),
+            Text(
+              '${selectedReceiptItem?.totalPrice ?? 0} Nu',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _handleExport(BuildContext context) {
+    final blocState = context.read<ProceedOrderBloc>().state;
+
+    if (blocState is ProceedOrderLoaded) {
+      if (blocState.proceedOrders.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No orders available to export'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(8),
+          ),
+        );
+        return;
+      }
+      _exportToExcel(blocState.proceedOrders);
+    } else if (blocState is ProceedOrderLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loading orders, please wait...'),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(8),
+        ),
+      );
+    } else {
+      context.read<ProceedOrderBloc>().add(LoadProceedOrders());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reloading orders...'),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(8),
+        ),
+      );
+    }
   }
 
   Widget _mainTopMenu({

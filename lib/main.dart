@@ -32,6 +32,7 @@ import 'package:pos_system_legphel/bloc/branch_bloc/bloc/branch_bloc.dart';
 import 'package:pos_system_legphel/services/network_service.dart';
 import 'package:pos_system_legphel/services/sync_service.dart';
 import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
+import 'package:pos_system_legphel/services/ImmersiveModeHelper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,11 +40,29 @@ void main() async {
 
   await _requestImageAndStoragePermissions();
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-  ]);
+  await ImmersiveModeHelper.enterFullImmersiveMode();
+  ImmersiveModeHelper.setupImmersiveModeListener();
 
-  runApp(MyApp(prefs: prefs));
+  // Initialize database helpers
+  final databaseHelper = DatabaseHelper.instance;
+  final menuLocalDb = MenuLocalDb.instance;
+  final menuApiService = MenuApiService();
+  final categoryBloc = CategoryBloc()..add(LoadCategories());
+  final subcategoryBloc = SubcategoryBloc()..add(LoadAllSubcategory());
+  final menuRepository = MenuRepository(
+    menuLocalDb,
+    menuApiService,
+    categoryBloc,
+    subcategoryBloc,
+  );
+
+  runApp(MyApp(
+    prefs: prefs,
+    databaseHelper: databaseHelper,
+    menuRepository: menuRepository,
+    categoryBloc: categoryBloc,
+    subcategoryBloc: subcategoryBloc,
+  ));
 }
 
 Future<void> _requestImageAndStoragePermissions() async {
@@ -65,8 +84,19 @@ Future<void> _requestImageAndStoragePermissions() async {
 
 class MyApp extends StatelessWidget {
   final SharedPreferences prefs;
+  final DatabaseHelper databaseHelper;
+  final MenuRepository menuRepository;
+  final CategoryBloc categoryBloc;
+  final SubcategoryBloc subcategoryBloc;
 
-  const MyApp({super.key, required this.prefs});
+  const MyApp({
+    super.key,
+    required this.prefs,
+    required this.databaseHelper,
+    required this.menuRepository,
+    required this.categoryBloc,
+    required this.subcategoryBloc,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +113,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => ItemlistBloc()),
         BlocProvider(
             create: (context) =>
-                ProductBloc(DatabaseHelper.instance)..add(LoadProducts())),
+                ProductBloc(databaseHelper)..add(LoadProducts())),
         BlocProvider(create: (context) => AddItemNavigationBloc()),
         BlocProvider(create: (context) => MenuBloc()),
         BlocProvider(create: (context) => HoldOrderBloc()),
@@ -95,19 +125,11 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => BillBloc(networkService, syncService),
         ),
+        BlocProvider<SubcategoryBloc>.value(value: subcategoryBloc),
         BlocProvider(
-            create: (context) => SubcategoryBloc()..add(LoadAllSubcategory())),
-        BlocProvider(
-          create: (context) => MenuApiBloc(
-            MenuRepository(
-              // MenuApiService(),
-              // MenuLocalDb(),
-              MenuLocalDb(),
-            ),
-          ),
+          create: (context) => MenuApiBloc(menuRepository),
         ),
-        BlocProvider(
-            create: (context) => CategoryBloc()..add(LoadCategories())),
+        BlocProvider<CategoryBloc>.value(value: categoryBloc),
         BlocProvider(
           create: (context) => IpAddressBloc(prefs),
         ),

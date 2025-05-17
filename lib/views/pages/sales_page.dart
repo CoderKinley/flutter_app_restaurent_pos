@@ -591,7 +591,7 @@ class _SalesPageState extends State<SalesPage> {
                   Container(
                     padding: const EdgeInsets.only(left: 10),
                     height: 60,
-                    color: Colors.grey,
+                    color: Colors.green[200],
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1034,9 +1034,8 @@ class _SalesPageState extends State<SalesPage> {
     BuildContext context,
     double totalAmount,
     List<MenuBillModel> cartItems,
-    String tableNumber, {
-    num? tax = 0.2,
-  }) {
+    String tableNumber,
+  ) {
     return FutureBuilder<SharedPreferences>(
       future: SharedPreferences.getInstance(),
       builder: (context, snapshot) {

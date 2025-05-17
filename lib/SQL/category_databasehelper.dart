@@ -159,6 +159,18 @@ class CategoryDatabaseHelper {
     );
   }
 
+  // Clear all categories
+  Future<int> clearCategories() async {
+    final db = await instance.database;
+    return await db.delete('categories');
+  }
+
+  // Clear all subcategories
+  Future<int> clearSubcategories() async {
+    final db = await instance.database;
+    return await db.delete('subcategories');
+  }
+
   // Close the database
   Future<void> close() async {
     final db = await instance.database;

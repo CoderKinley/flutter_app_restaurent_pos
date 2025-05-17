@@ -11,6 +11,7 @@ class MenuApiBloc extends Bloc<MenuApiEvent, MenuApiState> {
 
   MenuApiBloc(this.repository) : super(MenuApiInitial()) {
     on<FetchMenuApi>(_onFetchMenuApi);
+    on<FetchMenuFromApi>(_onFetchMenuFromApi);
     on<AddMenuApiItem>(_onAddMenuApiItem);
     on<RemoveMenuApiItem>(_onRemoveMenuApiItem);
     on<UpdateMenuApiItem>(_onUpdateMenuApiItem);
@@ -27,9 +28,24 @@ class MenuApiBloc extends Bloc<MenuApiEvent, MenuApiState> {
     }
   }
 
+  Future<void> _onFetchMenuFromApi(
+      FetchMenuFromApi event, Emitter<MenuApiState> emit) async {
+    emit(MenuApiLoading());
+    try {
+      final success = await repository.fetchAndUpdateMenuFromApi();
+      if (success) {
+        List<MenuModel> menuItems = await repository.getMenuItems();
+        emit(MenuApiLoaded(menuItems));
+      } else {
+        emit(MenuApiError("Failed to fetch menu from API"));
+      }
+    } catch (e) {
+      emit(MenuApiError(e.toString()));
+    }
+  }
+
   Future<void> _onAddMenuApiItem(
       AddMenuApiItem event, Emitter<MenuApiState> emit) async {
-    // Store current state to revert in case of error
     final currentState = state;
 
     try {

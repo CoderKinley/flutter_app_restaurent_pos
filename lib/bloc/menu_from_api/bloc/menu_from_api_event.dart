@@ -11,6 +11,8 @@ class LoadMenuFromDB extends MenuApiEvent {}
 
 class FetchMenuApi extends MenuApiEvent {}
 
+class FetchMenuFromApi extends MenuApiEvent {}
+
 class AddMenuApiItem extends MenuApiEvent {
   final MenuModel menuItem;
 
