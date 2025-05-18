@@ -257,6 +257,7 @@ class BillService {
     required int totalQuantity,
     required String date,
     required String time,
+    required double discount,
     required double totalAmount,
     required String payMode,
   }) async {
@@ -333,9 +334,6 @@ class BillService {
 
         buffer.writeln('$itemLine$spaces$priceLine');
       }
-
-      buffer.writeln('-' * lineLength);
-
       void addSummaryLine(String label, String value, {bool bold = false}) {
         int space = lineLength - label.length - value.length;
         String padding = ' ' * (space < 0 ? 0 : space);
@@ -344,13 +342,16 @@ class BillService {
         if (bold) buffer.write(boldOff);
       }
 
+      buffer.writeln();
+      addSummaryLine('Total Quantity:', '$totalQuantity');
+
+      buffer.writeln('-' * lineLength);
+
       addSummaryLine('Subtotal:', 'Nu.${subTotal.toStringAsFixed(2)}');
       addSummaryLine('Service ${bst}%:', 'Nu.${(bstAmt).toStringAsFixed(2)}');
       addSummaryLine(
           'B.S.T ${serviceTax}%:', 'Nu.${(serviceAmt).toStringAsFixed(2)}');
-      // addSummaryLine('Discount:', 'Nu. 0.00');
-
-      addSummaryLine('Total Quantity:', '$totalQuantity');
+      addSummaryLine('Discount:', 'Nu.${discount.toStringAsFixed(2)}');
 
       buffer.writeln('-' * lineLength);
       addSummaryLine('Total Amount:', 'Nu.${totalAmount.toStringAsFixed(2)}',

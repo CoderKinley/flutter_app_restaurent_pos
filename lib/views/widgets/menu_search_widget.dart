@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pos_system_legphel/bloc/search_suggestion_bloc/bloc/search_suggestion_bloc.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
+import 'package:pos_system_legphel/models/search/search_suggestion_model.dart';
 
 class MenuSearchWidget extends StatefulWidget {
   final List<MenuModel> menuItems;
@@ -20,6 +23,8 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
   final FocusNode _searchFocusNode = FocusNode();
   List<MenuModel> _filteredItems = [];
   bool _isSearching = false;
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
@@ -32,6 +37,81 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
     setState(() {
       _isSearching = _searchFocusNode.hasFocus;
     });
+    if (_searchFocusNode.hasFocus) {
+      _showSuggestions();
+    } else {
+      _hideSuggestions();
+    }
+  }
+
+  void _showSuggestions() {
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideSuggestions() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(0, size.height + 5),
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: BlocBuilder<SearchSuggestionBloc, SearchSuggestionState>(
+              builder: (context, state) {
+                if (state is SearchSuggestionLoading) {
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (state is SearchSuggestionLoaded) {
+                  if (state.suggestions.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: state.suggestions.length,
+                      itemBuilder: (context, index) {
+                        final suggestion = state.suggestions[index];
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            suggestion.menuName,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          onTap: () {
+                            _searchController.text = suggestion.menuName;
+                            _filterItems(suggestion.menuName);
+                            _hideSuggestions();
+                            _searchFocusNode.unfocus();
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -39,6 +119,7 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
     _searchController.dispose();
     _searchFocusNode.removeListener(_onFocusChange);
     _searchFocusNode.dispose();
+    _hideSuggestions();
     super.dispose();
   }
 
@@ -53,6 +134,14 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
             .toList();
       }
       widget.onSearchResults(_filteredItems);
+
+      // Update suggestions based on current query
+      context.read<SearchSuggestionBloc>().add(
+            UpdateSearchSuggestions(
+              query: query,
+              menuItems: widget.menuItems,
+            ),
+          );
     });
   }
 
@@ -60,6 +149,7 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
     _searchController.clear();
     _filterItems('');
     _searchFocusNode.unfocus();
+    _hideSuggestions();
   }
 
   @override
@@ -81,44 +171,47 @@ class _MenuSearchWidgetState extends State<MenuSearchWidget> {
               ),
             ],
           ),
-          child: TextField(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            onChanged: _filterItems,
-            decoration: InputDecoration(
-              hintText: 'Search menu items...',
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              prefixIcon: Icon(
-                Icons.search,
-                color: _isSearching
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey[500],
-              ),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear, color: Colors.grey[500]),
-                      onPressed: _clearSearch,
-                    )
-                  : null,
-              border: InputBorder.none,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
-                  width: 1.5,
+          child: CompositedTransformTarget(
+            link: _layerLink,
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: _filterItems,
+              decoration: InputDecoration(
+                hintText: 'Search menu items...',
+                hintStyle: TextStyle(color: Colors.grey[500]),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: _isSearching
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey[500],
                 ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: Colors.grey[500]),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                border: InputBorder.none,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor,
+                    width: 1.5,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 4),
               ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 4),
-            ),
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 16,
+              style: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 16,
+              ),
             ),
           ),
         ),

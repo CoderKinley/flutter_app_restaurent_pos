@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:pos_system_legphel/models/settings/app_settings.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_widget.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/branch_settings_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/ip_address_page.dart';
+import 'package:pos_system_legphel/views/pages/privacy_policy_page.dart';
+import 'package:pos_system_legphel/views/pages/help_support_page.dart';
+import 'package:pos_system_legphel/providers/theme_provider.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -16,7 +20,6 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   bool _showFetchButton = false;
-  bool _darkMode = false;
   bool _notificationsEnabled = true;
   bool _autoSync = false;
 
@@ -43,6 +46,9 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -55,12 +61,11 @@ class _SettingPageState extends State<SettingPage> {
         elevation: 0,
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFBBDEFB), // Very light blue
-                Color(0xFF0A1F36), // Your dark blue
-              ],
+              colors: themeProvider.isDarkMode
+                  ? [theme.colorScheme.surface, theme.colorScheme.background]
+                  : [const Color(0xFFBBDEFB), const Color(0xFF0A1F36)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -68,146 +73,138 @@ class _SettingPageState extends State<SettingPage> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Color(0xFFFFF0F0)],
+            colors: themeProvider.isDarkMode
+                ? [theme.colorScheme.surface, theme.colorScheme.background]
+                : [Colors.white, const Color(0xFFFFF0F0)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: ListView(
           children: [
-            // Header with search
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search settings...',
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  prefixIcon: Icon(Icons.search,
+                      color: theme.colorScheme.onSurface.withOpacity(0.6)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: theme.colorScheme.surface,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
-
-            // Settings Sections
             _buildSectionHeader('Appearance'),
             _buildSettingTile(
               icon: Icons.dark_mode,
               title: 'Dark Mode',
               subtitle: 'Switch between light and dark theme',
-              color: const Color(0xFF5856D6), // Apple purple
-              trailing: Switch(
-                value: _darkMode,
-                onChanged: (value) {
-                  setState(() {
-                    _darkMode = value;
-                  });
-                },
+              color: theme.colorScheme.primary,
+              trailing: _buildCustomSwitch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) => themeProvider.toggleTheme(),
+                activeColor: theme.colorScheme.primary,
               ),
             ),
-
             _buildSectionHeader('Menu Settings'),
             _buildSettingTile(
               icon: Icons.sync,
               title: 'Show Fetch Button',
               subtitle:
                   'Enable to show the fetch button for API synchronization',
-              color: const Color(0xFF34C759), // Apple green
-              trailing: Switch(
+              color: ThemeProvider.successColor,
+              trailing: _buildCustomSwitch(
                 value: _showFetchButton,
                 onChanged: _toggleFetchButton,
+                activeColor: ThemeProvider.successColor,
               ),
             ),
             _buildSettingTile(
               icon: Icons.cloud_sync,
               title: 'Auto Sync',
               subtitle: 'Automatically sync menu data periodically',
-              color: const Color(0xFF007AFF), // Apple blue
-              trailing: Switch(
+              color: theme.colorScheme.primary,
+              trailing: _buildCustomSwitch(
                 value: _autoSync,
-                onChanged: (value) {
-                  setState(() {
-                    _autoSync = value;
-                  });
-                },
+                onChanged: (value) => setState(() => _autoSync = value),
+                activeColor: theme.colorScheme.primary,
               ),
             ),
-
             _buildSectionHeader('Notifications'),
             _buildSettingTile(
               icon: Icons.notifications,
               title: 'Enable Notifications',
               subtitle: 'Receive important system notifications',
-              color: const Color(0xFFFF9500), // Apple orange
-              trailing: Switch(
+              color: const Color(0xFFFF9500),
+              trailing: _buildCustomSwitch(
                 value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                  });
-                },
+                onChanged: (value) =>
+                    setState(() => _notificationsEnabled = value),
+                activeColor: const Color(0xFFFF9500),
               ),
             ),
-
             _buildSectionHeader('System Settings'),
             _buildSettingTile(
               icon: Icons.business_rounded,
               title: 'Branch Settings',
               subtitle: 'Configure branch information and settings',
-              color: const Color(0xFFFF3B30), // Apple red
-              onTap: () {
-                // Navigate to Branch Settings
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BranchSettingsPage(),
-                  ),
-                );
-              },
+              color: ThemeProvider.errorColor,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BranchSettingsPage(),
+                ),
+              ),
             ),
             _buildSettingTile(
               icon: Icons.print_rounded,
               title: 'Printer IP',
               subtitle: 'Configure printer network settings',
-              color: const Color(0xFF34C759), // Apple green
-              onTap: () {
-                // Navigate to Printer IP Settings
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const IpAddressPage(),
-                  ),
-                );
-              },
+              color: ThemeProvider.successColor,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const IpAddressPage(),
+                ),
+              ),
             ),
-
             _buildSectionHeader('About'),
             _buildSettingTile(
               icon: Icons.info,
               title: 'App Version',
               subtitle: '1.2.3',
-              color: Colors.grey, // Neutral gray
-              onTap: () {},
+              color: theme.colorScheme.onSurface,
             ),
             _buildSettingTile(
               icon: Icons.privacy_tip,
               title: 'Privacy Policy',
               subtitle: 'View our privacy practices',
-              color: const Color(0xFFAF52DE), // Apple pink
-              onTap: () {},
+              color: const Color(0xFFAF52DE),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyPage(),
+                ),
+              ),
             ),
             _buildSettingTile(
               icon: Icons.help,
               title: 'Help & Support',
               subtitle: 'Contact our support team',
-              color: const Color(0xFFFF3B30), // Apple red
-              onTap: () {},
+              color: ThemeProvider.errorColor,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HelpSupportPage(),
+                ),
+              ),
             ),
           ],
         ),
@@ -216,15 +213,35 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
+  Widget _buildCustomSwitch({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required Color activeColor,
+  }) {
+    return Transform.scale(
+      scale: 0.9,
+      child: Switch.adaptive(
+        value: value,
+        onChanged: onChanged,
+        activeColor: activeColor,
+        activeTrackColor: activeColor.withOpacity(0.5),
+        inactiveThumbColor: Colors.grey[300],
+        inactiveTrackColor: Colors.grey[400],
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.onSurface,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -238,38 +255,52 @@ class _SettingPageState extends State<SettingPage> {
     Widget? trailing,
     VoidCallback? onTap,
   }) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      elevation: 0,
+      elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(0.1),
+          width: 1,
+        ),
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
-        ),
-        trailing: trailing,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            title: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontSize: 13,
+              ),
+            ),
+            trailing: trailing,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            minVerticalPadding: 12,
+          ),
+        ),
       ),
     );
   }

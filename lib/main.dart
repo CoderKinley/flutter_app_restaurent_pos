@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -33,6 +34,8 @@ import 'package:pos_system_legphel/services/network_service.dart';
 import 'package:pos_system_legphel/services/sync_service.dart';
 import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
 import 'package:pos_system_legphel/services/ImmersiveModeHelper.dart';
+import 'package:pos_system_legphel/bloc/search_suggestion_bloc/bloc/search_suggestion_bloc.dart';
+import 'package:pos_system_legphel/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,13 +63,18 @@ void main() async {
     subcategoryBloc,
   );
 
-  runApp(MyApp(
-    prefs: prefs,
-    databaseHelper: databaseHelper,
-    menuRepository: menuRepository,
-    categoryBloc: categoryBloc,
-    subcategoryBloc: subcategoryBloc,
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: MyApp(
+        prefs: prefs,
+        databaseHelper: databaseHelper,
+        menuRepository: menuRepository,
+        categoryBloc: categoryBloc,
+        subcategoryBloc: subcategoryBloc,
+      ),
+    ),
+  );
 }
 
 Future<void> _requestImageAndStoragePermissions() async {
@@ -104,56 +112,59 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize services
-    final networkService = NetworkService();
-    final syncService = SyncService(
-      networkService,
-      baseUrl: 'http://119.2.105.142:3800',
-    );
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        // Initialize services
+        final networkService = NetworkService();
+        final syncService = SyncService(
+          networkService,
+          baseUrl: 'http://119.2.105.142:3800',
+        );
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => NavigationBloc()),
-        BlocProvider(create: (context) => ItemlistBloc()),
-        BlocProvider(
-            create: (context) =>
-                ProductBloc(databaseHelper)..add(LoadProducts())),
-        BlocProvider(create: (context) => AddItemNavigationBloc()),
-        BlocProvider(create: (context) => MenuBloc()),
-        BlocProvider(create: (context) => HoldOrderBloc()),
-        BlocProvider(create: (context) => ProceedOrderBloc()),
-        BlocProvider(create: (context) => TableBloc()),
-        BlocProvider(create: (context) => CustomerInfoBloc()),
-        BlocProvider(create: (context) => CustomerInfoOrderBloc()),
-        BlocProvider(create: (context) => MenuPrintBloc()),
-        BlocProvider(
-          create: (context) => BillBloc(networkService, syncService),
-        ),
-        BlocProvider<SubcategoryBloc>.value(value: subcategoryBloc),
-        BlocProvider(
-          create: (context) => MenuApiBloc(menuRepository),
-        ),
-        BlocProvider<CategoryBloc>.value(value: categoryBloc),
-        BlocProvider(
-          create: (context) => IpAddressBloc(prefs),
-        ),
-        BlocProvider(
-          create: (context) => BranchBloc(prefs),
-        ),
-        BlocProvider(
-          create: (context) => TaxSettingsBloc(prefs)..add(LoadTaxSettings()),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepOrange,
-            brightness: Brightness.light,
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (context) => NavigationBloc()),
+            BlocProvider(create: (context) => ItemlistBloc()),
+            BlocProvider(
+                create: (context) =>
+                    ProductBloc(databaseHelper)..add(LoadProducts())),
+            BlocProvider(create: (context) => AddItemNavigationBloc()),
+            BlocProvider(create: (context) => MenuBloc()),
+            BlocProvider(create: (context) => HoldOrderBloc()),
+            BlocProvider(create: (context) => ProceedOrderBloc()),
+            BlocProvider(create: (context) => TableBloc()),
+            BlocProvider(create: (context) => CustomerInfoBloc()),
+            BlocProvider(create: (context) => CustomerInfoOrderBloc()),
+            BlocProvider(create: (context) => MenuPrintBloc()),
+            BlocProvider(
+              create: (context) => BillBloc(networkService, syncService),
+            ),
+            BlocProvider<SubcategoryBloc>.value(value: subcategoryBloc),
+            BlocProvider(
+              create: (context) => MenuApiBloc(menuRepository),
+            ),
+            BlocProvider<CategoryBloc>.value(value: categoryBloc),
+            BlocProvider(
+              create: (context) => IpAddressBloc(prefs),
+            ),
+            BlocProvider(
+              create: (context) => BranchBloc(prefs),
+            ),
+            BlocProvider(
+              create: (context) =>
+                  TaxSettingsBloc(prefs)..add(LoadTaxSettings()),
+            ),
+            BlocProvider(
+              create: (context) => SearchSuggestionBloc(),
+            ),
+          ],
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.currentTheme,
+            home: const HomePage(),
           ),
-        ),
-        home: const HomePage(),
-      ),
+        );
+      },
     );
   }
 }

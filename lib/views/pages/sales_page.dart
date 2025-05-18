@@ -1465,36 +1465,6 @@ class _SalesPageState extends State<SalesPage> {
                                       _orderCounter;
                                 }
 
-                                // Regenerate order number here for model
-                                final nowForModel = DateTime.now();
-                                final formattedDateTimeModel =
-                                    DateFormat('yyyyMMddHHmmss')
-                                        .format(nowForModel);
-                                final branchCodeModel =
-                                    branchState is BranchLoaded
-                                        ? branchState.branchCode
-                                        : '';
-                                final generatedOrderNumberForModel =
-                                    '$formattedDateTimeModel-$branchCodeModel-$currentOrderNumber';
-
-                                // This is what it gets proceeded at the End the model on whic the bill is printerd the data here is used later for the receipt page only you know
-                                final proceedOrderItems = ProceedOrderModel(
-                                  holdOrderId: uuid.v4().toString(),
-                                  orderNumber: generatedOrderNumberForModel,
-                                  tableNumber:
-                                      _permanentOrderCounter.toString(),
-                                  customerName: nameController.text.toString(),
-                                  phoneNumber:
-                                      "+975-${contactController.text.toString()}",
-                                  restaurantBranchName: branchName,
-                                  orderDateTime: DateTime.now(),
-                                  menuItems: state is MenuLoaded
-                                      ? state.cartItems
-                                      : [],
-                                  totalAmount: double.parse(
-                                      payableAmount.toStringAsFixed(2)),
-                                );
-
                                 await _incrementOrderCounter();
                                 await _incrementPermanentOrderCounter();
 
@@ -1511,14 +1481,6 @@ class _SalesPageState extends State<SalesPage> {
                                 context
                                     .read<CustomerInfoOrderBloc>()
                                     .add(RemoveCustomerInfoOrder());
-
-                                context
-                                    .read<ProceedOrderBloc>()
-                                    .add(AddProceedOrder(proceedOrderItems));
-
-                                context
-                                    .read<MenuBloc>()
-                                    .add(RemoveAllFromCart());
                                 context
                                     .read<MenuPrintBloc>()
                                     .add(const RemoveAllFromPrint());

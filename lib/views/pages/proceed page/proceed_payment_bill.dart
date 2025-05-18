@@ -18,6 +18,7 @@ class ProceedPaymentBill extends StatelessWidget {
   final String payMode;
   final String orderNumber;
   final String branchName;
+  final double discount;
 
   const ProceedPaymentBill({
     super.key,
@@ -36,6 +37,7 @@ class ProceedPaymentBill extends StatelessWidget {
     required this.time,
     required this.totalAmount,
     required this.payMode,
+    required this.discount,
   });
 
   // Generate PDF data by calling service
@@ -399,6 +401,7 @@ class ProceedPaymentBill extends StatelessWidget {
                             onPressed: () => BillService.printWithEscPos(
                               context: context,
                               id: id,
+                              discount: discount,
                               user: user,
                               phoneNo: phoneNo,
                               tableNo: tableNo,

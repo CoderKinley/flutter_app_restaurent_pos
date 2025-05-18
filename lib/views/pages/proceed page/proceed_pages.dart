@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
 import 'package:pos_system_legphel/bloc/bill_bloc/bill_bloc.dart';
 import 'package:pos_system_legphel/models/Bill/bill_summary_model.dart';
 import 'package:pos_system_legphel/models/Bill/bill_details_model.dart';
+import 'package:pos_system_legphel/bloc/menu_item_bloc/bloc/menu_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProceedPages extends StatefulWidget {
@@ -46,6 +49,193 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   List<double> splitAmounts = [];
   bool isSplit = false;
 
+  // Add new state variables for discounts
+  double fixedDiscount = 0.0;
+  double percentageDiscount = 0.0;
+  List<double> suggestedAmounts = [];
+  double finalAmount = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    finalAmount = widget.totalCost;
+    _calculateSuggestedAmounts();
+  }
+
+  void _calculateSuggestedAmounts() {
+    final baseAmount = widget.totalCost;
+    suggestedAmounts = [
+      (baseAmount / 50).ceil() * 50, // Round to nearest 50
+      (baseAmount / 100).ceil() * 100, // Round to nearest 100
+      (baseAmount / 500).ceil() * 500, // Round to nearest 500
+    ];
+  }
+
+  void _updateFinalAmount() {
+    double amount = widget.totalCost;
+    // Apply percentage discount first
+    if (percentageDiscount > 0) {
+      amount = amount * (1 - percentageDiscount / 100);
+    }
+    // Then apply fixed discount
+    amount = amount - fixedDiscount;
+    setState(() {
+      finalAmount = amount;
+    });
+    _calculateSuggestedAmounts();
+  }
+
+  void _showDiscountDialog() {
+    double tempFixedDiscount = fixedDiscount;
+    double tempPercentageDiscount = percentageDiscount;
+    double tempFinalAmount = finalAmount;
+
+    final fixedDiscountController = TextEditingController(
+      text: tempFixedDiscount > 0 ? tempFixedDiscount.toString() : '',
+    );
+    final percentageDiscountController = TextEditingController(
+      text: tempPercentageDiscount > 0 ? tempPercentageDiscount.toString() : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Apply Discount"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: "Fixed Discount (Nu.)",
+                        hintText: "Enter amount",
+                        border: OutlineInputBorder(),
+                      ),
+                      controller: fixedDiscountController,
+                      onChanged: (value) {
+                        setState(() {
+                          tempFixedDiscount = double.tryParse(value) ?? 0.0;
+                          // Calculate temporary final amount
+                          double amount = widget.totalCost;
+                          if (tempPercentageDiscount > 0) {
+                            amount =
+                                amount * (1 - tempPercentageDiscount / 100);
+                          }
+                          amount = amount - tempFixedDiscount;
+                          tempFinalAmount = amount;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: "Percentage Discount (%)",
+                        hintText: "Enter percentage",
+                        border: OutlineInputBorder(),
+                      ),
+                      controller: percentageDiscountController,
+                      onChanged: (value) {
+                        setState(() {
+                          tempPercentageDiscount =
+                              double.tryParse(value) ?? 0.0;
+                          // Calculate temporary final amount
+                          double amount = widget.totalCost;
+                          if (tempPercentageDiscount > 0) {
+                            amount =
+                                amount * (1 - tempPercentageDiscount / 100);
+                          }
+                          amount = amount - tempFixedDiscount;
+                          tempFinalAmount = amount;
+                        });
+                      },
+                    ),
+                    if (tempFixedDiscount > 0 || tempPercentageDiscount > 0)
+                      Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.green.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (tempPercentageDiscount > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 5),
+                                child: Text(
+                                  "New Amount after ${tempPercentageDiscount.toStringAsFixed(1)}% discount: Nu. ${(widget.totalCost * (1 - tempPercentageDiscount / 100)).toStringAsFixed(2)}",
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            if (tempFixedDiscount > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 5),
+                                child: Text(
+                                  "New Amount after Nu. ${tempFixedDiscount.toStringAsFixed(2)} discount: Nu. ${(widget.totalCost - tempFixedDiscount).toStringAsFixed(2)}",
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            const Divider(height: 10),
+                            Text(
+                              "Final Amount: Nu. ${tempFinalAmount.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      fixedDiscount = tempFixedDiscount;
+                      percentageDiscount = tempPercentageDiscount;
+                      finalAmount = tempFinalAmount;
+                    });
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   double calculateTotal() {
     return widget.items.fold(0, (sum, item) => sum + item.totalPrice);
   }
@@ -75,9 +265,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   onPressed: () {
                     setState(() {
                       isSplit = true;
-                      double total = calculateTotal();
                       splitAmounts = List.generate(
-                          splitCount, (index) => total / splitCount);
+                          splitCount, (index) => finalAmount / splitCount);
                     });
                     Navigator.pop(context);
                   },
@@ -159,6 +348,9 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               color: Colors.white,
             ),
           ),
+          iconTheme: const IconThemeData(
+            color: Colors.white, // 👈 this makes the back button white
+          ),
           centerTitle: false,
           foregroundColor: Colors.white,
           backgroundColor: const Color.fromARGB(255, 3, 27, 48),
@@ -167,7 +359,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
           children: [
             // Left Side: Order Details
             Expanded(
-              flex: 4,
+              flex: 5,
               child: Container(
                 color: Colors.grey[200],
                 child: Column(
@@ -223,14 +415,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                 ),
               ),
             ),
-            // Right Side: Payment and Total --------------------------------------------------------------
+            // Right Side: Payment and Total
             Expanded(
-              flex: 3,
+              flex: 5,
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 color: Colors.white,
                 child: LayoutBuilder(
-                  // Use LayoutBuilder for better constraints
                   builder: (context, constraints) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,13 +446,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        // Text(
-                                        //   '   (Including 20% charge)',
-                                        //   style: TextStyle(
-                                        //     fontSize: 14,
-                                        //     fontWeight: FontWeight.bold,
-                                        //   ),
-                                        // ),
                                       ],
                                     ),
                                     const SizedBox(height: 10),
@@ -269,7 +453,6 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                       child: Focus(
                                         onFocusChange: (hasFocus) {
                                           if (hasFocus) {
-                                            // Auto-scroll to input when focused
                                             Scrollable.ensureVisible(
                                               context,
                                               duration: const Duration(
@@ -279,7 +462,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                         },
                                         child: TextFormField(
                                           controller: TextEditingController(
-                                            text: widget.totalCost.toString(),
+                                            text:
+                                                finalAmount.toStringAsFixed(2),
                                           ),
                                           decoration: const InputDecoration(
                                             border: InputBorder.none,
@@ -294,6 +478,146 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                       ),
                                     ),
                                     const Divider(height: 20, thickness: 1),
+                                    // Discount Button
+                                    ElevatedButton(
+                                      onPressed: _showDiscountDialog,
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 24),
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 0, 150, 136),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        "Apply Discount",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    if (fixedDiscount > 0 ||
+                                        percentageDiscount > 0)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 10),
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color:
+                                                Colors.green.withOpacity(0.3),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (percentageDiscount > 0)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 5),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(Icons.percent,
+                                                        color: Colors.green,
+                                                        size: 16),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      "Percentage Discount: ${percentageDiscount.toStringAsFixed(1)}%",
+                                                      style: const TextStyle(
+                                                        color: Colors.green,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            if (fixedDiscount > 0)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 5),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                        Icons.attach_money,
+                                                        color: Colors.green,
+                                                        size: 16),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      "Fixed Discount: Nu. ${fixedDiscount.toStringAsFixed(2)}",
+                                                      style: const TextStyle(
+                                                        color: Colors.green,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            const Divider(height: 10),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.receipt_long,
+                                                    color: Colors.grey,
+                                                    size: 16),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  "Original Amount: Nu. ${widget.totalCost.toStringAsFixed(2)}",
+                                                  style: const TextStyle(
+                                                    decoration: TextDecoration
+                                                        .lineThrough,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    const SizedBox(height: 15),
+                                    // Suggested Amounts
+                                    const Text(
+                                      "Suggested Amounts:",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children:
+                                          _getSuggestedAmounts().map((amount) {
+                                        return ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              finalAmount = amount;
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                amount == finalAmount
+                                                    ? Colors.green
+                                                    : Colors.grey[200],
+                                            foregroundColor:
+                                                amount == finalAmount
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                          ),
+                                          child: Text(
+                                            "Nu. ${amount.toStringAsFixed(0)}",
+                                            style:
+                                                const TextStyle(fontSize: 14),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                    const SizedBox(height: 10),
                                     // Split Bill Button
                                     ElevatedButton(
                                       onPressed: _showSplitDialog,
@@ -385,6 +709,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       height: 50,
       child: ElevatedButton(
         onPressed: () async {
+          // clears the history form the front page you know
+          context.read<MenuBloc>().add(RemoveAllFromCart());
           // Create bill summary
           final billSummary = BillSummaryModel(
             fnbBillNo: widget.orderNumber,
@@ -397,10 +723,11 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             subTotal: widget.subTotal,
             bst: widget.bst,
             serviceCharge: widget.serviceTax,
-            discount: 0,
-            totalAmount: widget.totalCost,
+            discount:
+                fixedDiscount + (widget.totalCost * percentageDiscount / 100),
+            totalAmount: finalAmount,
             paymentStatus: "PAID",
-            amountSettled: widget.totalCost,
+            amountSettled: finalAmount,
             amountRemaining: 0,
             paymentMode: method,
             date: DateTime.now(),
@@ -422,12 +749,26 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   ))
               .toList();
 
+          // adding to the proceed model you  know what and you know who
+          final proceedOrderItems = ProceedOrderModel(
+            orderNumber: widget.orderNumber,
+            holdOrderId: widget.orderID,
+            tableNumber: widget.tableNumber,
+            customerName: widget.customername,
+            phoneNumber: widget.phoneNumber,
+            restaurantBranchName: widget.branchName,
+            orderDateTime: DateTime.now(),
+            menuItems: widget.items,
+            totalAmount: finalAmount,
+          );
           // Submit bill using bloc
           context.read<BillBloc>().add(SubmitBill(
                 billSummary: billSummary,
                 billDetails: billDetails,
               ));
-
+          context
+              .read<ProceedOrderBloc>()
+              .add(AddProceedOrder(proceedOrderItems));
           // Navigate to payment bill page
           final result = await Navigator.push(
             context,
@@ -454,8 +795,9 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                     widget.items.fold(0, (sum, item) => sum + item.quantity),
                 date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
                 time: DateFormat('hh:mm a').format(DateTime.now()),
-                totalAmount: widget.totalCost,
+                totalAmount: finalAmount,
                 payMode: method,
+                discount: finalAmount - widget.totalCost,
                 branchName: widget.branchName,
               ),
             ),
@@ -488,5 +830,42 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
         ),
       ),
     );
+  }
+
+  // calculating the suggested amount in the bill section you know what and you know who
+  List<double> _getSuggestedAmounts() {
+    final baseAmount = finalAmount;
+    final List<double> amounts = [];
+
+    // Round down to nearest 50
+    final lower50 = (baseAmount / 50.0).floor() * 50.0;
+    if (lower50 > 0) amounts.add(lower50);
+
+    // Round up to nearest 50
+    final upper50 = (baseAmount / 50.0).ceil() * 50.0;
+    if (upper50 != lower50) amounts.add(upper50);
+
+    // Round down to nearest 100
+    final lower100 = (baseAmount / 100.0).floor() * 100.0;
+    if (lower100 > 0 && !amounts.contains(lower100)) amounts.add(lower100);
+
+    // Round up to nearest 100
+    final upper100 = (baseAmount / 100.0).ceil() * 100.0;
+    if (upper100 != lower100 && !amounts.contains(upper100))
+      amounts.add(upper100);
+
+    // Round down to nearest 500
+    final lower500 = (baseAmount / 500.0).floor() * 500.0;
+    if (lower500 > 0 && !amounts.contains(lower500)) amounts.add(lower500);
+
+    // Round up to nearest 500
+    final upper500 = (baseAmount / 500.0).ceil() * 500.0;
+    if (upper500 != lower500 && !amounts.contains(upper500))
+      amounts.add(upper500);
+
+    // Sort amounts
+    amounts.sort();
+
+    return amounts;
   }
 }
