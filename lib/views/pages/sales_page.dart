@@ -30,6 +30,7 @@ import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc.dart';
 import 'package:pos_system_legphel/views/widgets/menu_search_widget.dart';
+import 'package:pos_system_legphel/services/category_order_service.dart';
 
 // https://mobipos.com.au/resources/guide/cash-register/ordering-menu/
 
@@ -72,20 +73,29 @@ class _SalesPageState extends State<SalesPage> {
   bool _applyServiceCharge = true;
   static const String _applyBstKey = 'apply_bst';
   static const String _applyServiceChargeKey = 'apply_service_charge';
+  static const String _enablePrintKey = 'enable_print';
 
   // Add state for filtered menu items
   List<MenuModel> _filteredMenuItems = [];
+
+  bool _enablePrint = true;
+
+  List<CategoryModel> _orderedCategories = [];
+  bool _isDragging = false;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _initializeData();
     _loadTaxCheckboxStates();
+    _loadPrintOptionState();
   }
 
   Future<void> _initializeData() async {
     await _loadOrderCounter();
     await _loadPermanentOrderCounter();
+    await _loadCategoryOrder(); // Load category order first
     if (mounted) {
       context.read<MenuBloc>().add(LoadMenuItems());
       context.read<MenuPrintBloc>().add(const LoadMenuPrintItems());
@@ -189,6 +199,18 @@ class _SalesPageState extends State<SalesPage> {
     await prefs.setBool(_applyServiceChargeKey, _applyServiceCharge);
   }
 
+  Future<void> _loadPrintOptionState() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _enablePrint = prefs.getBool(_enablePrintKey) ?? true;
+    });
+  }
+
+  Future<void> _savePrintOptionState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enablePrintKey, _enablePrint);
+  }
+
   // Used to see the change in dependencies automatically updating the UserInformation widget
   @override
   void didChangeDependencies() {
@@ -225,6 +247,54 @@ class _SalesPageState extends State<SalesPage> {
         });
       }
     });
+  }
+
+  Future<void> _loadCategoryOrder() async {
+    final savedOrder = await CategoryOrderService.getCategoryOrder();
+    if (mounted) {
+      setState(() {
+        if (savedOrder.isNotEmpty) {
+          // Get the current categories from the bloc
+          final categoryState = context.read<CategoryBloc>().state;
+          if (categoryState is CategoryLoaded) {
+            // Apply the saved order to the categories
+            _orderedCategories = _applySavedOrder(
+              List<CategoryModel>.from(categoryState.categories),
+              savedOrder,
+            );
+          }
+        }
+        _isInitialized = true;
+      });
+    }
+  }
+
+  List<CategoryModel> _applySavedOrder(
+      List<CategoryModel> categories, List<String> savedOrder) {
+    if (savedOrder.isEmpty) return categories;
+
+    // Create a map for quick lookup
+    final categoryMap = {for (var c in categories) c.categoryId: c};
+
+    // First add categories in saved order
+    final orderedCategories = savedOrder
+        .map((id) => categoryMap[id])
+        .where((c) => c != null)
+        .cast<CategoryModel>()
+        .toList();
+
+    // Then add any new categories that weren't in the saved order
+    final newCategories =
+        categories.where((c) => !savedOrder.contains(c.categoryId)).toList();
+
+    return [...orderedCategories, ...newCategories];
+  }
+
+  Future<void> _saveCategoryOrder() async {
+    if (_orderedCategories.isNotEmpty) {
+      final categoryIds = _orderedCategories.map((c) => c.categoryId).toList();
+      await CategoryOrderService.saveCategoryOrder(categoryIds);
+    }
   }
 
   @override
@@ -269,20 +339,60 @@ class _SalesPageState extends State<SalesPage> {
                               return const Center(
                                   child: CircularProgressIndicator());
                             } else if (state is CategoryLoaded) {
-                              final sortedCategories = List<CategoryModel>.from(
-                                  state.categories)
-                                ..sort((a, b) =>
-                                    a.categoryName.compareTo(b.categoryName));
+                              List<CategoryModel> categoriesToDisplay;
 
-                              return ListView.builder(
-                                itemCount: sortedCategories.length,
+                              if (_isInitialized &&
+                                  _orderedCategories.isNotEmpty) {
+                                // Use the ordered categories if we have them
+                                categoriesToDisplay = _orderedCategories;
+                              } else {
+                                // Use the default order for first load
+                                categoriesToDisplay = List<CategoryModel>.from(
+                                    state.categories)
+                                  ..sort((a, b) =>
+                                      a.categoryName.compareTo(b.categoryName));
+
+                                // Initialize ordered categories
+                                if (!_isInitialized) {
+                                  _orderedCategories =
+                                      List.from(categoriesToDisplay);
+                                  _isInitialized = true;
+                                }
+                              }
+
+                              return ReorderableListView.builder(
+                                itemCount: categoriesToDisplay.length,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 8),
+                                onReorderStart: (index) {
+                                  setState(() {
+                                    _isDragging = true;
+                                  });
+                                },
+                                onReorderEnd: (index) {
+                                  setState(() {
+                                    _isDragging = false;
+                                    _orderedCategories =
+                                        List.from(categoriesToDisplay);
+                                    _saveCategoryOrder();
+                                  });
+                                },
+                                onReorder: (oldIndex, newIndex) {
+                                  setState(() {
+                                    if (oldIndex < newIndex) {
+                                      newIndex -= 1;
+                                    }
+                                    final item =
+                                        categoriesToDisplay.removeAt(oldIndex);
+                                    categoriesToDisplay.insert(newIndex, item);
+                                  });
+                                },
                                 itemBuilder: (context, index) {
-                                  final category = sortedCategories[index];
+                                  final category = categoriesToDisplay[index];
                                   final isSelected = _expandedIndex == index;
 
                                   return Padding(
+                                    key: ValueKey(category.categoryId),
                                     padding: const EdgeInsets.only(bottom: 4),
                                     child: Container(
                                       decoration: BoxDecoration(
@@ -364,6 +474,10 @@ class _SalesPageState extends State<SalesPage> {
                                                         : null,
                                                   ),
                                                 ),
+                                                trailing: _isDragging
+                                                    ? const Icon(
+                                                        Icons.drag_handle)
+                                                    : null,
                                               );
                                             },
                                             body: Container(
@@ -398,10 +512,10 @@ class _SalesPageState extends State<SalesPage> {
                                                               CircularProgressIndicator(
                                                             valueColor:
                                                                 AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                              Colors.deepOrange
-                                                                  .shade300,
-                                                            ),
+                                                                        Color>(
+                                                                    Colors
+                                                                        .deepOrange
+                                                                        .shade300),
                                                           ),
                                                         ),
                                                       );
@@ -445,8 +559,8 @@ class _SalesPageState extends State<SalesPage> {
                                                               contentPadding:
                                                                   const EdgeInsets
                                                                       .symmetric(
-                                                                horizontal: 16,
-                                                              ),
+                                                                      horizontal:
+                                                                          16),
                                                               leading: Icon(
                                                                 Icons
                                                                     .subdirectory_arrow_right,
@@ -653,6 +767,44 @@ class _SalesPageState extends State<SalesPage> {
                         ),
                         Row(
                           children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  "Print",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Checkbox(
+                                  value: _enablePrint,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _enablePrint = value ?? true;
+                                      _savePrintOptionState();
+                                    });
+                                  },
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  fillColor:
+                                      MaterialStateProperty.resolveWith<Color>(
+                                          (states) {
+                                    return states
+                                            .contains(MaterialState.selected)
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.transparent;
+                                  }),
+                                  side: BorderSide(
+                                    color: _enablePrint
+                                        ? const Color(0xFF4CAF50)
+                                        : Colors.grey[400]!,
+                                    width: 1.5,
+                                  ),
+                                  checkColor: Colors.white,
+                                ),
+                              ],
+                            ),
                             IconButton(
                               onPressed: () {
                                 return _showAddPersonDialog(context);
@@ -1377,7 +1529,9 @@ class _SalesPageState extends State<SalesPage> {
                                   .read<MenuPrintBloc>()
                                   .add(const RemoveAllFromPrint());
 
-                              await ticket.printToThermalPrinter(context);
+                              if (_enablePrint) {
+                                await ticket.printToThermalPrinter(context);
+                              }
                             },
                           ),
                         );

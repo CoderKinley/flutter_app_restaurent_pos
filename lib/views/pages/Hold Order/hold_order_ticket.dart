@@ -197,17 +197,24 @@ class HoldOrderTicket {
 
   /// Generates plain text for direct printing to thermal printer
   String _generatePlainTextTicket() {
-    final nonBeverageItems = items
-        .where((item) =>
-            item.product.menuType == "Food" ||
-            item.product.menuType == "Beverage")
-        .toList();
+    // For Kharpandi goenpa
+    // final nonBeverageItems = items
+    //     .where((item) =>
+    //         item.product.menuType == "Food" ||
+    //         item.product.menuType == "Beverage")
+    //     .toList();
 
-    final beverageItems = items
-        .where((item) =>
-            item.product.menuType == "Cold Drinks" ||
-            item.product.menuType == "Shake")
-        .toList();
+    // final beverageItems = items
+    //     .where((item) =>
+    //         item.product.menuType == "Cold Drinks" ||
+    //         item.product.menuType == "Shake")
+    //     .toList();
+
+    final nonBeverageItems =
+        items.where((item) => item.product.menuType != "Beverage").toList();
+
+    final beverageItems =
+        items.where((item) => item.product.menuType == "Beverage").toList();
 
     // ESC/POS commands for formatting
     const String esc = '\x1B';
