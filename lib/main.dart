@@ -8,7 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:pos_system_legphel/SQL/database_helper.dart';
+import 'package:pos_system_legphel/services/database_helper.dart';
 import 'package:pos_system_legphel/SQL/menu_local_db.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
 import 'package:pos_system_legphel/bloc/bill_bloc/bill_bloc.dart';
@@ -36,6 +36,8 @@ import 'package:pos_system_legphel/bloc/tax_settings_bloc/bloc/tax_settings_bloc
 import 'package:pos_system_legphel/services/ImmersiveModeHelper.dart';
 import 'package:pos_system_legphel/bloc/search_suggestion_bloc/bloc/search_suggestion_bloc.dart';
 import 'package:pos_system_legphel/providers/theme_provider.dart';
+import 'package:pos_system_legphel/bloc/destination/bloc/destination_bloc.dart';
+import 'package:pos_system_legphel/SQL/database_helper.dart' as sql;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +53,7 @@ void main() async {
   ImmersiveModeHelper.setupImmersiveModeListener();
 
   // Initialize database helpers
-  final databaseHelper = DatabaseHelper.instance;
+  final databaseHelper = DatabaseHelper();
   final menuLocalDb = MenuLocalDb.instance;
   final menuApiService = MenuApiService();
   final categoryBloc = CategoryBloc()..add(LoadCategories());
@@ -127,8 +129,8 @@ class MyApp extends StatelessWidget {
             BlocProvider(create: (context) => NavigationBloc()),
             BlocProvider(create: (context) => ItemlistBloc()),
             BlocProvider(
-                create: (context) =>
-                    ProductBloc(databaseHelper)..add(LoadProducts())),
+                create: (context) => ProductBloc(sql.DatabaseHelper.instance)
+                  ..add(LoadProducts())),
             BlocProvider(create: (context) => AddItemNavigationBloc()),
             BlocProvider(create: (context) => MenuBloc()),
             BlocProvider(create: (context) => HoldOrderBloc()),
@@ -157,6 +159,10 @@ class MyApp extends StatelessWidget {
             ),
             BlocProvider(
               create: (context) => SearchSuggestionBloc(),
+            ),
+            BlocProvider(
+              create: (context) =>
+                  DestinationBloc(databaseHelper)..add(LoadDestinations()),
             ),
           ],
           child: MaterialApp(
