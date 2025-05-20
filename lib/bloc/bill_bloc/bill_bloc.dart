@@ -28,17 +28,28 @@ class BillBloc extends Bloc<BillEvent, BillState> {
   Future<void> _onSubmitBill(SubmitBill event, Emitter<BillState> emit) async {
     try {
       emit(BillLoading());
+      print('Submitting bill ${event.billSummary.fnbBillNo}...');
 
       final isConnected = await _networkService.isConnected();
+      print('Network connected: $isConnected');
 
-      if (!isConnected) {
-        // Store locally if offline
-        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+      final isServerAvailable = await _networkService.isServerAvailable();
+      print('Server available: $isServerAvailable');
+
+      // Always store locally first
+      print('Storing bill locally...');
+      await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
+      print('Successfully stored bill locally');
+
+      // If offline or server unavailable, just emit success
+      if (!isConnected || !isServerAvailable) {
+        print('Network or server unavailable, keeping bill local only');
         emit(BillSubmitted(event.billSummary.fnbBillNo));
         return;
       }
 
       // Try to submit online
+      print('Attempting to submit bill online...');
       try {
         // Submit bill summary
         final summaryResponse = await http.post(
@@ -49,12 +60,16 @@ class BillBloc extends Bloc<BillEvent, BillState> {
 
         if (summaryResponse.statusCode != 200 &&
             summaryResponse.statusCode != 201) {
+          print(
+              'Failed to submit bill summary: ${summaryResponse.statusCode} - ${summaryResponse.body}');
           throw Exception(
               'Failed to submit bill summary: ${summaryResponse.body}');
         }
+        print('Successfully submitted bill summary');
 
         // Submit bill details
         for (var detail in event.billDetails) {
+          print('Submitting bill detail for ${detail.id}');
           final detailResponse = await http.post(
             Uri.parse('$baseUrl/api/fnb_bill_details_legphel_eats'),
             headers: {'Content-Type': 'application/json'},
@@ -63,18 +78,28 @@ class BillBloc extends Bloc<BillEvent, BillState> {
 
           if (detailResponse.statusCode != 200 &&
               detailResponse.statusCode != 201) {
+            print(
+                'Failed to submit bill detail: ${detailResponse.statusCode} - ${detailResponse.body}');
             throw Exception(
                 'Failed to submit bill detail: ${detailResponse.body}');
           }
+          print('Successfully submitted bill detail');
         }
 
-        emit(BillSubmitted(event.billSummary.fnbBillNo));
+        // If online submission succeeds, delete from local storage
+        print(
+            'Successfully submitted all bill data online, removing from local storage');
+        await _dbHelper.deleteSyncedBill(event.billSummary.fnbBillNo);
+        print('Successfully removed bill from local storage');
       } catch (e) {
-        // If online submission fails, store locally
-        await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
-        emit(BillSubmitted(event.billSummary.fnbBillNo));
+        print('Error submitting bill online: $e');
+        // Keep the bill in local storage for later sync
+        print('Keeping bill in local storage for later sync');
       }
+
+      emit(BillSubmitted(event.billSummary.fnbBillNo));
     } catch (e) {
+      print('Error in _onSubmitBill: $e');
       emit(BillError(e.toString()));
     }
   }
@@ -84,8 +109,9 @@ class BillBloc extends Bloc<BillEvent, BillState> {
       emit(BillLoading());
 
       final isConnected = await _networkService.isConnected();
+      final isServerAvailable = await _networkService.isServerAvailable();
 
-      if (!isConnected) {
+      if (!isConnected || !isServerAvailable) {
         // Try to load from local storage
         final pendingBills = await _dbHelper.getPendingBills();
         final bill = pendingBills.firstWhere(
@@ -144,8 +170,9 @@ class BillBloc extends Bloc<BillEvent, BillState> {
       emit(BillLoading());
 
       final isConnected = await _networkService.isConnected();
+      final isServerAvailable = await _networkService.isServerAvailable();
 
-      if (!isConnected) {
+      if (!isConnected || !isServerAvailable) {
         // Store update locally
         await _dbHelper.insertPendingBill(event.billSummary, event.billDetails);
         emit(BillSubmitted(event.billSummary.fnbBillNo));
@@ -204,8 +231,9 @@ class BillBloc extends Bloc<BillEvent, BillState> {
       emit(BillLoading());
 
       final isConnected = await _networkService.isConnected();
+      final isServerAvailable = await _networkService.isServerAvailable();
 
-      if (!isConnected) {
+      if (!isConnected || !isServerAvailable) {
         // Mark as deleted locally
         await _dbHelper.updateSyncStatus(event.fnbBillNo, 'deleted');
         emit(BillInitial());

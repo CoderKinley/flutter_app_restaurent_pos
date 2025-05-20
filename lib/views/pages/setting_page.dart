@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'package:pos_system_legphel/views/pages/Add Items/ip_address_page.dart';
 import 'package:pos_system_legphel/views/pages/privacy_policy_page.dart';
 import 'package:pos_system_legphel/views/pages/help_support_page.dart';
 import 'package:pos_system_legphel/providers/theme_provider.dart';
+import 'package:pos_system_legphel/services/network_service.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -22,12 +24,27 @@ class _SettingPageState extends State<SettingPage> {
   bool _showFetchButton = false;
   bool _notificationsEnabled = true;
   bool _autoSync = false;
+  bool _isServerAvailable = false;
+  final NetworkService _networkService =
+      NetworkService(baseUrl: 'http://119.2.105.142:3800');
+  Timer? _serverStatusTimer;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
     context.read<MenuApiBloc>().add(FetchMenuApi());
+    _checkServerStatus();
+    // Check server status every 30 seconds
+    _serverStatusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _checkServerStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _serverStatusTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -42,6 +59,15 @@ class _SettingPageState extends State<SettingPage> {
     setState(() {
       _showFetchButton = value;
     });
+  }
+
+  Future<void> _checkServerStatus() async {
+    final isAvailable = await _networkService.isServerAvailable();
+    if (mounted) {
+      setState(() {
+        _isServerAvailable = isAvailable;
+      });
+    }
   }
 
   @override
@@ -151,6 +177,21 @@ class _SettingPageState extends State<SettingPage> {
               ),
             ),
             _buildSectionHeader('System Settings'),
+            _buildSettingTile(
+              icon: Icons.cloud_done,
+              title: 'Server Status',
+              subtitle:
+                  _isServerAvailable ? 'Server is online' : 'Server is offline',
+              color: _isServerAvailable
+                  ? ThemeProvider.successColor
+                  : ThemeProvider.errorColor,
+              trailing: Icon(
+                _isServerAvailable ? Icons.check_circle : Icons.error,
+                color: _isServerAvailable
+                    ? ThemeProvider.successColor
+                    : ThemeProvider.errorColor,
+              ),
+            ),
             _buildSettingTile(
               icon: Icons.business_rounded,
               title: 'Branch Settings',

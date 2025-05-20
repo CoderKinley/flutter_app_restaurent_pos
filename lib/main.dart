@@ -115,7 +115,8 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         // Initialize services
-        final networkService = NetworkService();
+        final networkService =
+            NetworkService(baseUrl: 'http://119.2.105.142:3800');
         final syncService = SyncService(
           networkService,
           baseUrl: 'http://119.2.105.142:3800',

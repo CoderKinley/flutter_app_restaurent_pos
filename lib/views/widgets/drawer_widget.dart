@@ -1,10 +1,53 @@
+import "dart:async";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart";
+import "package:pos_system_legphel/services/network_service.dart";
+import "package:connectivity_plus/connectivity_plus.dart";
 
-class DrawerWidget extends StatelessWidget {
+class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
+
+  @override
+  State<DrawerWidget> createState() => _DrawerWidgetState();
+}
+
+class _DrawerWidgetState extends State<DrawerWidget> {
+  bool _isServerAvailable = false;
+  bool _isNetworkAvailable = false;
+  final NetworkService _networkService =
+      NetworkService(baseUrl: 'http://119.2.105.142:3800');
+  Timer? _statusTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+    // Check status every 30 seconds
+    _statusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _checkStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkStatus() async {
+    final isServerAvailable = await _networkService.isServerAvailable();
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final isNetworkAvailable = connectivityResult != ConnectivityResult.none;
+
+    if (mounted) {
+      setState(() {
+        _isServerAvailable = isServerAvailable;
+        _isNetworkAvailable = isNetworkAvailable;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +101,30 @@ class DrawerWidget extends StatelessWidget {
                 ),
               ),
             ),
+            // Status Indicators
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildStatusIndicator(
+                      icon: Icons.cloud_done,
+                      label: 'Server',
+                      isAvailable: _isServerAvailable,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatusIndicator(
+                      icon: Icons.wifi,
+                      label: 'Network',
+                      isAvailable: _isNetworkAvailable,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Colors.black12),
             SingleChildScrollView(
               child: Column(
                 children: [
@@ -120,6 +187,58 @@ class DrawerWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator({
+    required IconData icon,
+    required String label,
+    required bool isAvailable,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: isAvailable
+            ? Colors.green.withOpacity(0.1)
+            : Colors.red.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isAvailable
+              ? Colors.green.withOpacity(0.3)
+              : Colors.red.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isAvailable ? Colors.green : Colors.red,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[700],
+                ),
+              ),
+              Text(
+                isAvailable ? 'Online' : 'Offline',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isAvailable ? Colors.green : Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

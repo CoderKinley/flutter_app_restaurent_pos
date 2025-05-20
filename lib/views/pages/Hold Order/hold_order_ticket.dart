@@ -210,6 +210,7 @@ class HoldOrderTicket {
     //         item.product.menuType == "Shake")
     //     .toList();
 
+    //  for other branch
     final nonBeverageItems =
         items.where((item) => item.product.menuType != "Beverage").toList();
 

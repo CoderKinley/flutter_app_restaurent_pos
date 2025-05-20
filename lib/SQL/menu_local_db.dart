@@ -23,7 +23,9 @@ class MenuLocalDb {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'menu.db');
+    // for Main town banch name newMenu.db
+    // for kharpandi and hotel main menu.db
+    String path = join(await getDatabasesPath(), 'newMenu.db');
     return await openDatabase(
       path,
       version: 3,
