@@ -8,6 +8,7 @@ class MenuModel {
   final bool availability;
   final String? dishImage;
   final String uuid;
+  final String? itemDestination;
 
   MenuModel({
     required this.menuId,
@@ -19,6 +20,7 @@ class MenuModel {
     required this.availability,
     this.dishImage,
     required this.uuid,
+    this.itemDestination,
   });
 
   factory MenuModel.fromMap(Map<String, dynamic> map) {
@@ -32,6 +34,7 @@ class MenuModel {
       availability: map['availability'] == 1,
       dishImage: map['dish_image'],
       uuid: map['uuid'],
+      itemDestination: map['item_destination'],
     );
   }
 
@@ -46,6 +49,7 @@ class MenuModel {
       'availability': availability ? 1 : 0,
       'dish_image': dishImage,
       'uuid': uuid,
+      'item_destination': itemDestination,
     };
   }
 
@@ -60,6 +64,7 @@ class MenuModel {
       availability: json['availability'] == true,
       dishImage: json['dish_image'],
       uuid: json['uuid'],
+      itemDestination: json['item_destination'],
     );
   }
 
@@ -74,6 +79,7 @@ class MenuModel {
       'availability': availability,
       'dish_image': dishImage,
       'uuid': uuid,
+      'item_destination': itemDestination,
     };
   }
 }

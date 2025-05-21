@@ -212,10 +212,10 @@ class HoldOrderTicket {
 
     //  for other branch
     final nonBeverageItems =
-        items.where((item) => item.product.menuType != "Beverage").toList();
+        items.where((item) => item.product.menuType != "Kitchen").toList();
 
     final beverageItems =
-        items.where((item) => item.product.menuType == "Beverage").toList();
+        items.where((item) => item.product.menuType == "Bar").toList();
 
     // ESC/POS commands for formatting
     const String esc = '\x1B';

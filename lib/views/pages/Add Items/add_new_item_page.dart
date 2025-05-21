@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/category_bloc/bloc/cetagory_bloc.dart';
 import 'package:pos_system_legphel/bloc/menu_from_api/bloc/menu_from_api_bloc.dart';
 import 'package:pos_system_legphel/bloc/sub_category_bloc/bloc/sub_category_bloc.dart';
+import 'package:pos_system_legphel/bloc/destination/bloc/destination_bloc.dart';
 import 'package:pos_system_legphel/models/others/new_menu_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -32,6 +33,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
   bool _selectedAvailability = true;
   String? _selectedMenuType;
   String? _selectedSubMenuType;
+  String? _selectedDestination;
   bool _isSubmitting = false;
 
   // Apple-themed color palette
@@ -60,6 +62,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       _selectedAvailability = widget.product!.availability;
       _selectedMenuType = widget.product!.menuType;
       _selectedSubMenuType = widget.product!.subMenuType;
+      _selectedDestination = widget.product!.itemDestination;
 
       if (_selectedSubMenuType != null && _selectedSubMenuType!.isEmpty) {
         _selectedSubMenuType = null;
@@ -162,6 +165,7 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       dishImage: _imagePath!,
       subMenuType: _selectedSubMenuType ?? '',
       menuId: _menuIdController.text.trim(),
+      itemDestination: _selectedDestination,
     );
 
     print('Attempting to save product: ${product.toJson()}');
@@ -191,6 +195,8 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
       ),
       body: BlocListener<MenuApiBloc, MenuApiState>(
         listener: (context, state) {
+          if (!mounted) return;
+
           if (state is MenuApiLoading) {
             setState(() {
               _isSubmitting = true;
@@ -210,9 +216,10 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                 isError: false,
               );
 
-              Future.delayed(const Duration(seconds: 1), () {
+              // Navigate back after a short delay
+              Future.delayed(const Duration(milliseconds: 500), () {
                 if (mounted) {
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 }
               });
             }
@@ -478,6 +485,69 @@ class _AddNewItemPageState extends State<AddNewItemPage> {
                             } else {
                               return const Center(
                                   child: Text('No sub categories found'));
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 15.0),
+
+                        // Item Destination Dropdown
+                        BlocBuilder<DestinationBloc, DestinationState>(
+                          builder: (context, state) {
+                            if (state is DestinationLoading) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            } else if (state is DestinationError) {
+                              return Center(child: Text(state.message));
+                            } else if (state is DestinationLoaded) {
+                              final destinations = state.destinations;
+
+                              bool valueExists = false;
+                              if (_selectedDestination != null) {
+                                valueExists = destinations.any((destination) =>
+                                    destination.name == _selectedDestination);
+                                if (!valueExists) {
+                                  _selectedDestination = null;
+                                }
+                              }
+
+                              return DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  labelText: 'Item Destination',
+                                  labelStyle: TextStyle(color: _textColor),
+                                  prefixIcon: Icon(Icons.location_on,
+                                      color: _primaryColor),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide:
+                                        BorderSide(color: _primaryColor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide(
+                                        color: _primaryColor, width: 2),
+                                  ),
+                                ),
+                                value: _selectedDestination,
+                                hint: Text('Select a destination (optional)',
+                                    style: TextStyle(
+                                        color: _textColor.withOpacity(0.6))),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedDestination = newValue;
+                                  });
+                                },
+                                items: destinations
+                                    .map((destination) => DropdownMenuItem(
+                                          value: destination.name,
+                                          child: Text(destination.name,
+                                              style:
+                                                  TextStyle(color: _textColor)),
+                                        ))
+                                    .toList(),
+                              );
+                            } else {
+                              return const Center(
+                                  child: Text('No destinations found'));
                             }
                           },
                         ),

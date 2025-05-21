@@ -12,6 +12,8 @@ import 'package:pos_system_legphel/views/pages/privacy_policy_page.dart';
 import 'package:pos_system_legphel/views/pages/help_support_page.dart';
 import 'package:pos_system_legphel/providers/theme_provider.dart';
 import 'package:pos_system_legphel/services/network_service.dart';
+import 'package:pos_system_legphel/bloc/auth_bloc/auth_bloc.dart';
+import 'package:pos_system_legphel/views/pages/settings_page.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -203,6 +205,28 @@ class _SettingPageState extends State<SettingPage> {
                   builder: (context) => const BranchSettingsPage(),
                 ),
               ),
+            ),
+            _buildSectionHeader('Security'),
+            _buildSettingTile(
+              icon: Icons.lock,
+              title: 'Change Password',
+              subtitle: 'Update your login credentials',
+              color: theme.colorScheme.primary,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              ),
+            ),
+            _buildSettingTile(
+              icon: Icons.logout,
+              title: 'Logout',
+              subtitle: 'Sign out from your account',
+              color: ThemeProvider.errorColor,
+              onTap: () {
+                context.read<AuthBloc>().add(LogoutRequested());
+              },
             ),
             _buildSettingTile(
               icon: Icons.print_rounded,

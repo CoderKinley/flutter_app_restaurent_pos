@@ -28,7 +28,7 @@ class MenuLocalDb {
     String path = join(await getDatabasesPath(), 'newMenu.db');
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE menu (
@@ -42,7 +42,8 @@ class MenuLocalDb {
             dish_image TEXT,
             uuid TEXT,
             created_at TEXT,
-            updated_at TEXT
+            updated_at TEXT,
+            item_destination TEXT
           )
         ''');
       },
@@ -59,6 +60,9 @@ class MenuLocalDb {
         if (oldVersion < 3) {
           await db.execute("ALTER TABLE menu ADD COLUMN created_at TEXT");
           await db.execute("ALTER TABLE menu ADD COLUMN updated_at TEXT");
+        }
+        if (oldVersion < 4) {
+          await db.execute("ALTER TABLE menu ADD COLUMN item_destination TEXT");
         }
       },
     );

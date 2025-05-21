@@ -38,6 +38,8 @@ import 'package:pos_system_legphel/bloc/search_suggestion_bloc/bloc/search_sugge
 import 'package:pos_system_legphel/providers/theme_provider.dart';
 import 'package:pos_system_legphel/bloc/destination/bloc/destination_bloc.dart';
 import 'package:pos_system_legphel/SQL/database_helper.dart' as sql;
+import 'package:pos_system_legphel/bloc/auth_bloc/auth_bloc.dart';
+import 'package:pos_system_legphel/views/pages/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +66,12 @@ void main() async {
     categoryBloc,
     subcategoryBloc,
   );
+
+  // Set default credentials if not set
+  if (!prefs.containsKey('username')) {
+    await prefs.setString('username', 'admin');
+    await prefs.setString('password', 'admin123');
+  }
 
   runApp(
     ChangeNotifierProvider(
@@ -164,11 +172,21 @@ class MyApp extends StatelessWidget {
               create: (context) =>
                   DestinationBloc(databaseHelper)..add(LoadDestinations()),
             ),
+            BlocProvider(
+              create: (context) => AuthBloc(prefs: prefs),
+            ),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
-            home: const HomePage(),
+            home: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is Authenticated) {
+                  return const HomePage();
+                }
+                return const LoginPage();
+              },
+            ),
           ),
         );
       },

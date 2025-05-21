@@ -8,6 +8,7 @@ import 'package:pos_system_legphel/views/pages/Add Items/sub_category_list.dart'
 import 'package:pos_system_legphel/views/pages/Add Items/branch_settings_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/tax_settings_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/item_destination_list.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/database_management_page.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 
 class ItemsPage extends StatelessWidget {
@@ -19,6 +20,7 @@ class ItemsPage extends StatelessWidget {
     const IpAddressPage(),
     const TaxSettingsPage(),
     const BranchSettingsPage(),
+    const DatabaseManagementPage(),
   ];
 
   ItemsPage({super.key});
@@ -113,6 +115,14 @@ class ItemsPage extends StatelessWidget {
                                   title: "Tax Settings",
                                   iconColor: Colors.orange.shade700,
                                   index: 5,
+                                ),
+                                const Divider(height: 1, color: Colors.black12),
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.storage_rounded,
+                                  title: "Database Management",
+                                  iconColor: Colors.teal.shade700,
+                                  index: 7,
                                 ),
                                 const Divider(height: 1, color: Colors.black12),
                               ],
