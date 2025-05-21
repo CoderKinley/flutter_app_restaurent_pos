@@ -27,6 +27,7 @@ class _SettingPageState extends State<SettingPage> {
   bool _notificationsEnabled = true;
   bool _autoSync = false;
   bool _isServerAvailable = false;
+  bool _showDatabaseManagement = true;
   final NetworkService _networkService =
       NetworkService(baseUrl: 'http://119.2.105.142:3800');
   Timer? _serverStatusTimer;
@@ -51,8 +52,11 @@ class _SettingPageState extends State<SettingPage> {
 
   Future<void> _loadSettings() async {
     final showFetchButton = await AppSettings.getShowFetchButton();
+    final showDatabaseManagement =
+        await AppSettings.getShowDatabaseManagement();
     setState(() {
       _showFetchButton = showFetchButton;
+      _showDatabaseManagement = showDatabaseManagement;
     });
   }
 
@@ -60,6 +64,13 @@ class _SettingPageState extends State<SettingPage> {
     await AppSettings.setShowFetchButton(value);
     setState(() {
       _showFetchButton = value;
+    });
+  }
+
+  Future<void> _toggleDatabaseManagement(bool value) async {
+    await AppSettings.setShowDatabaseManagement(value);
+    setState(() {
+      _showDatabaseManagement = value;
     });
   }
 
@@ -154,17 +165,6 @@ class _SettingPageState extends State<SettingPage> {
                 activeColor: ThemeProvider.successColor,
               ),
             ),
-            _buildSettingTile(
-              icon: Icons.cloud_sync,
-              title: 'Auto Sync',
-              subtitle: 'Automatically sync menu data periodically',
-              color: theme.colorScheme.primary,
-              trailing: _buildCustomSwitch(
-                value: _autoSync,
-                onChanged: (value) => setState(() => _autoSync = value),
-                activeColor: theme.colorScheme.primary,
-              ),
-            ),
             _buildSectionHeader('Notifications'),
             _buildSettingTile(
               icon: Icons.notifications,
@@ -192,6 +192,17 @@ class _SettingPageState extends State<SettingPage> {
                 color: _isServerAvailable
                     ? ThemeProvider.successColor
                     : ThemeProvider.errorColor,
+              ),
+            ),
+            _buildSettingTile(
+              icon: Icons.storage_rounded,
+              title: 'Database Management',
+              subtitle: 'Show database management in items menu',
+              color: Colors.teal.shade700,
+              trailing: _buildCustomSwitch(
+                value: _showDatabaseManagement,
+                onChanged: _toggleDatabaseManagement,
+                activeColor: Colors.teal.shade700,
               ),
             ),
             _buildSettingTile(

@@ -145,7 +145,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   _buildListTile(
                     context,
                     icon: Icons.add_card,
-                    title: "Items Setting",
+                    title: "Edit Items",
                     color: Color(0xFF007AFF), // Apple blue
                     navigationEvent: NavigateToItems(),
                   ),
@@ -171,7 +171,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   _buildListTile(
                     context,
                     icon: Icons.settings,
-                    title: "Main Settings",
+                    title: "Settings",
                     color: Colors.grey.shade700,
                     navigationEvent: NavigateToSettings(),
                   ),

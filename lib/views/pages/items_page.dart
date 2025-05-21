@@ -10,6 +10,7 @@ import 'package:pos_system_legphel/views/pages/Add Items/tax_settings_page.dart'
 import 'package:pos_system_legphel/views/pages/Add Items/item_destination_list.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/database_management_page.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
+import 'package:pos_system_legphel/models/settings/app_settings.dart';
 
 class ItemsPage extends StatelessWidget {
   final List<Widget> rightScreens = [
@@ -117,14 +118,29 @@ class ItemsPage extends StatelessWidget {
                                   index: 5,
                                 ),
                                 const Divider(height: 1, color: Colors.black12),
-                                _buildMenuItem(
-                                  context,
-                                  icon: Icons.storage_rounded,
-                                  title: "Database Management",
-                                  iconColor: Colors.teal.shade700,
-                                  index: 7,
+                                FutureBuilder<bool>(
+                                  future:
+                                      AppSettings.getShowDatabaseManagement(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData &&
+                                        snapshot.data == true) {
+                                      return Column(
+                                        children: [
+                                          _buildMenuItem(
+                                            context,
+                                            icon: Icons.storage_rounded,
+                                            title: "Export Data",
+                                            iconColor: Colors.teal.shade700,
+                                            index: 7,
+                                          ),
+                                          const Divider(
+                                              height: 1, color: Colors.black12),
+                                        ],
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
                                 ),
-                                const Divider(height: 1, color: Colors.black12),
                               ],
                             ),
                           ),

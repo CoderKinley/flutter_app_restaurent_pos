@@ -104,18 +104,9 @@ class HelpSupportPage extends StatelessWidget {
             _buildContactItem(
               Icons.phone,
               "Phone Support",
-              "+1 (555) 123-4567",
+              "+975-17807306",
               () {
                 // Handle phone tap
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildContactItem(
-              Icons.chat,
-              "Live Chat",
-              "Available 24/7",
-              () {
-                // Handle chat tap
               },
             ),
           ],
