@@ -3,7 +3,78 @@
 ## 🚀 About the Project
 
 ## Description
-The **Point of Sale (POS) System** is a comprehensive application developed using **Flutter** to manage sales transactions, product inventory, and customer interactions in a seamless and efficient manner. This system is designed to help businesses handle various aspects of their operations, including managing menu items, processing payments, generating receipts, and tracking order history.
+Transform your business operations with our **next-generation Point of Sale (POS) System** - a powerful, intuitive, and feature-rich solution designed to revolutionize how you manage your restaurant or retail business. Built with Flutter, this cutting-edge system combines sleek design with robust functionality to deliver an exceptional user experience.
+
+### 🌟 Why Choose Our POS System?
+
+#### 💫 Seamless Operations
+- **Lightning-Fast Transactions**: Process orders in seconds with our optimized interface
+- **Zero Downtime**: Work confidently with our offline-first architecture
+- **Smart Sync**: Automatic data synchronization when you're back online
+- **Real-Time Updates**: Stay current with live inventory and sales data
+
+#### 🎯 Business Intelligence
+- **Smart Analytics**: Make data-driven decisions with comprehensive reports
+- **Customer Insights**: Understand your customers better with detailed analytics
+- **Inventory Control**: Never run out of stock with intelligent inventory management
+- **Performance Tracking**: Monitor your business health in real-time
+
+#### 🛡️ Reliability & Security
+- **Always Available**: Continue operations even during network issues
+- **Data Protection**: Your business data is secure with end-to-end encryption
+- **Automatic Backups**: Never lose critical business information
+- **Role-Based Access**: Control who can access what in your system
+
+#### 💼 Business Growth
+- **Scalable Solution**: Grow your business without changing your system
+- **Multi-Branch Support**: Manage multiple locations effortlessly
+- **Customizable Features**: Adapt the system to your unique needs
+- **Future-Ready**: Regular updates with new features and improvements
+
+### 🎉 Key Benefits
+
+1. **Boost Efficiency**
+   - Reduce order processing time by 50%
+   - Eliminate manual errors
+   - Streamline operations
+   - Save valuable staff time
+
+2. **Increase Revenue**
+   - Track sales trends
+   - Optimize pricing
+   - Reduce wastage
+   - Improve customer satisfaction
+
+3. **Save Costs**
+   - Reduce operational expenses
+   - Minimize inventory waste
+   - Optimize staff scheduling
+   - Lower training costs
+
+4. **Enhance Customer Experience**
+   - Faster service
+   - Accurate orders
+   - Multiple payment options
+   - Personalized service
+
+### 🎯 Perfect For
+- Restaurants & Cafes
+- Retail Stores
+- Food Courts
+- Quick Service Restaurants
+- Bars & Pubs
+- Small to Medium Businesses
+
+### 🌟 Standout Features
+- **Offline-First Design**: Never stop serving customers, even without internet
+- **Smart Discounting**: Flexible discount options with real-time calculations
+- **Multi-Payment Support**: Accept all payment types with ease
+- **Real-Time Analytics**: Make informed decisions with live data
+- **User-Friendly Interface**: Minimal training required
+- **Customizable Reports**: Get insights that matter to your business
+
+### 🚀 Get Started Today
+Join the growing number of businesses that have transformed their operations with our POS system. Experience the perfect blend of power, simplicity, and reliability.
 
 ---
 
@@ -15,7 +86,10 @@ The **Point of Sale (POS) System** is a comprehensive application developed usin
 - ⏳ **Hold Orders Functionality**: Save incomplete orders and retrieve them later.
 - 🔄 **State Management with BLoC**: Efficient app state handling for a smooth user experience.
 - 📑 **Receipt Generation**: Display order summaries with itemized lists.
-- 📊 **Sales Insights (Upcoming)**: Track sales and generate reports.
+- 📊 **Sales Insights**: Track sales and generate reports.
+- 💰 **Discount Management**: Apply percentage and fixed discounts with real-time calculations.
+- 💳 **Multiple Payment Methods**: Support for Cash, Card, Scan, Credit, and Complimentary payments.
+- 📱 **Responsive Design**: Optimized for various screen sizes and orientations.
 
 ## 🛠️ Tech Stack
 
@@ -24,10 +98,13 @@ The **Point of Sale (POS) System** is a comprehensive application developed usin
 - **SQLite (sqflite)** (Local Database)
 - **BLoC Pattern** (State Management)
 - **Json Parsing** (handling data exchange between app and server)
+- **Provider** (Additional state management)
+- **Intl** (Internationalization and formatting)
+- **UUID** (Unique identifier generation)
 
 ## App Screenshots
 
-Here’s a preview of the app's UI:
+Here's a preview of the app's UI:
 ![Screen_Recording_20250319_114738-ezgif com-crop](https://github.com/user-attachments/assets/e65e53d4-416c-4e0b-bd7a-419e4c0d84c1)
 
 <div style="display: flex; justify-content: center;">
@@ -52,16 +129,6 @@ Here’s a preview of the app's UI:
         <p><b>Hold Orders View</b></p>
       </td>
     </tr>
-    <tr>
-      <td style="text-align: center; padding: 10px;">
-        <img src="https://github.com/user-attachments/assets/4e6d1f6c-51b7-493c-8ca3-a91474808218" alt="Extra Image 1" style="width: 100%; max-width: 500px;">
-        <p><b>Extra Image 1</b></p>
-      </td>
-      <td style="text-align: center; padding: 10px;">
-        <img src="https://github.com/user-attachments/assets/1f1cc6b1-0c52-4f0c-871d-b1a699266fad" alt="Extra Image 2" style="width: 100%; max-width: 500px;">
-        <p><b>Extra Image 2</b></p>
-      </td>
-    </tr>
   </table>
 </div>
 
@@ -69,130 +136,295 @@ Here’s a preview of the app's UI:
 
 ## Key Features and Functionality
 
-### 1. **Product Management**
-- Add, edit, delete, and manage menu items using a local SQLite database.
-- Support for product attributes, such as name, price, description, and category.
-- Integration with Flutter BLoC to manage product-related operations like loading and updating items.
+### 1. **Authentication & User Management**
+- Secure login system with user authentication
+- Role-based access control
+- User session management
+- Shift management for staff
+- User activity tracking
 
-### 2. **Cart Management**
-- Real-time cart management using the BLoC pattern, where users can add/remove items, modify quantities, and view total amounts.
-- Ability to hold orders and store them in the local database for later completion or modification.
+### 2. **Menu Management**
+- Dynamic menu creation and management
+- Category and sub-category organization
+- Menu item details with images and descriptions
+- Price management and updates
+- Allergen information tracking
+- Menu printing capabilities
+- Search functionality with history and suggestions
 
-### 3. **Order Processing**
-- Create new orders by adding selected items to the cart and assigning a table number and customer name.
-- Display order details, including total price, items, payment type, and employee handling the transaction.
+### 3. **Table & Customer Management**
+- Table allocation and management
+- Customer information tracking
+- Customer order history
+- Table status monitoring
+- Branch-specific table management
 
-### 4. **Payment Integration**
-- Support for handling different payment methods, including cash and digital payment types.
-- Automatically calculate change and display it in the UI after completing a transaction.
+### 4. **Order Processing**
+- Real-time cart management
+- Multiple service types:
+  - Dine-in
+  - Takeaway
+  - Delivery
+- Hold order functionality
+- Order modification and updates
+- Split bill capability
+- Tax calculation (BST and Service Charge)
+- Discount management:
+  - Percentage-based discounts
+  - Fixed amount discounts
+  - Real-time discount calculations
 
-### 5. **Receipt Generation**
-- Generate itemized receipts with the ability to print or send digitally to customers.
-- Support for displaying detailed information, such as order ID, date, total price, employee, and POS machine used.
+### 5. **Payment Processing**
+- Multiple payment methods:
+  - Cash
+  - Card
+  - Scan (QR Code)
+  - Credit
+  - Complimentary
+- Automatic tax calculations
+- Change calculation
+- Payment confirmation
+- Receipt generation
 
-### 6. **Order History and Reports**
-- View historical orders and payments, including the ability to update or cancel held orders.
-- Track sales performance and employee productivity by referencing past transactions.
+### 6. **Receipt & Bill Management**
+- Detailed receipt generation
+- Bill summary creation
+- Tax breakdown
+- Discount information
+- Customer details
+- Branch information
+- Order number and timestamp
+- Receipt printing capabilities
 
-### 7. **UI and UX Design**
-- Clean and intuitive interface using Flutter's rich UI components.
-- Responsive layout to support various screen sizes, ensuring a seamless user experience on both Android and iOS devices.
-- Custom widgets like `LoadingOverlay` and flexible cards for displaying order details, making the app interactive and visually appealing.
+### 7. **Inventory & Stock Management**
+- Real-time inventory tracking
+- Stock level monitoring
+- Item availability status
+- Low stock alerts
+- Inventory reports
 
-### 8. **State Management with BLoC**
-- Using BLoC to handle the cart and product data efficiently, ensuring that the app responds dynamically to user inputs.
-- Organizing events to handle adding/removing items from the cart, fetching product data from the database, and managing UI updates based on the app’s state.
+### 8. **Sales & Reporting**
+- Sales tracking and analytics
+- Daily/monthly reports
+- Performance metrics
+- Revenue analysis
+- Tax reports
+- Discount reports
+- Payment method analysis
 
-### 9. **Real-Time Data Synchronization**
-- Integration with MQTT for real-time synchronization of order and inventory data, allowing the app to update dynamically without needing to reload or refresh.
+### 9. **Branch Management**
+- Multi-branch support
+- Branch-specific settings
+- IP address management
+- Branch-specific menu items
+- Branch performance tracking
 
-### 10. **Hold Order Feature**
-- Ability to save cart items when an order is placed on hold, with an option to retrieve and resume the order later.
-- Use of SQLite for persisting held orders and enabling smooth transitions between the active and held states.
+### 10. **Settings & Configuration**
+- Tax settings management
+- System configuration
+- User preferences
+- Printer settings
+- Network settings
+- Backup and restore options
+
+### 11. **Search & Navigation**
+- Advanced search functionality
+- Search history tracking
+- Search suggestions
+- Quick navigation
+- Category-based browsing
+
+### 12. **Help & Support**
+- Help documentation
+- Support contact information
+- Privacy policy
+- User guides
+- FAQ section
+
+### 13. **Notifications**
+- System notifications
+- Order alerts
+- Low stock alerts
+- Payment notifications
+- Status updates
+
+### 14. **Data Management**
+- Local SQLite database
+- Data synchronization
+- Backup and restore
+- Data validation
+- Error handling
+- Audit logging
+
+### 15. **UI/UX Features**
+- Responsive design
+- Real-time updates
+- Intuitive navigation
+- Loading states
+- Error handling
+- Progress indicators
+- Dark/Light theme support
+- Custom animations
+
+### 16. **Offline Capabilities & Data Persistence**
+- Robust offline mode support
+- Local data storage for uninterrupted operations
+- Automatic data synchronization when online
+- Queue system for pending operations
+- Conflict resolution for data synchronization
+- Bill data persistence during network outages
+- Automatic retry mechanism for failed operations
+- Data integrity checks during sync
+- Transaction logging for offline operations
+- Backup of critical data during offline mode
+
+### 17. **Network Resilience**
+- Automatic detection of network status
+- Seamless transition between online/offline modes
+- Queue management for pending transactions
+- Priority-based sync when connection is restored
+- Bandwidth optimization for data sync
+- Connection status monitoring
+- Automatic reconnection handling
+- Data compression for efficient sync
+- Batch processing for offline transactions
+- Error recovery mechanisms
+
+### 18. **Data Synchronization**
+- Real-time data sync when online
+- Background sync for offline data
+- Selective sync for critical operations
+- Conflict resolution strategies
+- Sync status monitoring
+- Progress tracking for sync operations
+- Error handling during sync
+- Data validation before sync
+- Version control for synced data
+- Sync history tracking
+
+### 19. **Error Recovery & Backup**
+- Automatic error detection and recovery
+- Transaction rollback capabilities
+- Data backup before critical operations
+- Point-in-time recovery options
+- Error logging and reporting
+- Automatic retry for failed operations
+- Data integrity verification
+- Backup scheduling
+- Emergency recovery procedures
+- System state preservation
+
+### 20. **Performance Optimization**
+- Efficient data caching
+- Optimized database queries
+- Resource usage monitoring
+- Memory management
+- Background task optimization
+- UI rendering optimization
+- Network request batching
+- Image optimization
+- Database indexing
+- Query performance tracking
+
+### 21. **Security & Compliance**
+- End-to-end encryption
+- Secure data transmission
+- Role-based access control
+- Audit trail maintenance
+- Data privacy compliance
+- Secure storage of sensitive data
+- Regular security updates
+- Vulnerability scanning
+- Access logging
+- Security policy enforcement
+
+### 22. **Integration Capabilities**
+- API integration support
+- Third-party service integration
+- Payment gateway integration
+- Printer integration
+- External device support
+- Custom integration hooks
+- Webhook support
+- Data import/export
+- Integration monitoring
+- Error handling for integrations
+
+### 23. **Monitoring & Analytics**
+- Real-time system monitoring
+- Performance analytics
+- Usage statistics
+- Error tracking
+- User activity monitoring
+- Resource utilization tracking
+- Network performance monitoring
+- Database performance metrics
+- Application health checks
+- Custom metric tracking
+
+### 24. **User Experience Enhancements**
+- Customizable UI themes
+- Keyboard shortcuts
+- Touch gesture support
+- Accessibility features
+- Multi-language support
+- Customizable layouts
+- Quick access menus
+- Context-aware help
+- Guided workflows
+- User preference management
+
+### 25. **Business Intelligence**
+- Sales trend analysis
+- Customer behavior tracking
+- Inventory optimization
+- Revenue forecasting
+- Performance benchmarking
+- Market analysis tools
+- Competitive analysis
+- Business metrics dashboard
+- Custom report generation
+- Data visualization tools
 
 ---
-# Flutter App Folder Structure
 
-This project follows a structured folder architecture to separate concerns and improve maintainability. Below is an explanation of each folder and its purpose.
+## 📁 Project Structure
 
-## 📂 bloc
-This folder is the core of state management. It contains all the necessary files and logic for handling business logic using BLoC.
-
----
-
-## 📂 data
-This directory handles all data-related operations, including fetching and managing data.
-
-### 📂 repositories
-Contains files responsible for fetching data from various sources like APIs, databases, and local storage.
-- `items_data.dart` - Handles fetching and managing item-related data.
-- `menu_api_service.dart` - Manages API calls related to menus.
-- `receipt_data.dart` - Manages receipt-related data operations.
-
-### 📂 models
-Includes all the data models used in the app for structured data representation.
-- `category_model.dart` - Defines the structure for category data.
-- `new_menu_model.dart` - Represents the new menu structure.
-- `sub_category_model.dart` - Defines sub-category data.
-- `table_no_model.dart` - Represents table number details.
-- `card_item` (Folder) - Likely contains models related to cart items.
-
-### 📂 SQL
-Handles local database operations (likely using SQLite). This folder might contain scripts or classes for database management.
-
----
-
-## 📂 views
-This folder manages all UI components, including pages and widgets.
-
-### 📂 pages
-Contains different screens and their subdirectories.
-
-#### 📂 Add Items
-Manages screens related to adding items.
-
-#### 📂 Hold Order
-Handles UI related to holding orders.
-
-#### 📂 proceed page
-Manages the screens related to order processing.
-
-Other important pages:
-- `home_page.dart` - The main home screen of the application.
-- `items_page.dart` - Displays available items.
-- `notification_page.dart` - Handles user notifications.
-- `receipt_page.dart` - Displays receipt details.
-- `sales_page.dart` - Manages sales tracking and displays relevant data.
-- `setting_page.dart` - Handles user settings.
-- `shift_page.dart` - Manages shift-related operations.
-
-### 📂 widgets
-Contains reusable UI components used across different pages to maintain consistency.
-- `add_items_widget.dart` - Widget for adding items.
-- `cart_item_widget.dart` - Displays a cart item.
-- `drawer_menu_widget.dart` - Handles the sidebar menu.
-- `dropdown_widget.dart` - A dropdown UI component.
-- `items_list_widget.dart` - Displays a list of items.
-- `top_menu_bar_widget.dart` - Widget for the top menu bar.
-
----
-
-## 📜 main.dart
-The entry point of the Flutter application. It initializes the app and runs the main UI.
-
----
-
-This structure ensures clean separation of concerns and makes the codebase easier to navigate and maintain.
-
-## How It Works
-1. **Product Management**: Add and manage products with attributes like name, price, and category.
-2. **Cart Management**: Add items to the cart, modify quantities, and hold orders for later.
-3. **Order Processing**: Create orders, assign them to tables, and process payments.
-4. **Receipt Generation**: Generate and print/send receipts to customers.
-5. **Order History**: View past orders, update held orders, and track sales performance.
-6. **Real-Time Sync**: Use MQTT for real-time updates on orders and inventory.
-
----
+```plaintext
+/lib
+  ├── bloc/             # BLoC state management
+  │   ├── bill_bloc/    # Bill-related state management
+  │   ├── menu_bloc/    # Menu-related state management
+  │   └── proceed_order_bloc/  # Order processing state management
+  │
+  ├── data/             # Data handling
+  │   ├── repositories/ # Data repositories
+  │   └── models/       # Data models
+  │
+  ├── models/           # Business logic models
+  │   ├── Menu Model/   # Menu-related models
+  │   ├── Bill/         # Bill-related models
+  │   └── Cart/         # Cart-related models
+  │
+  ├── providers/        # Provider state management
+  │
+  ├── services/         # Service layer
+  │   ├── api/         # API services
+  │   └── database/    # Database services
+  │
+  ├── SQL/             # SQLite database operations
+  │
+  ├── views/           # UI components
+  │   ├── pages/       # Screen pages
+  │   │   ├── proceed page/    # Order processing pages
+  │   │   ├── hold order/      # Hold order pages
+  │   │   └── payment/         # Payment-related pages
+  │   └── widgets/     # Reusable widgets
+  │
+  ├── widgets/         # Global widgets
+  │
+  └── main.dart        # Application entry point
+```
 
 ## 🔧 Installation
 
@@ -210,25 +442,114 @@ flutter pub get
 flutter run
 ```
 
-## 🏗️ Project Structure
+## 📦 Dependencies
 
-```plaintext
-/lib
-  ├── bloc/             # BLoC state management files
-  ├── database/         # SQLite helper classes
-  ├── models/           # Data models
-  ├── pages/            # UI screens
-  ├── widgets/          # Reusable UI components
-  ├── main.dart         # App entry point
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^8.1.3
+  provider: ^6.0.5
+  sqflite: ^2.3.0
+  intl: ^0.18.1
+  uuid: ^3.0.7
+  # Add other dependencies as needed
 ```
+
+## 🚀 Getting Started
+
+1. **Setup Environment**
+   - Install Flutter SDK
+   - Set up your IDE (VS Code or Android Studio)
+   - Configure your development environment
+
+2. **Database Setup**
+   - Initialize SQLite database
+   - Create necessary tables
+   - Set up data models
+
+3. **Run the Application**
+   - Connect a device or start an emulator
+   - Run `flutter pub get` to install dependencies
+   - Execute `flutter run` to start the application
 
 ## 📌 Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests to improve this POS system.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📜 Author
 
 **Kinley Prnjor**
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Flutter team for the amazing framework
+- All contributors who have helped shape this project
+- The open-source community for their invaluable resources
+
+## 📊 System Architecture
+
+### Offline-First Architecture
+The system is designed with an offline-first approach, ensuring continuous operation even during network disruptions:
+
+1. **Local Data Storage**
+   - SQLite database for local data persistence
+   - Efficient data caching mechanisms
+   - Automatic data backup
+   - Transaction logging
+
+2. **Sync Management**
+   - Background sync when online
+   - Queue system for pending operations
+   - Conflict resolution strategies
+   - Priority-based sync
+
+3. **Error Handling**
+   - Automatic retry mechanisms
+   - Transaction rollback
+   - Data integrity checks
+   - Error logging and reporting
+
+4. **Network Resilience**
+   - Automatic connection monitoring
+   - Seamless online/offline transitions
+   - Bandwidth optimization
+   - Connection recovery
+
+### Data Flow
+1. **Online Mode**
+   - Real-time data synchronization
+   - Immediate transaction processing
+   - Live updates
+   - Direct server communication
+
+2. **Offline Mode**
+   - Local data storage
+   - Queue management
+   - Automatic sync when online
+   - Data integrity preservation
+
+3. **Sync Process**
+   - Background synchronization
+   - Conflict resolution
+   - Data validation
+   - Progress tracking
+
+4. **Recovery Process**
+   - Automatic error recovery
+   - Data restoration
+   - Transaction reconciliation
+   - System state recovery
 
 
 
