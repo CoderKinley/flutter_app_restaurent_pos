@@ -1,6 +1,5 @@
 #include "win32_window.h"
 
-#include <dwmapi.h>
 #include <flutter_windows.h>
 
 #include "resource.h"
@@ -37,20 +36,16 @@ int Scale(int source, double scale_factor) {
   return static_cast<int>(source * scale_factor);
 }
 
-// Dynamically loads the |EnableNonClientDpiScaling| from the User32 module.
-// This API is only needed for PerMonitor V1 awareness mode.
-void EnableFullDpiSupportIfAvailable(HWND hwnd) {
-  HMODULE user32_module = LoadLibraryA("User32.dll");
-  if (!user32_module) {
-    return;
-  }
-  auto enable_non_client_dpi_scaling =
+// Dynamically loads the |EnableNonClientDpiScaling| from the User32.dll.
+//
+// This function is not available in all Windows versions, so we need to
+// load it dynamically.
+EnableNonClientDpiScaling* GetEnableNonClientDpiScalingFunction() {
+  static EnableNonClientDpiScaling* enable_non_client_dpi_scaling =
       reinterpret_cast<EnableNonClientDpiScaling*>(
-          GetProcAddress(user32_module, "EnableNonClientDpiScaling"));
-  if (enable_non_client_dpi_scaling != nullptr) {
-    enable_non_client_dpi_scaling(hwnd);
-  }
-  FreeLibrary(user32_module);
+          GetProcAddress(GetModuleHandle(L"user32.dll"),
+                        "EnableNonClientDpiScaling"));
+  return enable_non_client_dpi_scaling;
 }
 
 }  // namespace
@@ -144,89 +139,41 @@ bool Win32Window::Create(const std::wstring& title,
     return false;
   }
 
-  UpdateTheme(window);
-
   return OnCreate();
 }
 
-bool Win32Window::Show() {
-  return ShowWindow(window_handle_, SW_SHOWNORMAL);
-}
-
-// static
-LRESULT CALLBACK Win32Window::WndProc(HWND const window,
-                                      UINT const message,
-                                      WPARAM const wparam,
-                                      LPARAM const lparam) noexcept {
-  if (message == WM_NCCREATE) {
-    auto window_struct = reinterpret_cast<CREATESTRUCT*>(lparam);
-    SetWindowLongPtr(window, GWLP_USERDATA,
-                     reinterpret_cast<LONG_PTR>(window_struct->lpCreateParams));
-
-    auto that = static_cast<Win32Window*>(window_struct->lpCreateParams);
-    EnableFullDpiSupportIfAvailable(window);
-    that->window_handle_ = window;
-  } else if (Win32Window* that = GetThisFromHandle(window)) {
-    return that->MessageHandler(window, message, wparam, lparam);
+bool Win32Window::OnCreate() {
+  // Set up the resource context to make this window's resource context
+  // current.
+  resource_context_ = FlutterDesktopGetResourceContext(window_handle_);
+  if (!resource_context_) {
+    return false;
   }
 
-  return DefWindowProc(window, message, wparam, lparam);
-}
+  // Set up the platform channel handlers.
+  flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
+      window_handle_, resource_context_);
 
-LRESULT
-Win32Window::MessageHandler(HWND hwnd,
-                            UINT const message,
-                            WPARAM const wparam,
-                            LPARAM const lparam) noexcept {
-  switch (message) {
-    case WM_DESTROY:
-      window_handle_ = nullptr;
-      Destroy();
-      if (quit_on_close_) {
-        PostQuitMessage(0);
-      }
-      return 0;
+  // Set up the window's message handler.
+  SetWindowLongPtr(window_handle_, GWLP_USERDATA,
+                  reinterpret_cast<LONG_PTR>(this));
 
-    case WM_DPICHANGED: {
-      auto newRectSize = reinterpret_cast<RECT*>(lparam);
-      LONG newWidth = newRectSize->right - newRectSize->left;
-      LONG newHeight = newRectSize->bottom - newRectSize->top;
+  // Set window properties for POS system
+  SetWindowLong(window_handle_, GWL_STYLE,
+                GetWindowLong(window_handle_, GWL_STYLE) & ~WS_MAXIMIZEBOX);
+  SetWindowLong(window_handle_, GWL_STYLE,
+                GetWindowLong(window_handle_, GWL_STYLE) & ~WS_THICKFRAME);
 
-      SetWindowPos(hwnd, nullptr, newRectSize->left, newRectSize->top, newWidth,
-                   newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
-
-      return 0;
-    }
-    case WM_SIZE: {
-      RECT rect = GetClientArea();
-      if (child_content_ != nullptr) {
-        // Size and position the child window.
-        MoveWindow(child_content_, rect.left, rect.top, rect.right - rect.left,
-                   rect.bottom - rect.top, TRUE);
-      }
-      return 0;
-    }
-
-    case WM_ACTIVATE:
-      if (child_content_ != nullptr) {
-        SetFocus(child_content_);
-      }
-      return 0;
-
-    case WM_DWMCOLORIZATIONCOLORCHANGED:
-      UpdateTheme(hwnd);
-      return 0;
-  }
-
-  return DefWindowProc(window_handle_, message, wparam, lparam);
+  return true;
 }
 
 void Win32Window::Destroy() {
-  OnDestroy();
-
   if (window_handle_) {
     DestroyWindow(window_handle_);
     window_handle_ = nullptr;
+  }
+  if (flutter_controller_) {
+    flutter_controller_ = nullptr;
   }
   if (g_active_window_count == 0) {
     WindowClassRegistrar::GetInstance()->UnregisterWindowClass();
@@ -263,13 +210,92 @@ void Win32Window::SetQuitOnClose(bool quit_on_close) {
   quit_on_close_ = quit_on_close;
 }
 
-bool Win32Window::OnCreate() {
-  // No-op; provided for subclasses.
+bool Win32Window::OnClose() {
+  if (quit_on_close_) {
+    return false;
+  }
+
+  // Hide the window instead of closing it.
+  ShowWindow(window_handle_, SW_HIDE);
   return true;
 }
 
-void Win32Window::OnDestroy() {
-  // No-op; provided for subclasses.
+// static
+LRESULT CALLBACK Win32Window::WndProc(HWND const window,
+                                     UINT const message,
+                                     WPARAM const wparam,
+                                     LPARAM const lparam) noexcept {
+  if (message == WM_NCCREATE) {
+    auto window_struct = reinterpret_cast<CREATESTRUCT*>(lparam);
+    SetWindowLongPtr(window, GWLP_USERDATA,
+                     reinterpret_cast<LONG_PTR>(window_struct->lpCreateParams));
+
+    auto that = static_cast<Win32Window*>(window_struct->lpCreateParams);
+    EnableNonClientDpiScaling* enable_non_client_dpi_scaling =
+        GetEnableNonClientDpiScalingFunction();
+    if (enable_non_client_dpi_scaling != nullptr) {
+      enable_non_client_dpi_scaling(window);
+    }
+  } else if (Win32Window* that = reinterpret_cast<Win32Window*>(
+                 GetWindowLongPtr(window, GWLP_USERDATA))) {
+    return that->MessageHandler(window, message, wparam, lparam);
+  }
+
+  return DefWindowProc(window, message, wparam, lparam);
+}
+
+LRESULT
+Win32Window::MessageHandler(HWND hwnd,
+                           UINT const message,
+                           WPARAM const wparam,
+                           LPARAM const lparam) noexcept {
+  switch (message) {
+    case WM_DESTROY:
+      window_handle_ = nullptr;
+      if (quit_on_close_) {
+        PostQuitMessage(0);
+      }
+      return 0;
+
+    case WM_DPICHANGED: {
+      auto newRectSize = reinterpret_cast<RECT*>(lparam);
+      LONG newWidth = newRectSize->right - newRectSize->left;
+      LONG newHeight = newRectSize->bottom - newRectSize->top;
+
+      SetWindowPos(hwnd, nullptr, newRectSize->left, newRectSize->top, newWidth,
+                   newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+
+      return 0;
+    }
+    case WM_SIZE: {
+      RECT rect = GetClientArea();
+      if (flutter_controller_ != nullptr) {
+        flutter_controller_->SetSize(rect.right - rect.left,
+                                    rect.bottom - rect.top);
+      }
+      return 0;
+    }
+
+    case WM_ACTIVATE:
+      if (flutter_controller_ != nullptr) {
+        if (LOWORD(wparam) == WA_ACTIVE) {
+          flutter_controller_->SetFocus();
+        } else {
+          flutter_controller_->KillFocus();
+        }
+      }
+      return 0;
+
+    case WM_GETOBJECT: {
+      LRESULT lresult = static_cast<LRESULT>(0L);
+      if (flutter_controller_ != nullptr) {
+        lresult = flutter_controller_->GetNativeAccessible();
+      }
+      return lresult;
+    }
+  }
+
+  return DefWindowProc(window_handle_, message, wparam, lparam);
 }
 
 void Win32Window::UpdateTheme(HWND const window) {

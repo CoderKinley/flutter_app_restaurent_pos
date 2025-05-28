@@ -1,0 +1,663 @@
+[COVER PAGE]
+
+POS System Documentation
+=======================
+
+Technical Documentation
+Version 1.0
+[Current Date]
+
+[PAGE BREAK]
+
+TABLE OF CONTENTS
+================
+
+1. Project Structure
+2. Architecture Overview
+   2.1 BLoC Layer
+   2.2 Data Layer
+   2.3 Models Layer
+   2.4 Providers Layer
+   2.5 Services Layer
+   2.6 SQL Layer
+   2.7 Views Layer
+   2.8 Main Application
+3. BLoC Pattern Deep Dive
+   3.1 Core Principles
+   3.2 Components
+   3.3 Implementation Flow
+   3.4 Benefits
+   3.5 Best Practices
+4. Dependencies
+   4.1 Core Dependencies
+   4.2 Network Dependencies
+   4.3 UI Dependencies
+   4.4 Utility Dependencies
+   4.5 Printing Dependencies
+   4.6 Development Dependencies
+5. Key Features
+   5.1 Authentication System
+   5.2 Menu Management
+   5.3 Order Processing
+   5.4 Table Management
+   5.5 Reporting and Analytics
+   5.6 System Features
+6. Technical Implementation
+   6.1 State Management
+   6.2 Data Persistence
+   6.3 UI/UX
+   6.4 Security
+   6.5 Performance
+
+[PAGE BREAK]
+
+1. PROJECT STRUCTURE
+===================
+
+[Folder Structure Diagram]
+lib/
+├── bloc/                      # State management using BLoC pattern
+│   ├── add_item_menu_navigation/
+│   ├── auth_bloc/
+│   ├── bill_bloc/
+│   ├── branch_bloc/
+│   ├── category_bloc/
+│   ├── customer_info_order_bloc/
+│   ├── destination/
+│   ├── hold_order_bloc/
+│   ├── ip_address_bloc/
+│   ├── list_bloc/
+│   ├── menu_from_api/
+│   ├── menu_item_bloc/
+│   ├── menu_item_local_bloc/
+│   ├── menu_print_bloc/
+│   ├── navigation_bloc/
+│   ├── proceed_order_bloc/
+│   ├── search_suggestion_bloc/
+│   ├── sub_category_bloc/
+│   ├── table_bloc/
+│   ├── tables and names/
+│   └── tax_settings_bloc/
+├── data/                      # Data layer
+│   ├── repositories/
+│   └── menu_api_service.dart
+├── models/                    # Data models
+│   ├── Bill/
+│   ├── Menu Model/
+│   ├── others/
+│   └── tables and names/
+├── providers/                 # State providers
+│   └── theme_provider.dart
+├── services/                  # Business logic and utilities
+│   ├── database_helper.dart
+│   ├── ImmersiveModeHelper.dart
+│   ├── network_service.dart
+│   └── sync_service.dart
+├── SQL/                      # Database related files
+│   ├── database_helper.dart
+│   └── menu_local_db.dart
+├── views/                    # UI components
+│   ├── pages/
+│   │   ├── Hold Order/
+│   │   ├── proceed page/
+│   │   ├── home_page.dart
+│   │   ├── login_page.dart
+│   │   ├── notification_page.dart
+│   │   └── sales_page.dart
+│   └── widgets/
+└── main.dart                 # Application entry point
+
+[PAGE BREAK]
+
+2. ARCHITECTURE OVERVIEW
+=======================
+
+The project follows a clean architecture pattern with clear separation of concerns. Here's a detailed breakdown of each layer:
+
+2.1 BLoC Layer (Business Logic Components)
+-----------------------------------------
+
+The BLoC pattern is a state management solution that separates business logic from UI. It follows these principles:
+
+a) Core BLoC Concepts:
+   • Events: User actions or system events that trigger state changes
+   • States: The current state of the application
+   • Bloc: The component that processes events and emits states
+
+b) Key BLoC Components:
+   • add_item_menu_navigation/: Manages menu item addition flow
+     - Handles the process of adding new items to the menu
+     - Manages navigation between menu item addition screens
+     - Validates item details and pricing
+     - Coordinates with category and subcategory selection
+     - Handles image upload and storage for menu items
+
+   • auth_bloc/: Handles authentication and user sessions
+     - Manages user login and logout processes
+     - Handles session persistence and token management
+     - Implements security measures and access control
+     - Manages user roles and permissions
+     - Handles password reset and account recovery
+
+   • bill_bloc/: Manages billing operations and calculations
+     - Processes order totals and subtotals
+     - Handles tax calculations and discounts
+     - Manages payment processing
+     - Generates and formats bills
+     - Handles bill printing and sharing
+
+   • category_bloc/: Handles menu category management
+     - Manages menu category hierarchy
+     - Handles category creation and updates
+     - Coordinates with menu items
+     - Manages category visibility and ordering
+     - Handles category-specific settings
+
+   • customer_info_order_bloc/: Manages customer order information
+     - Stores and manages customer details
+     - Handles order preferences and history
+     - Manages special requests and notes
+     - Coordinates with table assignments
+     - Handles customer loyalty features
+
+   • hold_order_bloc/: Controls order holding functionality
+     - Manages temporary order storage
+     - Handles order retrieval and modification
+     - Coordinates with table management
+     - Manages hold duration and expiration
+     - Handles order status transitions
+
+   • menu_from_api/: Handles menu data fetching from server
+     - Manages API communication for menu data
+     - Handles data synchronization
+     - Implements caching strategies
+     - Manages offline data availability
+     - Handles menu updates and versioning
+
+   • menu_item_bloc/: Manages menu item state
+     - Handles item availability and stock
+     - Manages pricing and special offers
+     - Coordinates item modifications
+     - Handles item categorization
+     - Manages item images and descriptions
+
+   • navigation_bloc/: Controls application navigation
+     - Manages screen transitions
+     - Handles navigation history
+     - Implements navigation guards
+     - Manages deep linking
+     - Coordinates with authentication state
+
+   • proceed_order_bloc/: Manages order processing flow
+     - Handles order submission
+     - Manages payment processing
+     - Coordinates with kitchen/bar systems
+     - Handles order status updates
+     - Manages order completion and delivery
+
+   • table_bloc/: Handles table management and assignments
+     - Manages table availability
+     - Handles table assignments
+     - Coordinates with order management
+     - Manages table status updates
+     - Handles table merging and splitting
+
+2.2 Data Layer
+-------------
+Located in the data/ directory, this layer handles data operations:
+
+a) Repositories:
+   • Implements repository pattern
+     - Provides a clean abstraction layer between data sources
+     - Implements the Repository Pattern for data access
+     - Manages data operations through a single interface
+     - Handles data source switching (local/remote)
+     - Implements caching strategies
+
+   • Abstracts data sources (local and remote)
+     - Manages SQLite database operations
+     - Handles REST API communications
+     - Coordinates between local and remote data
+     - Implements data synchronization
+     - Manages data conflicts
+
+   • Provides clean API for data access
+     - Exposes simple CRUD operations
+     - Handles data validation
+     - Manages data relationships
+     - Provides type-safe data access
+     - Implements error handling
+
+   • Handles data caching and synchronization
+     - Implements caching strategies
+     - Manages data freshness
+     - Handles offline data access
+     - Coordinates data updates
+     - Manages sync conflicts
+
+b) API Services:
+   • menu_api_service.dart: Handles API communication
+     - Manages HTTP requests to the server
+     - Implements REST API endpoints
+     - Handles authentication tokens
+     - Manages request/response formatting
+     - Implements retry mechanisms
+
+   • Manages network requests
+     - Handles GET, POST, PUT, DELETE operations
+     - Manages request headers and parameters
+     - Implements request timeouts
+     - Handles network errors
+     - Manages request queuing
+
+   • Handles data transformation
+     - Converts JSON to model objects
+     - Handles data serialization/deserialization
+     - Manages data validation
+     - Implements data mapping
+     - Handles data formatting
+
+   • Implements error handling
+     - Manages HTTP error codes
+     - Handles network timeouts
+     - Implements retry logic
+     - Manages error reporting
+     - Provides error recovery
+
+c) Data Models:
+   • MenuItem Model
+     - Represents menu item data structure
+     - Handles item properties and relationships
+     - Manages data validation
+     - Implements serialization
+     - Handles data transformations
+
+   • Category Model
+     - Manages category hierarchy
+     - Handles category relationships
+     - Implements category ordering
+     - Manages category metadata
+     - Handles category validation
+
+   • Order Model
+     - Represents order data structure
+     - Manages order items and quantities
+     - Handles order status
+     - Implements order calculations
+     - Manages order metadata
+
+   • Customer Model
+     - Represents customer information
+     - Manages customer preferences
+     - Handles customer history
+     - Implements customer validation
+     - Manages customer relationships
+
+d) Data Utilities:
+   • DataMapper
+     - Converts between different data formats
+     - Handles data normalization
+     - Implements data validation
+     - Manages data transformations
+     - Handles data mapping rules
+
+   • CacheManager
+     - Manages data caching
+     - Implements cache policies
+     - Handles cache invalidation
+     - Manages cache size
+     - Implements cache strategies
+
+   • SyncManager
+     - Coordinates data synchronization
+     - Manages sync conflicts
+     - Handles offline changes
+     - Implements sync strategies
+     - Manages sync status
+
+2.3 Models Layer
+---------------
+Located in models/ directory, contains data structures:
+
+a) Bill Models:
+   • Defines bill-related data structures
+     - Bill header information (date, time, bill number)
+     - Itemized list of ordered items
+     - Pricing and tax information
+     - Payment details and methods
+     - Customer and table information
+
+   • Handles bill calculations
+     - Subtotal calculations
+     - Tax computations
+     - Discount applications
+     - Service charge calculations
+     - Final amount determination
+
+   • Manages bill formatting
+     - Receipt layout and design
+     - Currency formatting
+     - Date and time formatting
+     - Item description formatting
+     - Special instructions handling
+
+b) Menu Models:
+   • Defines menu item structures
+     - Item details (name, description, price)
+     - Category and subcategory information
+     - Availability status
+     - Preparation time
+     - Special attributes (spicy, vegetarian, etc.)
+
+   • Handles menu categorization
+     - Category hierarchy management
+     - Subcategory organization
+     - Menu section ordering
+     - Category visibility control
+     - Special category handling
+
+   • Manages menu item properties
+     - Price variations
+     - Customization options
+     - Allergen information
+     - Nutritional data
+     - Image and media assets
+
+c) Other Models:
+   • Customer information models
+     - Personal details
+     - Order history
+     - Preferences and favorites
+     - Contact information
+     - Loyalty program data
+
+   • Table management models
+     - Table status and availability
+     - Capacity information
+     - Location and section data
+     - Current order status
+     - Reservation information
+
+   • System configuration models
+     - Application settings
+     - User preferences
+     - System parameters
+     - Feature flags
+     - Integration settings
+
+2.4 Providers Layer
+------------------
+Located in providers/ directory:
+
+a) Theme Provider:
+   • Manages application theming
+     - Color scheme management
+     - Typography settings
+     - Component styling
+     - Dark/Light mode
+     - Custom theme support
+
+   • Handles theme switching
+     - Theme state management
+     - Transition animations
+     - Theme persistence
+     - User preference handling
+     - System theme integration
+
+   • Maintains theme consistency
+     - Global style management
+     - Component theming
+     - Responsive design
+     - Accessibility support
+     - Brand consistency
+
+2.5 Services Layer
+-----------------
+Located in services/ directory, contains business logic and utilities:
+
+a) Database Services:
+   • database_helper.dart: SQLite operations
+     - Database initialization
+     - Table creation and management
+     - CRUD operations
+     - Transaction handling
+     - Query optimization
+
+   • Handles data persistence
+     - Data storage management
+     - Backup and recovery
+     - Data integrity checks
+     - Storage optimization
+     - Data migration
+
+   • Manages database migrations
+     - Version control
+     - Schema updates
+     - Data migration
+     - Rollback handling
+     - Migration logging
+
+b) Network Services:
+   • network_service.dart: Network operations
+     - API communication
+     - Request handling
+     - Response processing
+     - Error management
+     - Connection monitoring
+
+   • sync_service.dart: Data synchronization
+     - Data sync scheduling
+     - Conflict resolution
+     - Offline data handling
+     - Sync status tracking
+     - Error recovery
+
+c) Utility Services:
+   • ImmersiveModeHelper.dart: Full-screen management
+     - System UI visibility
+     - Screen orientation
+     - Status bar handling
+     - Navigation bar control
+     - Display optimization
+
+2.6 SQL Layer
+------------
+Located in SQL/ directory:
+
+a) Database Helpers:
+   • database_helper.dart: Core database operations
+     - Database connection management
+     - Query execution
+     - Result processing
+     - Error handling
+     - Performance optimization
+
+   • menu_local_db.dart: Menu-specific database operations
+     - Menu data storage
+     - Category management
+     - Item updates
+     - Price management
+     - Availability tracking
+
+2.7 Views Layer
+--------------
+Located in views/ directory, contains UI components:
+
+a) Pages:
+   • home_page.dart: Main application interface
+     - Serves as the main dashboard
+     - Displays key metrics and statistics
+     - Provides quick access to main features
+     - Shows recent orders and activities
+     - Handles navigation to other sections
+     - Implements responsive layout
+     - Manages state through BLoC
+
+   • login_page.dart: Authentication interface
+     - Handles user authentication
+     - Manages login form and validation
+     - Implements secure password handling
+     - Provides error feedback
+     - Handles session management
+     - Implements biometric authentication
+     - Manages user roles and permissions
+
+   • sales_page.dart: Sales management interface
+     - Displays sales data and analytics
+     - Shows daily/weekly/monthly reports
+     - Implements filtering and sorting
+     - Handles data visualization
+     - Manages export functionality
+     - Implements search and filtering
+     - Shows sales trends and patterns
+
+   • notification_page.dart: System notifications
+     - Displays system alerts and messages
+     - Manages notification priorities
+     - Handles notification actions
+     - Implements read/unread status
+     - Provides notification filtering
+     - Manages notification history
+     - Implements real-time updates
+
+   • Hold Order/ (Directory)
+     - hold_order_page.dart: Main hold order interface
+       * Displays held orders list
+       * Manages order retrieval
+       * Handles order modifications
+       * Implements order status updates
+       * Manages order expiration
+
+     - hold_order_details.dart: Order details view
+       * Shows complete order information
+       * Displays item details
+       * Manages order modifications
+       * Handles special instructions
+       * Shows payment information
+
+     - hold_order_list.dart: Order list component
+       * Displays held orders in list format
+       * Implements sorting and filtering
+       * Handles order selection
+       * Manages list updates
+       * Implements search functionality
+
+   • proceed page/ (Directory)
+     - proceed_order_page.dart: Order processing interface
+       * Manages order flow
+       * Handles payment processing
+       * Implements order confirmation
+       * Manages order status
+       * Handles special requests
+
+     - payment_page.dart: Payment handling
+       * Manages payment methods
+       * Handles payment processing
+       * Implements payment validation
+       * Manages payment confirmation
+       * Handles payment errors
+
+     - order_summary.dart: Order summary view
+       * Displays order details
+       * Shows pricing breakdown
+       * Handles order modifications
+       * Manages special requests
+       * Implements order confirmation
+
+b) Widgets:
+   • Common Widgets
+     - custom_button.dart: Reusable button component
+       * Implements different button styles
+       * Handles button states
+       * Manages button animations
+       * Implements loading states
+       * Handles touch feedback
+
+     - custom_text_field.dart: Input field component
+       * Manages text input
+       * Implements validation
+       * Handles error states
+       * Manages focus states
+       * Implements input formatting
+
+     - loading_indicator.dart: Loading state component
+       * Shows loading animations
+       * Manages loading states
+       * Implements progress indicators
+       * Handles error states
+       * Provides loading feedback
+
+   • Menu Widgets
+     - menu_item_card.dart: Menu item display
+       * Shows item details
+       * Handles item selection
+       * Manages item images
+       * Implements price display
+       * Handles availability status
+
+     - category_list.dart: Category display
+       * Shows category hierarchy
+       * Handles category selection
+       * Manages category images
+       * Implements filtering
+       * Handles navigation
+
+   • Order Widgets
+     - order_item.dart: Order item display
+       * Shows item details
+       * Handles quantity changes
+       * Manages modifications
+       * Implements price calculations
+       * Handles special requests
+
+     - order_summary.dart: Order summary display
+       * Shows order totals
+       * Displays itemized list
+       * Manages discounts
+       * Implements tax calculations
+       * Handles payment summary
+
+   • Table Widgets
+     - table_grid.dart: Table layout display
+       * Shows table arrangement
+       * Handles table selection
+       * Manages table status
+       * Implements drag and drop
+       * Handles table merging
+
+     - table_status.dart: Table status indicator
+       * Shows occupancy status
+       * Displays order status
+       * Manages status updates
+       * Implements status colors
+       * Handles status changes
+
+   • Utility Widgets
+     - error_dialog.dart: Error display
+       * Shows error messages
+       * Handles error actions
+       * Manages error states
+       * Implements retry logic
+       * Provides user feedback
+
+     - confirmation_dialog.dart: Confirmation prompts
+       * Shows confirmation messages
+       * Handles user responses
+       * Manages dialog states
+       * Implements animations
+       * Provides user feedback
+
+     - search_bar.dart: Search functionality
+       * Implements search input
+       * Handles search results
+       * Manages search history
+       * Implements filters
+       * Provides search suggestions
+
+[Continue with the rest of the content...]
+
+[PAGE BREAK]
+
+[FOOTER]
+POS System Documentation - Page X of Y
+[END FOOTER] 

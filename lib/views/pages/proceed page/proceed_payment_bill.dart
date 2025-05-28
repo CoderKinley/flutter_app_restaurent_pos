@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'bill_service.dart';
 import 'dart:typed_data';
+import 'qr_code_display_page.dart';
 
 class ProceedPaymentBill extends StatelessWidget {
   final String id;
@@ -61,6 +62,15 @@ class ProceedPaymentBill extends StatelessWidget {
     );
   }
 
+  Future<void> _showQrCodePage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const QrCodeDisplayPage(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -68,29 +78,29 @@ class ProceedPaymentBill extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: const Color.fromARGB(255, 3, 27, 48),
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back,
-            color: colorScheme.primary,
+            color: Colors.white,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
+        title: const Text(
           'Bill Details',
           style: TextStyle(
-            color: colorScheme.onSurface,
+            color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.check,
-              color: colorScheme.primary,
+              color: Colors.white,
             ),
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
           ),
         ],
@@ -99,366 +109,407 @@ class ProceedPaymentBill extends StatelessWidget {
       ),
       body: Container(
         color: colorScheme.background.withOpacity(0.05),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Section
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey.shade200,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
+        child: Row(
+          children: [
+            // Left Section - Order Details Only
+            Expanded(
+              flex: 3,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Invoice #$orderNumber",
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                  letterSpacing: 0.5,
+                          // Header Section
+                          Container(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey.shade200,
+                                  width: 1.5,
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  payMode,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onPrimaryContainer,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    payMode,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Invoice #$orderNumber",
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.primary,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildInfoRow(
+                                    Icons.store, "Branch: $branchName"),
+                                _buildInfoRow(
+                                  Icons.table_bar,
+                                  "Table No: $tableNo",
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "$date at $time",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 6,
+                                ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      _getPaymentIcon(payMode),
+                                      size: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      "Paid via $payMode",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Items Section
+                          const SizedBox(height: 24),
+                          Text(
+                            "ORDER DETAILS",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          // _buildInfoRow(Icons.person, user),
-                          // _buildInfoRow(Icons.phone, phoneNo),
-                          _buildInfoRow(Icons.store, "Branch: $branchName"),
-                          _buildInfoRow(
-                            Icons.table_bar,
-                            "Count: $tableNo",
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "$date at $time",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
+
+                          // Item headers
+                          Container(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.grey.shade300,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Items Section
-                    const SizedBox(height: 24),
-                    Text(
-                      "ORDER DETAILS",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Item headers
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey.shade300,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              "Item",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade600,
-                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "Qty",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade600,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "Price",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade600,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Item list
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey.shade200,
-                                width: 0.5,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Text(
-                                  item['menuName'],
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: colorScheme.onSurface,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    "Item",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "× ${item['quantity']}",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: colorScheme.onSurface,
+                                Expanded(
+                                  child: Text(
+                                    "Qty",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  "Nu.${item['price']}",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: colorScheme.onSurface,
+                                Expanded(
+                                  child: Text(
+                                    "Price",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    textAlign: TextAlign.right,
                                   ),
-                                  textAlign: TextAlign.right,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    ),
 
-                    // Summary Section
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceVariant.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildSummaryRow("Sub Total", subTotal.toString()),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(thickness: 1.5),
+                          // Item list
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.grey.shade200,
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        item['menuName'],
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        "× ${item['quantity']}",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        "Nu.${item['price']}",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                          _buildSummaryRow(
-                              "BST", (bst / 100 * subTotal).toStringAsFixed(2)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          _buildSummaryRow("Service Charge",
-                              (serviceTax / 100 * subTotal).toStringAsFixed(2)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                          const Divider(
+                            thickness: 0.5,
                           ),
                           _buildSummaryRow(
                               "Total Quantity", totalQuantity.toString()),
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(thickness: 1.5),
-                          ),
-                          _buildSummaryRow(
-                            "Total Amount",
-                            "Nu.${totalAmount.toStringAsFixed(2)}",
-                            isTotal: true,
-                            colorScheme: colorScheme,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Right Section - Financial Info and Actions
+            Expanded(
+              flex: 2,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Summary Card
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
                             children: [
-                              Icon(
-                                _getPaymentIcon(payMode),
-                                size: 16,
-                                color: Colors.grey.shade600,
+                              _buildSummaryRow(
+                                  "Sub Total", subTotal.toString()),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: Divider(thickness: 1.5),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                "Paid via $payMode",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
+                              _buildSummaryRow("BST", bst.toStringAsFixed(2)),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 4),
+                              ),
+                              _buildSummaryRow("Service Charge",
+                                  serviceTax.toStringAsFixed(2)),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Divider(thickness: 1.5),
+                              ),
+                              _buildSummaryRow(
+                                "Total Amount",
+                                "Nu.${totalAmount.toStringAsFixed(2)}",
+                                isTotal: true,
+                                colorScheme: colorScheme,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Action Buttons Card
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            children: [
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.share),
+                                label: const Text("Share PDF"),
+                                onPressed: () async {
+                                  await BillService.sharePdf(
+                                    id: id,
+                                    pdfGenerator: _generatePdf,
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colorScheme.primary,
+                                  foregroundColor: colorScheme.onPrimary,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.receipt_long),
+                                label: const Text("Thermal Print"),
+                                onPressed: () => BillService.printWithEscPos(
+                                  context: context,
+                                  id: id,
+                                  discount: discount,
+                                  user: user,
+                                  phoneNo: phoneNo,
+                                  tableNo: tableNo,
+                                  items: items,
+                                  subTotal: subTotal,
+                                  bst: bst,
+                                  bstAmt: bst / 100 * subTotal,
+                                  serviceAmt: serviceTax / 100 * subTotal,
+                                  serviceTax: serviceTax,
+                                  totalQuantity: totalQuantity,
+                                  date: date,
+                                  time: time,
+                                  totalAmount: totalAmount,
+                                  payMode: payMode,
+                                  orderNumber: orderNumber,
+                                  branchName: branchName,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green.shade600,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.save_alt),
+                                label: const Text("Save PDF"),
+                                onPressed: () => BillService.savePdfLocally(
+                                  context: context,
+                                  id: id,
+                                  pdfGenerator: _generatePdf,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onSecondaryContainer,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 0,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Action Buttons
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.share),
-                            label: const Text("Share PDF"),
-                            onPressed: () async {
-                              await BillService.sharePdf(
-                                id: id,
-                                pdfGenerator: _generatePdf,
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.primary,
-                              foregroundColor: colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.receipt_long),
-                            label: const Text("Thermal Print"),
-                            onPressed: () => BillService.printWithEscPos(
-                              context: context,
-                              id: id,
-                              discount: discount,
-                              user: user,
-                              phoneNo: phoneNo,
-                              tableNo: tableNo,
-                              items: items,
-                              subTotal: subTotal,
-                              bst: bst,
-                              bstAmt: bst / 100 * subTotal,
-                              serviceAmt: serviceTax / 100 * subTotal,
-                              serviceTax: serviceTax,
-                              totalQuantity: totalQuantity,
-                              date: date,
-                              time: time,
-                              totalAmount: totalAmount,
-                              payMode: payMode,
-                              orderNumber: orderNumber,
-                              branchName: branchName,
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.save_alt),
-                        label: const Text("Save PDF"),
-                        onPressed: () => BillService.savePdfLocally(
-                          context: context,
-                          id: id,
-                          pdfGenerator: _generatePdf,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.secondaryContainer,
-                          foregroundColor: colorScheme.onSecondaryContainer,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -521,7 +572,6 @@ class ProceedPaymentBill extends StatelessWidget {
         return Icons.payments;
       case 'card':
         return Icons.credit_card;
-      case 'upi':
       case 'qr':
         return Icons.qr_code;
       case 'online':

@@ -758,71 +758,197 @@ class _SalesPageState extends State<SalesPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Bill",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            const Text(
+                              "Bill",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // Table Selection Dropdown
+                            BlocBuilder<TableBloc, TableState>(
+                              builder: (context, state) {
+                                if (state is TableLoaded) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          const Color.fromARGB(255, 3, 27, 48)
+                                              .withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color:
+                                            const Color.fromARGB(255, 3, 27, 48)
+                                                .withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: selectedTableNumber,
+                                      underline: const SizedBox(),
+                                      icon: Icon(
+                                        Icons.arrow_drop_down,
+                                        color: selectedTableNumber == 'Table'
+                                            ? const Color.fromARGB(
+                                                255, 29, 29, 29)
+                                            : const Color.fromARGB(
+                                                255, 3, 27, 48),
+                                        size: 20,
+                                      ),
+                                      style: TextStyle(
+                                        color: selectedTableNumber == 'Table'
+                                            ? const Color.fromARGB(
+                                                255, 26, 26, 26)
+                                            : const Color.fromARGB(
+                                                255, 3, 27, 48),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      dropdownColor: const Color.fromARGB(
+                                          255, 248, 248, 248),
+                                      items: [
+                                        DropdownMenuItem(
+                                          value: 'Table',
+                                          child: Text(
+                                            'Select Table',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                        ...state.tables.map((table) {
+                                          return DropdownMenuItem(
+                                            value: table.tableNumber,
+                                            child: Text(
+                                              table.tableName != null &&
+                                                      table
+                                                          .tableName!.isNotEmpty
+                                                  ? '${table.tableNumber} - ${table.tableName}'
+                                                  : 'Table ${table.tableNumber}',
+                                              style: const TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 3, 27, 48),
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ],
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          selectedTableNumber =
+                                              newValue ?? 'Table';
+                                          reSelectTableNumber = newValue ?? '';
+                                        });
+                                      },
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ],
                         ),
                         Row(
                           children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  "Print",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Checkbox(
-                                  value: _enablePrint,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _enablePrint = value ?? true;
-                                      _savePrintOptionState();
-                                    });
-                                  },
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  fillColor:
-                                      MaterialStateProperty.resolveWith<Color>(
-                                          (states) {
-                                    return states
-                                            .contains(MaterialState.selected)
-                                        ? const Color(0xFF4CAF50)
-                                        : Colors.transparent;
-                                  }),
-                                  side: BorderSide(
-                                    color: _enablePrint
-                                        ? const Color(0xFF4CAF50)
-                                        : Colors.grey[400]!,
-                                    width: 1.5,
-                                  ),
-                                  checkColor: Colors.white,
-                                ),
-                              ],
-                            ),
                             IconButton(
-                              onPressed: () {
-                                return _showAddPersonDialog(context);
-                              },
+                              onPressed: () => _showAddPersonDialog(context),
                               icon: const Icon(Icons.person_add),
                             ),
                             PopupMenuButton<String>(
                               onSelected: (value) {
-                                Navigator.push(context, MaterialPageRoute(
-                                  builder: (context) {
-                                    return const HoldOrderPage(menuItems: []);
-                                  },
-                                ));
+                                if (value == 'toggle_print') {
+                                  setState(() {
+                                    _enablePrint = !_enablePrint;
+                                    _savePrintOptionState();
+                                  });
+                                } else if (value == 'view_orders') {
+                                  Navigator.push(context, MaterialPageRoute(
+                                    builder: (context) {
+                                      return const HoldOrderPage(menuItems: []);
+                                    },
+                                  ));
+                                }
                               },
                               itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'View Hold Order',
-                                  child: Text('View Orders'),
+                                PopupMenuItem(
+                                  value: 'toggle_print',
+                                  child: Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.print_rounded,
+                                              size: 20,
+                                              color: _enablePrint
+                                                  ? const Color(0xFF4CAF50)
+                                                  : Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Enable Print',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: _enablePrint
+                                                    ? const Color(0xFF4CAF50)
+                                                    : Colors.grey[800],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Switch(
+                                          value: _enablePrint,
+                                          onChanged: (bool value) {
+                                            setState(() {
+                                              _enablePrint = value;
+                                              _savePrintOptionState();
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          activeColor: const Color(0xFF4CAF50),
+                                          activeTrackColor:
+                                              const Color(0xFF4CAF50)
+                                                  .withOpacity(0.4),
+                                          inactiveThumbColor: Colors.grey[400],
+                                          inactiveTrackColor: Colors.grey[300],
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuDivider(),
+                                PopupMenuItem(
+                                  value: 'view_orders',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.receipt_long_rounded,
+                                        size: 20,
+                                        color: Colors.grey[600],
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        'View Orders',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                               child: const IconButton(
@@ -1007,7 +1133,7 @@ class _SalesPageState extends State<SalesPage> {
       },
       child: Card(
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1051,10 +1177,20 @@ class _SalesPageState extends State<SalesPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Nu. ${product.price}', // Use MenuItem's price
+                    'Nu. ${product.price}',
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: Color.fromARGB(255, 0, 29, 57),
+                    ),
+                    onPressed: () => _showItemDetails(context, product),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
@@ -1062,6 +1198,168 @@ class _SalesPageState extends State<SalesPage> {
           ),
         ),
       ),
+    );
+  }
+
+// items details popup page you know what and you know who
+  void _showItemDetails(BuildContext context, MenuModel product) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4, // Reduced width
+            child: Dialog(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header with image
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 180,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                          ),
+                          child: (product.dishImage != null &&
+                                  product.dishImage!.isNotEmpty &&
+                                  product.dishImage != "No Image" &&
+                                  File(product.dishImage!).existsSync())
+                              ? Image.file(
+                                  File(product.dishImage!),
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/icons/logo.png',
+                                  fit: BoxFit.contain,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Title and Price
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.menuName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color.fromARGB(255, 3, 27, 48),
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 3, 27, 48)
+                                  .withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color.fromARGB(255, 3, 27, 48)
+                                    .withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              'Nu. ${product.price}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color.fromARGB(255, 3, 27, 48),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Divider
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.grey[300],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Description
+                      if (product.description != null &&
+                          product.description!.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Description',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color.fromARGB(255, 3, 27, 48),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              product.description!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 20),
+
+                      // Close button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 3, 27, 48),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Close',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1588,7 +1886,7 @@ class _SalesPageState extends State<SalesPage> {
                                 customername: nameController.text,
                                 bst: bst,
                                 serviceTax: serviceCharge,
-                                tableNumber: _permanentOrderCounter.toString(),
+                                tableNumber: tableNumber,
                                 phoneNumber: "+975-${contactController.text}",
                                 orderID: const Uuid().v4(),
                                 subTotal: totalAmount,

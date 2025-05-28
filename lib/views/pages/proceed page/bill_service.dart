@@ -300,7 +300,7 @@ class BillService {
       buffer.write(init);
       buffer.write(centerAlign);
       buffer.write(boldOn);
-      buffer.writeln('LEGPHEL EATS');
+      buffer.writeln('LEGPHEL HOTEL');
       buffer.write(boldOff);
       buffer.write("Branch Name: ");
       buffer.writeln(branchName);
@@ -313,6 +313,7 @@ class BillService {
       buffer.write(leftAlign);
 
       buffer.writeln('Order No: $orderNumber');
+      buffer.writeln('Table No: $tableNo');
       buffer.write('Date: $date  ');
       buffer.writeln('Time: $time');
       // buffer.writeln('User: $user');

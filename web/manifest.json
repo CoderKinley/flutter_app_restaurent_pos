@@ -1,12 +1,12 @@
 {
-    "name": "pos_system_legphel",
-    "short_name": "pos_system_legphel",
+    "name": "Legphel POS System",
+    "short_name": "Legphel POS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#031B30",
+    "theme_color": "#031B30",
+    "description": "Modern Point of Sale System",
+    "orientation": "landscape",
     "prefer_related_applications": false,
     "icons": [
         {

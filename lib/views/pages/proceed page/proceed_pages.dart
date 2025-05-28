@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pos_system_legphel/bloc/proceed_order_bloc/bloc/proceed_order_bloc.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/proceed_order_model.dart';
+import 'package:pos_system_legphel/models/Menu%20Model/receipt_model.dart';
 import 'package:uuid/uuid.dart';
 import 'package:pos_system_legphel/models/Menu%20Model/menu_bill_model.dart';
 import 'package:pos_system_legphel/views/pages/proceed%20page/proceed_payment_bill.dart';
+import 'package:pos_system_legphel/views/pages/proceed%20page/qr_code_display_page.dart';
 import 'package:pos_system_legphel/bloc/bill_bloc/bill_bloc.dart';
 import 'package:pos_system_legphel/models/Bill/bill_summary_model.dart';
 import 'package:pos_system_legphel/models/Bill/bill_details_model.dart';
@@ -52,13 +54,17 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   // Add new state variables for discounts
   double fixedDiscount = 0.0;
   double percentageDiscount = 0.0;
+  double bstCalculated = 0.0;
+  double serviceChargeCalculated = 0.0;
+  double amountAfterDiscount = 0.0;
+
   List<double> suggestedAmounts = [];
   double finalAmount = 0.0;
 
   @override
   void initState() {
     super.initState();
-    finalAmount = widget.totalCost;
+    _updateFinalAmount();
     _calculateSuggestedAmounts();
   }
 
@@ -71,16 +77,30 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
     ];
   }
 
+  // calculation fo the Whatever logic for the Discount, BST, SST whatever......
   void _updateFinalAmount() {
-    double amount = widget.totalCost;
+    double amount = widget.subTotal; // Start with subtotal
+
     // Apply percentage discount first
     if (percentageDiscount > 0) {
       amount = amount * (1 - percentageDiscount / 100);
     }
     // Then apply fixed discount
     amount = amount - fixedDiscount;
+
+    bstCalculated = amount * (widget.bst / 100);
+    serviceChargeCalculated = amount * (widget.serviceTax / 100);
+
+    // Calculate BST and service tax as percentages on the discounted amount
+    // double bstAmount = amount * (widget.bst / widget.subTotal);
+    // double serviceTaxAmount = amount * (widget.serviceTax / widget.subTotal);
+
+    // Add BST and service tax to get final amount
+    // amount = amount + bstAmount + serviceTaxAmount;
+
     setState(() {
-      finalAmount = amount;
+      finalAmount = amount + bstCalculated + serviceChargeCalculated;
+      amountAfterDiscount = amount;
     });
     _calculateSuggestedAmounts();
   }
@@ -89,6 +109,9 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
     double tempFixedDiscount = fixedDiscount;
     double tempPercentageDiscount = percentageDiscount;
     double tempFinalAmount = finalAmount;
+    double tempBstCalculated = bstCalculated;
+    double tempServiceChargeCalculated = serviceChargeCalculated;
+    double tempAmountAfterDiscount = amountAfterDiscount;
 
     final fixedDiscountController = TextEditingController(
       text: tempFixedDiscount > 0 ? tempFixedDiscount.toString() : '',
@@ -102,6 +125,20 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            void updateTempCalculations() {
+              double amount = widget.subTotal;
+              if (tempPercentageDiscount > 0) {
+                amount = amount * (1 - tempPercentageDiscount / 100);
+              }
+              amount = amount - tempFixedDiscount;
+
+              tempBstCalculated = amount * (widget.bst / 100);
+              tempServiceChargeCalculated = amount * (widget.serviceTax / 100);
+              tempAmountAfterDiscount = amount;
+              tempFinalAmount =
+                  amount + tempBstCalculated + tempServiceChargeCalculated;
+            }
+
             return AlertDialog(
               title: const Text("Apply Discount"),
               content: SingleChildScrollView(
@@ -120,14 +157,16 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                       onChanged: (value) {
                         setState(() {
                           tempFixedDiscount = double.tryParse(value) ?? 0.0;
-                          // Calculate temporary final amount
-                          double amount = widget.totalCost;
-                          if (tempPercentageDiscount > 0) {
-                            amount =
-                                amount * (1 - tempPercentageDiscount / 100);
-                          }
-                          amount = amount - tempFixedDiscount;
-                          tempFinalAmount = amount;
+                          updateTempCalculations();
+                        });
+                        // Update parent widget state
+                        this.setState(() {
+                          fixedDiscount = tempFixedDiscount;
+                          percentageDiscount = tempPercentageDiscount;
+                          bstCalculated = tempBstCalculated;
+                          serviceChargeCalculated = tempServiceChargeCalculated;
+                          amountAfterDiscount = tempAmountAfterDiscount;
+                          finalAmount = tempFinalAmount;
                         });
                       },
                     ),
@@ -145,14 +184,16 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                         setState(() {
                           tempPercentageDiscount =
                               double.tryParse(value) ?? 0.0;
-                          // Calculate temporary final amount
-                          double amount = widget.totalCost;
-                          if (tempPercentageDiscount > 0) {
-                            amount =
-                                amount * (1 - tempPercentageDiscount / 100);
-                          }
-                          amount = amount - tempFixedDiscount;
-                          tempFinalAmount = amount;
+                          updateTempCalculations();
+                        });
+                        // Update parent widget state
+                        this.setState(() {
+                          fixedDiscount = tempFixedDiscount;
+                          percentageDiscount = tempPercentageDiscount;
+                          bstCalculated = tempBstCalculated;
+                          serviceChargeCalculated = tempServiceChargeCalculated;
+                          amountAfterDiscount = tempAmountAfterDiscount;
+                          finalAmount = tempFinalAmount;
                         });
                       },
                     ),
@@ -174,7 +215,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 5),
                                 child: Text(
-                                  "New Amount after ${tempPercentageDiscount.toStringAsFixed(1)}% discount: Nu. ${(widget.totalCost * (1 - tempPercentageDiscount / 100)).toStringAsFixed(2)}",
+                                  "New Amount after ${tempPercentageDiscount.toStringAsFixed(1)}% discount: Nu. ${tempAmountAfterDiscount.toStringAsFixed(2)}",
                                   style: const TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,
@@ -185,7 +226,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 5),
                                 child: Text(
-                                  "New Amount after Nu. ${tempFixedDiscount.toStringAsFixed(2)} discount: Nu. ${(widget.totalCost - tempFixedDiscount).toStringAsFixed(2)}",
+                                  "New Amount after Nu. ${tempFixedDiscount.toStringAsFixed(2)} discount: Nu. ${tempAmountAfterDiscount.toStringAsFixed(2)}",
                                   style: const TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,
@@ -209,15 +250,24 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               actions: [
                 TextButton(
                   onPressed: () {
+                    // Reset values when canceling
+                    this.setState(() {
+                      fixedDiscount = 0.0;
+                      percentageDiscount = 0.0;
+                      _updateFinalAmount();
+                    });
                     Navigator.pop(context);
                   },
                   child: const Text("Cancel"),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
+                    this.setState(() {
                       fixedDiscount = tempFixedDiscount;
                       percentageDiscount = tempPercentageDiscount;
+                      bstCalculated = tempBstCalculated;
+                      serviceChargeCalculated = tempServiceChargeCalculated;
+                      amountAfterDiscount = tempAmountAfterDiscount;
                       finalAmount = tempFinalAmount;
                     });
                     Navigator.pop(context);
@@ -365,50 +415,150 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Service Type Dropdown
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 14),
+                    // Service Type Card
+                    Card(
+                      margin: const EdgeInsets.all(16),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Service Type',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 3, 27, 48),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 14),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              value: selectedServiceType,
+                              items: ['Dine In', 'Takeaway', 'Delivery']
+                                  .map((type) => DropdownMenuItem(
+                                        value: type,
+                                        child: Text(
+                                          type,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedServiceType = value!;
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        value: selectedServiceType,
-                        items: ['Dine In', 'Takeaway', 'Delivery']
-                            .map((type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Text(
-                                    type,
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedServiceType = value!;
-                          });
-                        },
                       ),
                     ),
-                    const Divider(height: 1, thickness: 1),
-                    // Order Items List
+                    // Order Items Card
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: widget.items.length,
-                        itemBuilder: (context, index) {
-                          final item = widget.items[index];
-                          return ListTile(
-                            title: Text(
-                              '${item.product.menuName} x ${item.quantity}',
-                              style: const TextStyle(fontSize: 16),
+                      child: Card(
+                        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Order Items',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color.fromARGB(255, 3, 27, 48),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          const Color.fromARGB(255, 3, 27, 48)
+                                              .withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${widget.items.length} Items',
+                                      style: const TextStyle(
+                                        color: Color.fromARGB(255, 3, 27, 48),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            trailing: Text(
-                              '${item.totalPrice.toStringAsFixed(2)} Nu',
-                              style: const TextStyle(fontSize: 16),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: widget.items.length,
+                                itemBuilder: (context, index) {
+                                  final item = widget.items[index];
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.withOpacity(0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                    child: ListTile(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
+                                      title: Text(
+                                        item.product.menuName,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        'Nu. ${item.product.price} × ${item.quantity}',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      trailing: Text(
+                                        'Nu. ${item.totalPrice.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color.fromARGB(255, 3, 27, 48),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -421,87 +571,201 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 color: Colors.white,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Scrollable Top Section
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Total Amount Section
-                                Column(
+                child: Column(
+                  children: [
+                    // Scrollable Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Order Summary Card
+                            Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Row(
+                                    const Text(
+                                      'Order Summary',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 3, 27, 48),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          'Total',
+                                        const Text(
+                                          'Subtotal',
                                           style: TextStyle(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Nu. ${amountAfterDiscount.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 10),
-                                    FocusScope(
-                                      child: Focus(
-                                        onFocusChange: (hasFocus) {
-                                          if (hasFocus) {
-                                            Scrollable.ensureVisible(
-                                              context,
-                                              duration: const Duration(
-                                                  milliseconds: 300),
-                                            );
-                                          }
-                                        },
-                                        child: TextFormField(
-                                          controller: TextEditingController(
-                                            text:
-                                                finalAmount.toStringAsFixed(2),
+                                    if (percentageDiscount > 0 ||
+                                        fixedDiscount > 0) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            'Discount',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.grey,
+                                            ),
                                           ),
-                                          decoration: const InputDecoration(
-                                            border: InputBorder.none,
-                                            hintText: "0.00",
+                                          Text(
+                                            'Nu. ${(percentageDiscount > 0 ? (widget.subTotal * percentageDiscount / 100) : 0) + fixedDiscount}',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.red,
+                                            ),
                                           ),
+                                        ],
+                                      ),
+                                    ],
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'BST',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Nu. ${bstCalculated.toStringAsFixed(2)}',
                                           style: const TextStyle(
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                    const Divider(height: 20, thickness: 1),
-                                    // Discount Button
-                                    ElevatedButton(
-                                      onPressed: _showDiscountDialog,
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 12, horizontal: 24),
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 0, 150, 136),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Service Charge',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                      ),
-                                      child: const Text(
-                                        "Apply Discount",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
+                                        Text(
+                                          'Nu. ${serviceChargeCalculated.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(height: 24),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Total Amount',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                Color.fromARGB(255, 3, 27, 48),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Nu. ${finalAmount.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                Color.fromARGB(255, 3, 27, 48),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Discount Section
+                            Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Discount',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                Color.fromARGB(255, 3, 27, 48),
+                                          ),
+                                        ),
+                                        ElevatedButton.icon(
+                                          onPressed: _showDiscountDialog,
+                                          icon: const Icon(Icons.discount,
+                                              size: 18),
+                                          label: const Text('Apply Discount'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color.fromARGB(
+                                                    255, 3, 27, 48),
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     if (fixedDiscount > 0 ||
-                                        percentageDiscount > 0)
+                                        percentageDiscount > 0) ...[
+                                      const SizedBox(height: 12),
                                       Container(
-                                        margin: const EdgeInsets.only(top: 10),
-                                        padding: const EdgeInsets.all(10),
+                                        padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           color: Colors.green.withOpacity(0.1),
                                           borderRadius:
@@ -518,13 +782,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                             if (percentageDiscount > 0)
                                               Padding(
                                                 padding: const EdgeInsets.only(
-                                                    bottom: 5),
+                                                    bottom: 8),
                                                 child: Row(
                                                   children: [
                                                     const Icon(Icons.percent,
                                                         color: Colors.green,
                                                         size: 16),
-                                                    const SizedBox(width: 5),
+                                                    const SizedBox(width: 8),
                                                     Text(
                                                       "Percentage Discount: ${percentageDiscount.toStringAsFixed(1)}%",
                                                       style: const TextStyle(
@@ -539,14 +803,14 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                             if (fixedDiscount > 0)
                                               Padding(
                                                 padding: const EdgeInsets.only(
-                                                    bottom: 5),
+                                                    bottom: 8),
                                                 child: Row(
                                                   children: [
                                                     const Icon(
                                                         Icons.attach_money,
                                                         color: Colors.green,
                                                         size: 16),
-                                                    const SizedBox(width: 5),
+                                                    const SizedBox(width: 8),
                                                     Text(
                                                       "Fixed Discount: Nu. ${fixedDiscount.toStringAsFixed(2)}",
                                                       style: const TextStyle(
@@ -558,13 +822,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                                   ],
                                                 ),
                                               ),
-                                            const Divider(height: 10),
+                                            const Divider(height: 16),
                                             Row(
                                               children: [
                                                 const Icon(Icons.receipt_long,
                                                     color: Colors.grey,
                                                     size: 16),
-                                                const SizedBox(width: 5),
+                                                const SizedBox(width: 8),
                                                 Text(
                                                   "Original Amount: Nu. ${widget.totalCost.toStringAsFixed(2)}",
                                                   style: const TextStyle(
@@ -578,103 +842,41 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                           ],
                                         ),
                                       ),
-                                    const SizedBox(height: 15),
-                                    // Suggested Amounts
-                                    const Text(
-                                      "Suggested Amounts:",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children:
-                                          _getSuggestedAmounts().map((amount) {
-                                        return ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              finalAmount = amount;
-                                            });
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                amount == finalAmount
-                                                    ? Colors.green
-                                                    : Colors.grey[200],
-                                            foregroundColor:
-                                                amount == finalAmount
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                          ),
-                                          child: Text(
-                                            "Nu. ${amount.toStringAsFixed(0)}",
-                                            style:
-                                                const TextStyle(fontSize: 14),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    // Split Bill Button
-                                    ElevatedButton(
-                                      onPressed: _showSplitDialog,
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 12, horizontal: 24),
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 0, 150, 136),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        "Split Bill",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
+                                    ],
                                   ],
                                 ),
-                                // Split Amounts (if enabled)
-                                if (isSplit)
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        "Split Among $splitCount People:",
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...splitAmounts.map(
-                                        (amount) => Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 4),
-                                          child: Text(
-                                            '${amount.toStringAsFixed(2)} Nu',
-                                            style:
-                                                const TextStyle(fontSize: 16),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        _buildPaymentButtons(),
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                    // Fixed Payment Method Card at Bottom
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Payment Method',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 3, 27, 48),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPaymentButtons(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -696,6 +898,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             const SizedBox(width: 5),
             Expanded(child: _paymentButton('CARD')),
             const SizedBox(width: 5),
+            Expanded(child: _paymentButton('COMPLIMENTARY')),
+            const SizedBox(width: 5),
             Expanded(child: _paymentButton('CREDIT')),
           ],
         ),
@@ -704,11 +908,51 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
   }
 
   Widget _paymentButton(String method) {
+    // Define colors based on payment method
+    Color backgroundColor;
+    Color textColor = Colors.white;
+
+    switch (method) {
+      case 'SCAN':
+        backgroundColor =
+            const Color.fromARGB(255, 3, 27, 48); // Dark blue for SCAN
+        break;
+      case 'CASH':
+        backgroundColor = const Color.fromARGB(255, 3, 27, 48)
+            .withOpacity(0.9); // Slightly transparent dark blue
+        break;
+      case 'CARD':
+        backgroundColor = const Color.fromARGB(255, 3, 27, 48)
+            .withOpacity(0.8); // More transparent dark blue
+        break;
+      case 'CREDIT':
+        backgroundColor = const Color.fromARGB(255, 3, 27, 48)
+            .withOpacity(0.7); // Most transparent dark blue
+        break;
+      default:
+        backgroundColor = const Color.fromARGB(255, 3, 27, 48).withOpacity(0.6);
+    }
+
     return SizedBox(
       width: 80,
       height: 50,
       child: ElevatedButton(
         onPressed: () async {
+          // If payment method is CARD, show QR code page first
+          if (method == 'SCAN') {
+            final bool? proceed = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const QrCodeDisplayPage(),
+              ),
+            );
+
+            // If user didn't proceed (pressed back), return
+            if (proceed != true) {
+              return;
+            }
+          }
+
           // clears the history form the front page you know
           context.read<MenuBloc>().add(RemoveAllFromCart());
           // Create bill summary
@@ -720,11 +964,13 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             pax: 1,
             outlet: widget.branchName,
             orderType: selectedServiceType,
-            subTotal: widget.subTotal,
-            bst: widget.bst,
-            serviceCharge: widget.serviceTax,
-            discount:
-                fixedDiscount + (widget.totalCost * percentageDiscount / 100),
+            subTotal: amountAfterDiscount,
+            bst: bstCalculated,
+            serviceCharge: serviceChargeCalculated,
+            discount: (percentageDiscount > 0
+                    ? (widget.subTotal * percentageDiscount / 100)
+                    : 0) +
+                fixedDiscount,
             totalAmount: finalAmount,
             paymentStatus: "PAID",
             amountSettled: finalAmount,
@@ -749,7 +995,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                   ))
               .toList();
 
-          // adding to the proceed model you  know what and you know who
+          // adding to the proceed model
           final proceedOrderItems = ProceedOrderModel(
             orderNumber: widget.orderNumber,
             holdOrderId: widget.orderID,
@@ -761,6 +1007,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
             menuItems: widget.items,
             totalAmount: finalAmount,
           );
+
           // Submit bill using bloc
           context.read<BillBloc>().add(SubmitBill(
                 billSummary: billSummary,
@@ -769,6 +1016,7 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
           context
               .read<ProceedOrderBloc>()
               .add(AddProceedOrder(proceedOrderItems));
+
           // Navigate to payment bill page
           final result = await Navigator.push(
             context,
@@ -788,16 +1036,19 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
                                   .toStringAsFixed(2),
                         })
                     .toList(),
-                subTotal: widget.subTotal,
-                bst: widget.bst,
-                serviceTax: widget.serviceTax,
+                subTotal: amountAfterDiscount,
+                bst: bstCalculated,
+                serviceTax: serviceChargeCalculated,
                 totalQuantity:
                     widget.items.fold(0, (sum, item) => sum + item.quantity),
-                date: DateFormat('dd-MM-yyyy').format(DateTime.now()),
+                date: DateFormat('MMMM dd, yyyy').format(DateTime.now()),
                 time: DateFormat('hh:mm a').format(DateTime.now()),
                 totalAmount: finalAmount,
                 payMode: method,
-                discount: finalAmount - widget.totalCost,
+                discount: (percentageDiscount > 0
+                        ? (widget.subTotal * percentageDiscount / 100)
+                        : 0) +
+                    fixedDiscount,
                 branchName: widget.branchName,
               ),
             ),
@@ -809,6 +1060,8 @@ class _ProceedOrderScreenState extends State<ProceedPages> {
           }
         },
         style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

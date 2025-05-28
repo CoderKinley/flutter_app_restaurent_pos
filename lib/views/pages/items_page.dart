@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pos_system_legphel/bloc/add_item_menu_navigation/bloc/add_item_navigation_bloc.dart';
+import 'package:pos_system_legphel/bloc/allergic_items_bloc/bloc/allergic_items_bloc.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/all_items_list.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/ip_address_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/items_category_list.dart';
@@ -9,6 +10,9 @@ import 'package:pos_system_legphel/views/pages/Add Items/branch_settings_page.da
 import 'package:pos_system_legphel/views/pages/Add Items/tax_settings_page.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/item_destination_list.dart';
 import 'package:pos_system_legphel/views/pages/Add Items/database_management_page.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/qr_code_page.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/add_new_table.dart';
+import 'package:pos_system_legphel/views/pages/Add Items/allergic_items_list.dart';
 import 'package:pos_system_legphel/views/widgets/drawer_menu_widget.dart';
 import 'package:pos_system_legphel/models/settings/app_settings.dart';
 
@@ -22,6 +26,12 @@ class ItemsPage extends StatelessWidget {
     const TaxSettingsPage(),
     const BranchSettingsPage(),
     const DatabaseManagementPage(),
+    const QrCodePage(),
+    const AddNewTable(),
+    BlocProvider(
+      create: (context) => AllergicItemsBloc(),
+      child: const AllergicItemsList(),
+    ),
   ];
 
   ItemsPage({super.key});
@@ -112,6 +122,22 @@ class ItemsPage extends StatelessWidget {
                                 const Divider(height: 1, color: Colors.black12),
                                 _buildMenuItem(
                                   context,
+                                  icon: Icons.table_bar_rounded,
+                                  title: "Tables",
+                                  iconColor: Colors.amber.shade700,
+                                  index: 9,
+                                ),
+                                const Divider(height: 1, color: Colors.black12),
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.warning_rounded,
+                                  title: "Allergic Items",
+                                  iconColor: Colors.red.shade700,
+                                  index: 10,
+                                ),
+                                const Divider(height: 1, color: Colors.black12),
+                                _buildMenuItem(
+                                  context,
                                   icon: Icons.request_quote_rounded,
                                   title: "Tax Settings",
                                   iconColor: Colors.orange.shade700,
@@ -141,6 +167,14 @@ class ItemsPage extends StatelessWidget {
                                     return const SizedBox.shrink();
                                   },
                                 ),
+                                _buildMenuItem(
+                                  context,
+                                  icon: Icons.qr_code_rounded,
+                                  title: "QR Codes",
+                                  iconColor: Colors.indigo.shade700,
+                                  index: 8,
+                                ),
+                                const Divider(height: 1, color: Colors.black12),
                               ],
                             ),
                           ),
@@ -171,18 +205,53 @@ class ItemsPage extends StatelessWidget {
                       )
                     ],
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "All Items",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                  child: BlocBuilder<AddItemNavigationBloc,
+                      AddItemNavigationState>(
+                    builder: (context, state) {
+                      String title = "All Items";
+                      switch (state.selectedIndex) {
+                        case 0:
+                          title = "All Items";
+                          break;
+                        case 1:
+                          title = "Categories";
+                          break;
+                        case 2:
+                          title = "Sub Categories";
+                          break;
+                        case 3:
+                          title = "Item Destinations";
+                          break;
+                        case 5:
+                          title = "Tax Settings";
+                          break;
+                        case 7:
+                          title = "Export Data";
+                          break;
+                        case 8:
+                          title = "QR Codes";
+                          break;
+                        case 9:
+                          title = "Tables";
+                          break;
+                        case 10:
+                          title = "Allergic Items";
+                          break;
+                      }
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 // Content Area

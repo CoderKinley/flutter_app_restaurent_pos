@@ -1,0 +1,499 @@
+POS System Documentation
+=======================
+
+Table of Contents
+----------------
+1. Project Structure
+2. Architecture Overview
+3. BLoC Pattern Deep Dive
+4. Dependencies
+5. Key Features
+6. Technical Implementation
+
+1. Project Structure
+-------------------
+[Folder Structure Diagram]
+lib/
+├── bloc/                      # State management using BLoC pattern
+│   ├── add_item_menu_navigation/
+│   ├── auth_bloc/
+│   ├── bill_bloc/
+│   ├── branch_bloc/
+│   ├── category_bloc/
+│   ├── customer_info_order_bloc/
+│   ├── destination/
+│   ├── hold_order_bloc/
+│   ├── ip_address_bloc/
+│   ├── list_bloc/
+│   ├── menu_from_api/
+│   ├── menu_item_bloc/
+│   ├── menu_item_local_bloc/
+│   ├── menu_print_bloc/
+│   ├── navigation_bloc/
+│   ├── proceed_order_bloc/
+│   ├── search_suggestion_bloc/
+│   ├── sub_category_bloc/
+│   ├── table_bloc/
+│   ├── tables and names/
+│   └── tax_settings_bloc/
+├── data/                      # Data layer
+│   ├── repositories/
+│   └── menu_api_service.dart
+├── models/                    # Data models
+│   ├── Bill/
+│   ├── Menu Model/
+│   ├── others/
+│   └── tables and names/
+├── providers/                 # State providers
+│   └── theme_provider.dart
+├── services/                  # Business logic and utilities
+│   ├── database_helper.dart
+│   ├── ImmersiveModeHelper.dart
+│   ├── network_service.dart
+│   └── sync_service.dart
+├── SQL/                      # Database related files
+│   ├── database_helper.dart
+│   └── menu_local_db.dart
+├── views/                    # UI components
+│   ├── pages/
+│   │   ├── Hold Order/
+│   │   ├── proceed page/
+│   │   ├── home_page.dart
+│   │   ├── login_page.dart
+│   │   ├── notification_page.dart
+│   │   └── sales_page.dart
+│   └── widgets/
+└── main.dart                 # Application entry point
+
+2. Architecture Overview
+-----------------------
+The project follows a clean architecture pattern with clear separation of concerns. Here's a detailed breakdown of each layer:
+
+2.1 BLoC Layer (Business Logic Components)
+-----------------------------------------
+The BLoC pattern is a state management solution that separates business logic from UI. It follows these principles:
+
+a) Core BLoC Concepts:
+   • Events: User actions or system events that trigger state changes
+   • States: The current state of the application
+   • Bloc: The component that processes events and emits states
+
+b) BLoC Directory Structure:
+   • Each feature has its own BLoC directory containing:
+     - bloc/feature_bloc.dart: Main BLoC implementation
+     - events/feature_event.dart: Event definitions
+     - states/feature_state.dart: State definitions
+
+c) Key BLoC Components:
+   • add_item_menu_navigation/: Manages menu item addition flow
+   • auth_bloc/: Handles authentication and user sessions
+   • bill_bloc/: Manages billing operations and calculations
+   • category_bloc/: Handles menu category management
+   • customer_info_order_bloc/: Manages customer order information
+   • hold_order_bloc/: Controls order holding functionality
+   • menu_from_api/: Handles menu data fetching from server
+   • menu_item_bloc/: Manages menu item state
+   • navigation_bloc/: Controls application navigation
+   • proceed_order_bloc/: Manages order processing flow
+   • table_bloc/: Handles table management and assignments
+
+2.2 Data Layer
+-------------
+Located in the data/ directory, this layer handles data operations:
+
+a) Repositories:
+   • Implements repository pattern
+   • Abstracts data sources (local and remote)
+   • Provides clean API for data access
+   • Handles data caching and synchronization
+
+b) API Services:
+   • menu_api_service.dart: Handles API communication
+   • Manages network requests
+   • Handles data transformation
+   • Implements error handling
+
+2.3 Models Layer
+---------------
+Located in models/ directory, contains data structures:
+
+a) Bill Models:
+   • Defines bill-related data structures
+   • Handles bill calculations
+   • Manages bill formatting
+
+b) Menu Models:
+   • Defines menu item structures
+   • Handles menu categorization
+   • Manages menu item properties
+
+c) Other Models:
+   • Customer information models
+   • Table management models
+   • System configuration models
+
+2.4 Providers Layer
+------------------
+Located in providers/ directory:
+
+a) Theme Provider:
+   • Manages application theming
+   • Handles theme switching
+   • Maintains theme consistency
+
+2.5 Services Layer
+-----------------
+Located in services/ directory, contains business logic and utilities:
+
+a) Database Services:
+   • database_helper.dart: SQLite operations
+   • Handles data persistence
+   • Manages database migrations
+
+b) Network Services:
+   • network_service.dart: Network operations
+   • sync_service.dart: Data synchronization
+
+c) Utility Services:
+   • ImmersiveModeHelper.dart: Full-screen management
+
+2.6 SQL Layer
+------------
+Located in SQL/ directory:
+
+a) Database Helpers:
+   • database_helper.dart: Core database operations
+   • menu_local_db.dart: Menu-specific database operations
+
+2.7 Views Layer
+--------------
+Located in views/ directory, contains UI components:
+
+a) Pages:
+   • home_page.dart: Main application interface
+   • login_page.dart: Authentication interface
+   • sales_page.dart: Sales management interface
+   • notification_page.dart: System notifications
+   • Hold Order/: Order management interface
+   • proceed page/: Order processing interface
+
+b) Widgets:
+   • Reusable UI components
+   • Custom widgets for specific features
+
+2.8 Main Application
+-------------------
+main.dart serves as the application entry point:
+• Initializes services and dependencies
+• Sets up theme and routing
+• Configures BLoC providers
+• Handles permissions and device orientation
+
+3. BLoC Pattern Deep Dive
+------------------------
+The BLoC (Business Logic Component) pattern is a state management solution that:
+
+3.1 Core Principles
+------------------
+• Separation of Concerns: UI is separated from business logic
+• Unidirectional Data Flow: Data flows in one direction
+• Reactive Programming: UI reacts to state changes
+• Testability: Business logic can be tested independently
+
+3.2 Components
+-------------
+a) Events:
+   • Represent user actions or system events
+   • Trigger state changes
+   • Are immutable
+   • Extend Equatable for comparison
+
+b) States:
+   • Represent the current state of the application
+   • Are immutable
+   • Extend Equatable for comparison
+   • Can be initial, loading, success, or error states
+
+c) Bloc:
+   • Processes events and emits states
+   • Contains business logic
+   • Handles state transitions
+   • Manages side effects
+
+3.3 Implementation Flow
+----------------------
+a) Event Handling:
+   • User performs an action
+   • Event is dispatched to Bloc
+   • Bloc processes the event
+   • New state is emitted
+
+b) State Management:
+   • UI listens to state changes
+   • Widgets rebuild based on new state
+   • State changes trigger UI updates
+
+3.4 Benefits
+-----------
+• Predictable state management
+• Easy testing
+• Code reusability
+• Clear separation of concerns
+• Maintainable codebase
+
+3.5 Best Practices
+----------------
+• Keep blocs focused and single-responsibility
+• Use proper error handling
+• Implement proper state management
+• Follow unidirectional data flow
+• Maintain immutability
+
+4. Dependencies
+--------------
+4.1 Core Dependencies
+-------------------
+• flutter: ^3.0.0
+  - The core Flutter framework
+  - Provides the foundation for building cross-platform applications
+  - Includes essential widgets, rendering engine, and platform integration
+  - Handles hot reload and development tools
+
+• flutter_bloc: ^8.0.0
+  - State management solution based on BLoC pattern
+  - Separates business logic from UI
+  - Provides tools for managing application state
+  - Includes BlocBuilder, BlocProvider, and BlocListener widgets
+  - Handles state transitions and event processing
+
+• provider: ^6.0.0
+  - Dependency injection and state management
+  - Simplifies widget tree management
+  - Provides ChangeNotifier for reactive programming
+  - Enables efficient widget rebuilds
+  - Supports multiple providers and consumer patterns
+
+• shared_preferences: ^2.0.0
+  - Persistent key-value storage
+  - Stores user preferences and settings
+  - Handles simple data persistence
+  - Supports various data types (String, int, bool, etc.)
+  - Provides synchronous API for data access
+
+• sqflite: ^2.0.0
+  - SQLite database implementation for Flutter
+  - Provides full SQL database functionality
+  - Supports complex queries and transactions
+  - Handles database versioning and migrations
+  - Enables efficient data storage and retrieval
+
+• path: ^1.8.0
+  - Cross-platform path manipulation
+  - Handles file and directory paths
+  - Provides path joining and splitting
+  - Supports path normalization
+  - Works across different operating systems
+
+4.2 Network Dependencies
+----------------------
+• http: ^0.13.0
+  - HTTP client for making network requests
+  - Supports GET, POST, PUT, DELETE methods
+  - Handles request/response headers
+  - Manages cookies and authentication
+  - Provides streaming capabilities
+
+• dio: ^4.0.0
+  - Advanced HTTP client with interceptors
+  - Supports request cancellation
+  - Handles file uploads and downloads
+  - Provides global configuration
+  - Includes request/response transformers
+
+• connectivity_plus: ^2.0.0
+  - Network connectivity monitoring
+  - Detects network type (WiFi, mobile, none)
+  - Handles connectivity changes
+  - Provides real-time network status
+  - Supports multiple platforms
+
+4.3 UI Dependencies
+-------------------
+• flutter_screenutil: ^5.0.0
+  - Screen size adaptation
+  - Responsive UI scaling
+  - Maintains consistent layouts
+  - Supports different screen sizes
+  - Provides easy size calculations
+
+• google_fonts: ^3.0.0
+  - Google Fonts integration
+  - Dynamic font loading
+  - Custom typography support
+  - Optimized font caching
+  - Wide font selection
+
+• flutter_svg: ^1.0.0
+  - SVG rendering support
+  - Vector graphics handling
+  - Scalable image support
+  - Color manipulation
+  - Animation capabilities
+
+• cached_network_image: ^3.0.0
+  - Network image caching
+  - Memory and disk caching
+  - Loading placeholders
+  - Error handling
+  - Image optimization
+
+4.4 Utility Dependencies
+----------------------
+• intl: ^0.17.0
+  - Internationalization and localization
+  - Date and number formatting
+  - Message translation
+  - Pluralization support
+  - Bidirectional text handling
+
+• logger: ^1.0.0
+  - Advanced logging capabilities
+  - Different log levels
+  - Customizable output
+  - Stack trace support
+  - Development debugging tools
+
+• permission_handler: ^8.0.0
+  - Permission management
+  - Request and check permissions
+  - Handle permission results
+  - Support for various permissions
+  - Platform-specific implementations
+
+• device_info_plus: ^3.0.0
+  - Device information retrieval
+  - Platform-specific details
+  - Hardware information
+  - OS version detection
+  - Device identification
+
+4.5 Printing Dependencies
+------------------------
+• pdf: ^3.0.0
+  - PDF generation
+  - Document creation
+  - Text and image support
+  - Page layout management
+  - Custom styling options
+
+• printing: ^5.0.0
+  - Print functionality
+  - PDF preview
+  - Print job management
+  - Multiple printer support
+  - Print settings configuration
+
+• share_plus: ^4.0.0
+  - Content sharing
+  - Multiple platform support
+  - File sharing
+  - Text sharing
+  - Share sheet customization
+
+4.6 Development Dependencies
+---------------------------
+• flutter_test: ^3.0.0
+  - Testing framework
+  - Widget testing
+  - Unit testing
+  - Integration testing
+  - Mock support
+
+• mockito: ^5.0.0
+  - Mocking framework
+  - Test doubles
+  - Behavior verification
+  - Argument matching
+  - Mock generation
+
+• build_runner: ^2.0.0
+  - Code generation
+  - Build automation
+  - Asset management
+  - Source code generation
+  - Development workflow tools
+
+5. Key Features
+--------------
+5.1 Authentication System
+-----------------------
+• Login/logout functionality
+• Session management
+• Secure access control
+
+5.2 Menu Management
+-----------------
+• Dynamic menu loading
+• Category organization
+• Local and remote data sync
+
+5.3 Order Processing
+------------------
+• Real-time order management
+• Bill generation
+• Payment processing
+• Order holding capability
+
+5.4 Table Management
+------------------
+• Table assignment
+• Customer information tracking
+• Order association
+
+5.5 Reporting and Analytics
+-------------------------
+• Sales tracking
+• Bill history
+• Transaction records
+
+5.6 System Features
+-----------------
+• Offline capability
+• Data synchronization
+• Print support
+• Theme customization
+
+6. Technical Implementation
+-------------------------
+6.1 State Management
+------------------
+• Uses BLoC pattern
+• Clean separation of concerns
+• Reactive programming approach
+
+6.2 Data Persistence
+------------------
+• SQLite for local storage
+• SharedPreferences for settings
+• API integration for remote data
+
+6.3 UI/UX
+--------
+• Material Design implementation
+• Custom theme support
+• Responsive layouts
+• Professional styling
+
+6.4 Security
+-----------
+• Authentication system
+• Secure data handling
+• Permission management
+
+6.5 Performance
+-------------
+• Efficient data loading
+• Optimized state management
+• Background processing
+
+[End of Document] 
