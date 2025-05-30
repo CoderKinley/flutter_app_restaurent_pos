@@ -5,6 +5,7 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "package:pos_system_legphel/bloc/navigation_bloc/bloc/navigation_bloc.dart";
 import "package:pos_system_legphel/services/network_service.dart";
 import "package:connectivity_plus/connectivity_plus.dart";
+import "dart:io";
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -19,6 +20,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   final NetworkService _networkService =
       NetworkService(baseUrl: 'http://119.2.105.142:3800');
   Timer? _statusTimer;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
@@ -28,24 +30,56 @@ class _DrawerWidgetState extends State<DrawerWidget> {
     _statusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _checkStatus();
     });
+
+    // Listen to connectivity changes
+    _connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      _checkStatus();
+    });
   }
 
   @override
   void dispose() {
     _statusTimer?.cancel();
+    _connectivitySubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _checkStatus() async {
-    final isServerAvailable = await _networkService.isServerAvailable();
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final isNetworkAvailable = connectivityResult != ConnectivityResult.none;
+    try {
+      // Check basic connectivity
+      final connectivityResult = await Connectivity().checkConnectivity();
+      bool hasConnectivity = connectivityResult != ConnectivityResult.none;
 
-    if (mounted) {
-      setState(() {
-        _isServerAvailable = isServerAvailable;
-        _isNetworkAvailable = isNetworkAvailable;
-      });
+      // If there's basic connectivity, check internet access
+      bool hasInternetAccess = false;
+      if (hasConnectivity) {
+        try {
+          final result = await InternetAddress.lookup('google.com');
+          hasInternetAccess =
+              result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+        } on SocketException catch (_) {
+          hasInternetAccess = false;
+        }
+      }
+
+      // Check server availability
+      final isServerAvailable = await _networkService.isServerAvailable();
+
+      if (mounted) {
+        setState(() {
+          _isNetworkAvailable = hasConnectivity && hasInternetAccess;
+          _isServerAvailable = isServerAvailable;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isNetworkAvailable = false;
+          _isServerAvailable = false;
+        });
+      }
     }
   }
 
